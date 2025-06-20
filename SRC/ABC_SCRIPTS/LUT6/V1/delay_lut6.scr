@@ -1,0 +1,1 @@
+&get -n -m; &st; &if -K 6; &save; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &if -K 6 -a; &st; &lf -K 6 -e; &satlut -d ; &dch -C 600; &lf -K 6 -e; &mfs -W 2 -D 15 -M 600 ; &satlut -d ; &save; &load; &ps; &put; 

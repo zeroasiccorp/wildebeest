@@ -1,0 +1,32 @@
+time
+
+echo "&if -K 4 -a;"
+&get -n -m; &st; &if -K 4 -a; &save -a; &load; &ps; time
+
+echo ""
+echo "mfs2 -W 4 -M 500 -C 7000; &get -n -m; &save -a; &synch2 -K 4 -C 500; &lf -K 4 -e; &save -a; &load;"
+&put; mfs2 -W 4 -M 500 -C 7000; &get -n -m; &save -a; &synch2 -K 4 -C 500; &lf -K 4 -e; &save -a; &load; &ps; time
+
+echo ""
+echo "&st; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m; &save -a; &load; &ps"
+&st; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m; &save -a; &load; &ps; time
+
+echo ""
+echo "&synch2 -K 4 -C 500; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m;  &save -a; &load; &synch2 -K 4 -C 500; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m;"
+&synch2 -K 4 -C 500; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m;  &save -a; &load; &synch2 -K 4 -C 500; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m; &save -a; &load; &ps; time
+
+echo ""
+echo "&synch2 -K 4 -C 500; &if -K 4 -a; &save -a; &load; &ps"
+&synch2 -K 4 -C 500; &if -K 4 -a; &save -a; &load; &ps; time
+
+echo ""
+echo "&st; &if -K 4; &save -a; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &if -K 4 -a; &st; &lf -K 4 -e; &satlut -d -N 15 ; &dch -C 600; &lf -K 4 -e; &mfs -W 2 -D 15 -M 600 ; &satlut -d -N 15 ; &save -a; &load"
+&st; &if -K 4; &save -a; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &if -K 4 -a; &st; &lf -K 4 -e; &satlut -d -N 15 ; &dch -C 600; &lf -K 4 -e; &mfs -W 2 -D 15 -M 600 ; &satlut -d -N 15 ; &save -a; &load; &ps; time
+
+echo ""
+echo "&st; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m; &save -a; &synch2 -K 4 -C 500; &lf -K 4 -e; &save -a; &load; &st; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000;"
+&st; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m; &save -a; &synch2 -K 4 -C 500; &lf -K 4 -e; &save -a; &load; &st; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m; &save -a; &load; &ps; time
+
+echo ""
+echo "&synch2 -K 4 -C 500; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m;  &save -a; &synch2 -K 4 -C 500; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m;  &save -a; &synch2 -K 4 -C 500; &if -K 4 -a"
+&synch2 -K 4 -C 500; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m;  &save -a; &synch2 -K 4 -C 500; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m;  &save -a; &synch2 -K 4 -C 500; &if -K 4 -a; &save -a; &load; &ps; &put; time
