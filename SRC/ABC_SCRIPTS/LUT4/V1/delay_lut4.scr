@@ -1,0 +1,46 @@
+time
+
+echo " "
+echo "** Starting ABC DELAY optimization !!!"
+
+write_blif in.blif
+
+&get -n -m;
+
+echo "firstMap1"
+&st; &lf -K 4 -e; &save; &ps; time
+
+echo "initMapFlow1"
+&st; &lf -K 4 -e; &satlut -C 100 -d -N 15; &save; &ps; time
+
+&load;
+
+echo "dInitMapFlow2"
+&st; &if -K 4; &save; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &if -K 4 -a; &st; &lf -K 4 -e; &satlut -d -N 15 ; &dch -C 600; &lf -K 4 -e; &mfs -W 2 -D 15 -M 600 ; &satlut -d -N 15 ; &save; &ps; time
+
+&load
+
+echo "map3"
+&shrink; &blut -K 4; &sopb -C 5; &synch2 -K 4 -W 2; &if -K 4 -C 16; &save; &shrink; &sopb -C 5; &blut -K 4; &synch2 -W 2  -K 4; &if -K 4 -C 16; &save; &load; &mfs -W 2 -D 15 -C 600 ; &satlut -N 15 -d ; &save; &ps; time
+
+&load
+
+echo "postMap1"
+&shrink; &blut -K 4; &sopb -C 5; &synch2 -W 2 -K 4; &if -K 4 -C 16; &save; &shrink; &sopb -C 5; &blut -K 4; &synch2 -W 2  -K 4; &if -K 4 -C 16; &save; &load; &mfs -W 2 -D 15 -C 600 ; &satlut -N 15 -d ; &put; lutpack -S 1; &get -n -m; &save; &ps; time
+
+echo " "
+echo "** ABC DELAY optimization done !!!"
+&put
+
+write_blif out.blif
+time
+
+echo ""
+echo ""
+echo "Skip Equivalence Checking ..."
+echo "Skip cec in.blif out.blif"
+echo ""
+echo ""
+
+time
+

@@ -1,0 +1,34 @@
+time
+echo " "
+echo "** Starting ABC DELAY optimization !!!"
+
+write_blif in.blif
+
+&get -n -m;
+
+&st; &lf -K 4 -e;
+
+&st; &if -K 4; &save; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &if -K 4 -a; &st; &lf -K 4 -e; &dch -C 600; &lf -K 4 -e; &mfs -W 2 -D 15 -M 600 ; &save; &load; &ps; time
+
+&shrink; &blut -K 4; &sopb -C 5; &synch2 -K 4 -W 2; &if -K 4 -C 16; &save; &shrink; &sopb -C 5; &blut -K 4; &synch2 -W 2  -K 4; &if -K 4 -C 16; &save; &load; &mfs -W 2 -D 15 -C 600 ; &save; &load; &ps; time
+
+&shrink; &blut -K 4; &sopb -C 5; &synch2 -W 2 -K 4; &lf -K 4 -e -C 32; &save; &shrink; &sopb -C 5; &blut -K 4; &synch2 -W 2  -K 4; &lf -K 4 -e -C 32; &save; &load; &mfs -W 2 -D 15 -C 600 ; &put; lutpack -S 1; &get -n -m; &save; &load; &ps; time
+
+&shrink; &blut -K 4; &sopb -C 5; &synch2 -K 4 -W 2; &if -K 4 -C 16; &save; &shrink; &sopb -C 5; &blut -K 4; &synch2 -W 2 -K 4; &if -K 4 -C 16; &save; &load; &mfs -W 2 -D 15 -C 600 ; &save; &load; &ps; time
+
+&shrink; &blut -K 4; &sopb -C 5; &synch2 -W 2 -K 4; &lf -K 4 -e -C 32; &save; &shrink; &sopb -C 5; &blut -K 4; &synch2 -W 2 -K 4; &lf -K 4 -e -C 32; &save; &load; &mfs -W 2 -D 15 -C 600 ; &put; lutpack -S 1; &get -n -m; &save; &load; &ps; time
+
+&put
+
+write_blif out.blif
+time
+
+echo ""
+echo ""
+echo "Skip Equivalence Checking ..."
+echo "Skip cec in.blif out.blif; time"
+echo ""
+echo ""
+
+time
+
