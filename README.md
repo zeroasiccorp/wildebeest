@@ -24,10 +24,20 @@ Then, to build 'yosys-syn', please type either 'make yosys-syn' or 'make' for sh
 A 'yosys-syn.so' share object library file will be generated and can be plugged-in with a Yosys
 executable.
 
-To plug-in 'yosys-syn' with a Yosys executable one can do: 
+How to link it with Yosys :
+--------------------------
+You need to add 'yosys-syn.so' under 'yosys/share/plugins/' if 'yosys' is your
+Yosys repository (note that Yosys is already compiled and there is no need to 
+recompile it again).
 
-            1/ at command line : 'yosys -m ./yosys-syn.so -s <script file>'
+When this is done, you can use it either ways: 
 
-            2/ Or in Yosys exe : plugin -i yosys-syn
+            1/ at command line : 
+
+                  yosys -m ./yosys-syn.so -s <script file>
+
+            2/ Or directly in the Yosys executable : 
+
+                  plugin -i yosys-syn
                
 
