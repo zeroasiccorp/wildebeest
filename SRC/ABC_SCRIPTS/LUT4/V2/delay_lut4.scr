@@ -52,7 +52,19 @@ echo "&st; &lf -K 4 -e;"
 
 echo " "
 echo "&dch -C 600; &lf -K 4 -e;"
-&dch -C 600; &lf -K 4 -e; &ps; time
+&dch -C 600; &lf -K 4 -e; &save; &ps; time
+
+echo ""
+echo "&load; &ps;"
+&load; &ps; time
+
+echo ""
+echo "&put; balance -l; resub -K 6 -l; rewrite -l; resub -K 6 -N 2 -l; refactor -l; resub -K 8 -l; balance -l; resub -K 8 -N 2 -l; rewrite -l; resub -K 10 -l; rewrite -z -l; resub -K 10 -N 2 -l; balance -l; resub -K 12 -l; refactor -z -l; resub -K 12 -N 2 -l; rewrite -z -l; balance -l; &get -n -m"
+&put; balance -l; resub -K 6 -l; rewrite -l; resub -K 6 -N 2 -l; refactor -l; resub -K 8 -l; balance -l; resub -K 8 -N 2 -l; rewrite -l; resub -K 10 -l; rewrite -z -l; resub -K 10 -N 2 -l; balance -l; resub -K 12 -l; refactor -z -l; resub -K 12 -N 2 -l; rewrite -z -l; balance -l; &get -n -m; &lf -K 4 -e; &save; &ps; time
+ 
+echo ""
+echo "&load; &ps;"
+&load; &ps; time
 
 echo " "
 echo "&mfs -W 2 -D 15 -M 600"
@@ -128,10 +140,15 @@ echo "&synch2 -W 2 -K 4; &if -sz -C 5 -K 7 -S 44"
 
 echo " "
 echo "&load; &ps"
-&load; &ps -s; time
+&load; &ps; time
 
 echo "&satlut -d -N 31; "
-&satlut -d -N 31; &ps; time
+&satlut -d -N 31; &ps; &save; time
+
+echo " "
+echo "Final stat: "
+echo " "
+&load; &ps -s; time
  
 echo " "
 echo "** ABC DELAY optimization done !!!"
