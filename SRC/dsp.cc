@@ -25,8 +25,8 @@
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
 
-#include "techlibs/yosys-syn/SRC/Z1010/DSP/dsp_CREG_pm.h"
-#include "techlibs/yosys-syn/SRC/Z1010/DSP/dsp_cascade_pm.h"
+#include "techlibs/yosys-syn/ARCHITECTURE/Z1010/DSP/dsp_CREG_pm.h"
+#include "techlibs/yosys-syn/ARCHITECTURE/Z1010/DSP/dsp_cascade_pm.h"
 
 void dsp_packC(dsp_CREG_pm &pm)
 {

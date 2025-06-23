@@ -352,7 +352,7 @@ struct SynthFpgaPass : public ScriptPass
      // NB: Zero Asic multipliers are signed only
      //
 
-     run("techmap -map +/mul2dsp.v -map +/yosys-syn/SRC/Z1010/DSP/mult18x18_DSP48.v -D DSP_A_MAXWIDTH=18 -D DSP_B_MAXWIDTH=18 "
+     run("techmap -map +/mul2dsp.v -map +/yosys-syn/ARCHITECTURE/Z1010/DSP/mult18x18_DSP48.v -D DSP_A_MAXWIDTH=18 -D DSP_B_MAXWIDTH=18 "
          "-D DSP_A_MINWIDTH=2 -D DSP_B_MINWIDTH=2 " // Blocks Nx1 multipliers
          "-D DSP_Y_MINWIDTH=9 " // UG901 suggests small multiplies are those 4x4 and smaller
          "-D DSP_SIGNEDONLY=1 -D DSP_NAME=$__MUL18X18");
@@ -424,7 +424,7 @@ struct SynthFpgaPass : public ScriptPass
 
     legalize_flops ();
 
-    string sc_syn_flop_library = stringf("+/yosys-syn/SRC/%s/techlib/tech_flops.v",
+    string sc_syn_flop_library = stringf("+/yosys-syn/ARCHITECTURE/%s/techlib/tech_flops.v",
                                          part_name.c_str());
     run("techmap -map " + sc_syn_flop_library);
 
@@ -951,7 +951,7 @@ struct SynthFpgaPass : public ScriptPass
     //
     // Map on the DFF of the architecture (partname)
     //
-    string sc_syn_flop_library = stringf("+/yosys-syn/SRC/%s/techlib/tech_flops.v", 
+    string sc_syn_flop_library = stringf("+/yosys-syn/ARCHITECTURE/%s/techlib/tech_flops.v", 
 		                         part_name.c_str());
     run("techmap -map " + sc_syn_flop_library);
 
