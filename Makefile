@@ -82,6 +82,7 @@ install_plugin: $(NAME).so
 	ls -l $(YOSYS_PATH)/share/plugins/$(NAME).so
 	mkdir -p $(YOSYS_PATH)/share/$(NAME)
 	cp -R $(ARCHITECTURE) $(YOSYS_PATH)/share/$(NAME)
+	cp -R $(SRC) $(YOSYS_PATH)/share/$(NAME)
 
 .PHONY: install
 install: install_plugin 
