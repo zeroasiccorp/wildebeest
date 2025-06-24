@@ -1,5 +1,5 @@
 # yosys-syn
-Zero Asic synthesis plugin for Yosys : 'yosys-syn'
+Zero Asic synthesis plugin for Yosys.
 
 Introduction :
 ------------
@@ -64,7 +64,8 @@ Here is below a classical sequence of commands to install the 'yosys-syn' plugin
         3. git submodule update --init --recursive
         4. make
 
-        // Clone 'yosys-syn' under 'yosys' ('yosys' is the directory where you currently are)
+        // Clone 'yosys-syn' under 'yosys' ('yosys' is the directory 
+        // where you currently are when you 'cd' in line 2.)
         //
         5. git clone https://github.com/zeroasiccorp/yosys-syn.git
         6. cd yosys-syn
