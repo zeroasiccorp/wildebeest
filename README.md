@@ -19,20 +19,22 @@ The plugin is called 'yosys-syn' and it provides two top level commands :
 
 How to build :
 -------------
-You need to have 'yosys-config' executable installed.
+Since the goal it to plug this plugin into a Yosys executable, you need to have a Yosys repository already installed. Under this yosys repository you need to see a 'yosys-config' necessary to build the plugin.
 
-Then, to build 'yosys-syn', please type either 'make yosys-syn' or 'make' for short.
+Right under your 'yosys' repository you need to put/copy this 'yosys-syn' plugin.
 
-A 'yosys-syn.so' share object library file will be generated and can be plugged-in with a Yosys
-executable.
+Then, to build and install 'yosys-syn' under your Yosys repository you have to type :
 
-How to link 'yosys-syn' with Yosys :
------------------------------------
-You need to add 'yosys-syn.so' under 'yosys/share/plugins/' if 'yosys' is your
-Yosys repository (note that Yosys is already compiled and there is no need to 
-recompile it again).
+           make install
 
-When this is done, you can use it either way: 
+It will : 
+	o  build yosys-syn.so
+        o  copy it under your 'yosys/share/plugins'
+        o  copy Zero Asic Architectures files under 'yosys'/share/plugins'.
+
+How to use built 'yosys-syn' plugin with Yosys :
+------------------------------------------
+When the build is done, you can use the plugin either way: 
 
             1/ at command line : 
 
