@@ -7,13 +7,13 @@ This repository stores the Zero Asic synthesis plugin that provides both FPGA an
 
 The plugin is called 'yosys-syn' and it provides two top level commands : 
 
-	1/ 'synth_fpga' : this top level command corresponds to 
+	1. 'synth_fpga' : this top level command corresponds to 
             the FPGA synthesis flow.  This flow is partially 
             implemented. 
             Once plugin is loaded under Yosys, you need to type 
             "help synth_fpga" to get all the options.
 
-	2/ 'synth_asic' : this top level command corresponds to 
+	2. 'synth_asic' : this top level command corresponds to 
            the Asic synthesis flow. This flow is not implemented 
            yet.
 
@@ -25,9 +25,10 @@ Right under your 'yosys' repository you need to put/copy this 'yosys-syn' direct
 
 Then, to build and install 'yosys-syn' under your Yosys repository, you have to type :
 
-           make install
+          make install
 
 It will : 
+
         - build 'yosys-syn.so'
 
         - copy it under your 'yosys/share/plugins'
