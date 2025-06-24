@@ -28,9 +28,9 @@ Then, to build and install 'yosys-syn' under your Yosys repository, you have to 
            make install
 
 It will : 
-	o  build yosys-syn.so
-        o  copy it under your 'yosys/share/plugins'
-        o  copy Zero Asic Src/Architectures files under 'yosys'/share/plugins'.
+	- build yosys-syn.so
+        - copy it under your 'yosys/share/plugins'
+        - copy Zero Asic Src/Architectures files under 'yosys'/share/plugins'.
 
 How to use 'yosys-syn' plugin with Yosys :
 ------------------------------------------
@@ -52,7 +52,7 @@ Here is below a classical sequence of commands to install the 'yosys-syn' plugin
 
         // Clone YosysHQ and compile it
         //
-	1/ git clone https://github.com/YosysHQ/yosys
+        1/ git clone https://github.com/YosysHQ/yosys
         2/ cd yosys
         3/ git submodule update --init --recursive
         4/ make
