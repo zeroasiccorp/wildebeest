@@ -1,7 +1,7 @@
-techlibs/yosys-syn/SRC/report_stat.o: \
- techlibs/yosys-syn/SRC/report_stat.cc /usr/include/stdc-predef.h \
- kernel/register.h kernel/yosys_common.h /usr/include/c++/13/map \
- /usr/include/c++/13/bits/requires_hosted.h \
+SRC/report_stat.o: SRC/report_stat.cc /usr/include/stdc-predef.h \
+ /home/thierry/ZEROASICCORP/synthesis/yosys/kernel/register.h \
+ /home/thierry/ZEROASICCORP/synthesis/yosys/kernel/yosys_common.h \
+ /usr/include/c++/13/map /usr/include/c++/13/bits/requires_hosted.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h \
  /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
@@ -247,9 +247,13 @@ techlibs/yosys-syn/SRC/report_stat.o: \
  /usr/include/asm-generic/posix_types.h \
  /usr/include/x86_64-linux-gnu/bits/statx-generic.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_statx_timestamp.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_statx.h kernel/io.h \
- kernel/hashlib.h kernel/yosys.h kernel/log.h /usr/include/c++/13/regex \
- /usr/include/c++/13/bitset /usr/include/c++/13/locale \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_statx.h \
+ /home/thierry/ZEROASICCORP/synthesis/yosys/kernel/io.h \
+ /home/thierry/ZEROASICCORP/synthesis/yosys/kernel/hashlib.h \
+ /home/thierry/ZEROASICCORP/synthesis/yosys/kernel/yosys.h \
+ /home/thierry/ZEROASICCORP/synthesis/yosys/kernel/log.h \
+ /usr/include/c++/13/regex /usr/include/c++/13/bitset \
+ /usr/include/c++/13/locale \
  /usr/include/c++/13/bits/locale_facets_nonio.h /usr/include/c++/13/ctime \
  /usr/include/x86_64-linux-gnu/c++/13/bits/time_members.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/messages_members.h \
@@ -291,14 +295,16 @@ techlibs/yosys-syn/SRC/report_stat.o: \
  /usr/include/x86_64-linux-gnu/bits/ss_flags.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h \
  /usr/include/x86_64-linux-gnu/bits/sigthread.h \
- /usr/include/x86_64-linux-gnu/bits/signal_ext.h kernel/rtlil.h \
- kernel/constids.inc kernel/celltypes.h /usr/include/c++/13/chrono \
- /usr/include/c++/13/bits/chrono.h /usr/include/c++/13/ratio \
- /usr/include/c++/13/cstdint /usr/include/c++/13/iomanip \
- /usr/include/c++/13/bits/quoted_string.h
+ /usr/include/x86_64-linux-gnu/bits/signal_ext.h \
+ /home/thierry/ZEROASICCORP/synthesis/yosys/kernel/rtlil.h \
+ /home/thierry/ZEROASICCORP/synthesis/yosys/kernel/constids.inc \
+ /home/thierry/ZEROASICCORP/synthesis/yosys/kernel/celltypes.h \
+ /usr/include/c++/13/chrono /usr/include/c++/13/bits/chrono.h \
+ /usr/include/c++/13/ratio /usr/include/c++/13/cstdint \
+ /usr/include/c++/13/iomanip /usr/include/c++/13/bits/quoted_string.h
 /usr/include/stdc-predef.h:
-kernel/register.h:
-kernel/yosys_common.h:
+/home/thierry/ZEROASICCORP/synthesis/yosys/kernel/register.h:
+/home/thierry/ZEROASICCORP/synthesis/yosys/kernel/yosys_common.h:
 /usr/include/c++/13/map:
 /usr/include/c++/13/bits/requires_hosted.h:
 /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h:
@@ -603,10 +609,10 @@ kernel/yosys_common.h:
 /usr/include/x86_64-linux-gnu/bits/statx-generic.h:
 /usr/include/x86_64-linux-gnu/bits/types/struct_statx_timestamp.h:
 /usr/include/x86_64-linux-gnu/bits/types/struct_statx.h:
-kernel/io.h:
-kernel/hashlib.h:
-kernel/yosys.h:
-kernel/log.h:
+/home/thierry/ZEROASICCORP/synthesis/yosys/kernel/io.h:
+/home/thierry/ZEROASICCORP/synthesis/yosys/kernel/hashlib.h:
+/home/thierry/ZEROASICCORP/synthesis/yosys/kernel/yosys.h:
+/home/thierry/ZEROASICCORP/synthesis/yosys/kernel/log.h:
 /usr/include/c++/13/regex:
 /usr/include/c++/13/bitset:
 /usr/include/c++/13/locale:
@@ -659,9 +665,9 @@ kernel/log.h:
 /usr/include/x86_64-linux-gnu/bits/types/struct_sigstack.h:
 /usr/include/x86_64-linux-gnu/bits/sigthread.h:
 /usr/include/x86_64-linux-gnu/bits/signal_ext.h:
-kernel/rtlil.h:
-kernel/constids.inc:
-kernel/celltypes.h:
+/home/thierry/ZEROASICCORP/synthesis/yosys/kernel/rtlil.h:
+/home/thierry/ZEROASICCORP/synthesis/yosys/kernel/constids.inc:
+/home/thierry/ZEROASICCORP/synthesis/yosys/kernel/celltypes.h:
 /usr/include/c++/13/chrono:
 /usr/include/c++/13/bits/chrono.h:
 /usr/include/c++/13/ratio:
