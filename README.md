@@ -28,19 +28,21 @@ Then, to build and install 'yosys-syn' under your Yosys repository, you have to 
            make install
 
 It will : 
-	- build yosys-syn.so
+        - build 'yosys-syn.so'
+
         - copy it under your 'yosys/share/plugins'
+
         - copy Zero Asic Src/Architectures files under 'yosys'/share/plugins'.
 
 How to use 'yosys-syn' plugin with Yosys :
 ------------------------------------------
 When the 'yosys-syn' plugin is built and installed, you can use the plugin either way: 
 
-            1/ at command line : 
+            1. at command line : 
 
                   yosys -m yosys-syn -s <script file>
 
-            2/ Or directly in the Yosys executable : 
+            2. Or directly in the Yosys executable : 
 
                   plugin -i yosys-syn
                
@@ -52,27 +54,27 @@ Here is below a classical sequence of commands to install the 'yosys-syn' plugin
 
         // Clone YosysHQ and compile it
         //
-        1/ git clone https://github.com/YosysHQ/yosys
-        2/ cd yosys
-        3/ git submodule update --init --recursive
-        4/ make
+        1. git clone https://github.com/YosysHQ/yosys
+        2. cd yosys
+        3. git submodule update --init --recursive
+        4. make
 
         // Clone 'yosys-syn' under 'yosys' ('yosys' is the directory where you currently are)
         //
-        5/ git clone https://github.com/zeroasiccorp/yosys-syn.git
-        6/ cd yosys-syn
+        5. git clone https://github.com/zeroasiccorp/yosys-syn.git
+        6. cd yosys-syn
         
         // Install 'yosys-plugin' under 'yosys'
         //
-        7/ make install
+        7. make install
 
 Your 'yosys-syn' plugin can now be part of your 'yosys' executable as soon as you download it.
 
 To download it you can do :
   
-        1/ yosys -m yosys-syn -s <script file> 
+        1. yosys -m yosys-syn -s <script file> 
 
-        2/ run yosys executable and as first command you can do :
+        2. run yosys executable and as first command you can do :
            plugin -i yosys-syn
 
    
