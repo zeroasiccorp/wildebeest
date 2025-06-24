@@ -17,8 +17,12 @@ The plugin is called 'yosys-syn' and it provides two top level commands :
            the Asic synthesis flow. This flow is not implemented 
            yet.
 
-How to build :
--------------
+How to build the 'yosys-syn' dynamic plugin:
+--------------------------------------------
+In case you want to use the plugin in a static mode there is nothing to do. This plugin should be put under the 'yosys/techlibs' and yosys should be compiled as usual. This plugin will be automatically part of the 'yosys' executable. 
+
+In case you want this plugin to be used as a 'so' shared library, e.g dynamic plugin, you need to read the following.
+ 
 Since the goal is to link this plugin into a Yosys executable, you need to have a Yosys repository already installed. Under this yosys repository you need to see a 'yosys-config' necessary to build the plugin.
 
 Right under your 'yosys' repository you need to put/copy this 'yosys-syn' directory.
