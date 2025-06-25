@@ -47,5 +47,5 @@ if(WIN32)
     target_link_libraries(yosys::yosys INTERFACE yosys_exe)
 endif()
 
-set(YOSYS_BINDIR ${YOSYS_BINDIR} PARENT_SCOPE)
-set(YOSYS_DATDIR ${YOSYS_DATDIR} PARENT_SCOPE)
+set(YOSYS_BINDIR ${YOSYS_BINDIR})
+set(YOSYS_DATDIR ${YOSYS_DATDIR})

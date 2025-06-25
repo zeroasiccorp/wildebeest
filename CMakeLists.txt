@@ -17,6 +17,12 @@ if (APPLE)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
 endif()
 
+set(OUTPUT_NAME "yosys-syn")
+
+find_package(Yosys)
+
+set(YOSYS_SHARE_DIR ${YOSYS_DATDIR}/share/${OUTPUT_NAME})
+
 add_subdirectory(SRC)
 add_subdirectory(ARCHITECTURE)
 
