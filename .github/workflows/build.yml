@@ -74,14 +74,15 @@ jobs:
         run: |
           cd yosys
           make config-gcc
-          make -j$(nproc)
+          make -j$(nproc) PREFIX=$HOME/.local
       - name: Install Yosys
         shell: bash
         run: |
           cd yosys
-          sudo make install
+          make install PREFIX=$HOME/.local
       - name: Build yosys-syn
         run: |
+          export PATH="$HOME/.local/bin:$PATH"
           cmake -S . -B build
           cmake --build build
           cmake --install build
