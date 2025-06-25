@@ -1,0 +1,97 @@
+name: Build and test
+on: [push, pull_request]
+jobs:
+  define-matrix:
+    runs-on: ubuntu-24.04
+    outputs:
+      all_versions: ${{ steps.final.outputs.all_versions }}
+      filtered_versions: ${{ steps.final.outputs.filtered_versions }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: final
+        shell: bash
+        run: |
+          {
+            versions=$(sed -rn 's/.+Yosys installed: supported versions are \*\*(.+)\*\*/\1/gp' README.md)
+            declare -A remap
+            remap["0.44"]="yosys-0.44"
+            remap["0.45"]="0.45"
+            remap["0.46"]="0.46"
+            remap["0.47"]="0.47"
+            echo -n "all_versions=["
+            first="";
+            last="";
+            for v in $versions; do
+              if [[ -z "${remap["$v"]+x}" ]] then
+                tag="v$v";
+              else
+                tag=${remap[$v]};
+              fi
+              if [[ -z "$first" ]] then
+                first="$tag";
+              fi
+              last="$tag";
+              echo -n "\"$tag\",";
+            done
+            echo "]"
+            echo "filtered_versions=[\"$first\",\"$last\"]"
+          } >> "$GITHUB_OUTPUT"
+  build:
+    runs-on: ubuntu-24.04
+    needs: [define-matrix]
+    strategy:
+      fail-fast: false
+      matrix:
+        yosys_version: ${{ fromJSON(needs.define-matrix.outputs.all_versions) }}
+    steps:
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git build-essential pkg-config cmake ccache gperf bison flex libreadline-dev gawk tcl-dev libffi-dev graphviz xdot python3 libboost-system-dev libboost-python-dev libboost-filesystem-dev zlib1g-dev
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Cache Yosys build
+        id: cache-yosys
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-yosys
+        with:
+          path: yosys
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.yosys_version }}
+      - if: ${{ steps.cache-yosys.outputs.cache-hit != 'true' }}
+        name: Pull Yosys
+        run: |
+          git clone --depth 1 --recursive \
+            --branch ${{ matrix.yosys_version }} \
+            -- https://github.com/YosysHQ/yosys.git yosys
+      - if: ${{ steps.cache-yosys.outputs.cache-hit != 'true' }}
+        name: Build Yosys
+        shell: bash
+        run: |
+          cd yosys
+          make config-gcc
+          make -j$(nproc)
+      - name: Install Yosys
+        shell: bash
+        run: |
+          cd yosys
+          sudo make install
+      - name: Build yosys-syn
+        run: |
+          cmake -S . -B build
+          cmake --build build
+          cmake --install build
+      - name: Pack build
+        shell: bash
+        run: |
+          tar -cvfz build.tar.gz build yosys/
+      - name: Store build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.yosys_version }}.tar.gz
+          path: build.tar.gz
+          retention-days: 1

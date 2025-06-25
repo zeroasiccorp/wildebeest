@@ -20,6 +20,14 @@ The plugin is called 'yosys-syn' and it provides two top level commands :
 How to build the 'yosys-syn' dynamic plugin:
 --------------------------------------------
 
+*Prerequisities:*
+
+ * Yosys installed: supported versions are **0.44 0.45 0.46 0.47 0.48 0.49 0.50 0.51 0.52 0.53 0.54**
+
+ * C++ compiler: GCC 11 and clang 17 are minimum supported versions
+
+ * Usual toolchains, CMake
+
 To build and install 'yosys-syn':
 
         cmake -S . -B build
@@ -33,7 +41,7 @@ It will :
 
         - copy it under your 'yosys/share/plugins'
 
-        - copy Architectures and support files under 'yosys/share'.
+        - copy Architectures and support files under 'yosys/share/plugins'.
 
 
 How to build the 'yosys-syn' dynamic plugin against a different yosys install:
