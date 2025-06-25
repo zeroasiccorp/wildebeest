@@ -27,7 +27,7 @@ Since the goal is to link this plugin into a Yosys executable, you need to have 
 
 Right under your 'yosys' repository you need to put/copy this 'yosys-syn' directory.
 
-Then, to build and install 'yosys-syn' under your Yosys repository, you have to type :
+Then, to build and install 'yosys-syn' under your Yosys repository, you have to go under 'yosys/yosys-syn' and type :
 
           make install
 
