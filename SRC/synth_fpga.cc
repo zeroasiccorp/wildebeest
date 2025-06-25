@@ -149,14 +149,14 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void load_dff_bb_models()
   {
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dff.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffe.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffr.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffs.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffrs.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffer.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffes.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffers.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dff.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dffe.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dffr.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dffs.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dffrs.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dffer.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dffes.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dffers.v");
 
      run("blackbox dff dffe dffr dffs dffrs dffer dffes dffers");
   }
@@ -238,7 +238,7 @@ struct SynthFpgaPass : public ScriptPass
 
     // Otherwise specific ABC script based flow
     //
-    string abc_script = "+/yosys-syn/SRC/ABC_SCRIPTS/LUT" + sc_syn_lut_size + 
+    string abc_script = "+/" SYN_SHARE_DIR "/ABC_SCRIPTS/LUT" + sc_syn_lut_size +
 	                "/" + abc_script_version + "/" + mode + "_lut" + 
 			sc_syn_lut_size + ".scr";
 
@@ -352,7 +352,7 @@ struct SynthFpgaPass : public ScriptPass
      // NB: Zero Asic multipliers are signed only
      //
 
-     run("techmap -map +/mul2dsp.v -map +/yosys-syn/ARCHITECTURE/Z1010/DSP/mult18x18_DSP48.v -D DSP_A_MAXWIDTH=18 -D DSP_B_MAXWIDTH=18 "
+     run("techmap -map +/mul2dsp.v -map +/" SYN_SHARE_DIR "/Z1010/DSP/mult18x18_DSP48.v -D DSP_A_MAXWIDTH=18 -D DSP_B_MAXWIDTH=18 "
          "-D DSP_A_MINWIDTH=2 -D DSP_B_MINWIDTH=2 " // Blocks Nx1 multipliers
          "-D DSP_Y_MINWIDTH=9 " // UG901 suggests small multiplies are those 4x4 and smaller
          "-D DSP_SIGNEDONLY=1 -D DSP_NAME=$__MUL18X18");
@@ -424,7 +424,7 @@ struct SynthFpgaPass : public ScriptPass
 
     legalize_flops ();
 
-    string sc_syn_flop_library = stringf("+/yosys-syn/ARCHITECTURE/%s/techlib/tech_flops.v",
+    string sc_syn_flop_library = stringf("+/" SYN_SHARE_DIR "/%s/techlib/tech_flops.v",
                                          part_name.c_str());
     run("techmap -map " + sc_syn_flop_library);
 
@@ -951,7 +951,7 @@ struct SynthFpgaPass : public ScriptPass
     //
     // Map on the DFF of the architecture (partname)
     //
-    string sc_syn_flop_library = stringf("+/yosys-syn/ARCHITECTURE/%s/techlib/tech_flops.v", 
+    string sc_syn_flop_library = stringf("+/" SYN_SHARE_DIR "/%s/techlib/tech_flops.v",
 		                         part_name.c_str());
     run("techmap -map " + sc_syn_flop_library);
 
