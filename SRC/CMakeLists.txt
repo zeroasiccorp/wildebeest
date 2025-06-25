@@ -24,7 +24,7 @@ target_link_libraries(yosys-syn
 )
 target_compile_definitions(yosys-syn
     PRIVATE
-        SYN_SHARE_DIR=\"${OUTPUT_NAME}\"
+        SYN_SHARE_DIR=\"plugins/${OUTPUT_NAME}\"
 )
 
 set_target_properties(yosys-syn PROPERTIES
@@ -50,3 +50,8 @@ else()
     install(TARGETS yosys-syn LIBRARY DESTINATION ${YOSYS_DATDIR}/plugins)
 endif()
 install(DIRECTORY ${SHARE_DIRECTORIES} DESTINATION ${YOSYS_SHARE_DIR})
+
+add_custom_target(
+    uninstall
+    COMMAND xargs rm < ${CMAKE_BINARY_DIR}/install_manifest.txt
+)
