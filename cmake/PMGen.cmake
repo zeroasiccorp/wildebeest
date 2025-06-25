@@ -16,7 +16,7 @@ cmake_parse_arguments(
 add_library(${ARG_NAME} INTERFACE)
 
 set(INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/${ARG_NAME})
-set(PMGSCRIPT ${CMAKE_SOURCE_DIR}/pmgen.py)
+set(PMGSCRIPT ${CMAKE_SOURCE_DIR}/utils/pmgen.py)
 set(HEADER ${INCLUDE_DIR}/${ARG_NAME}.h)
 
 add_custom_command(
