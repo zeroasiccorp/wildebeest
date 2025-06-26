@@ -89,7 +89,7 @@ jobs:
       - name: Pack build
         shell: bash
         run: |
-          tar -cvfz build.tar.gz build yosys/
+          tar -cvzf build.tar.gz build/ yosys/
       - name: Store build artifact
         uses: actions/upload-artifact@v4
         with:
