@@ -288,9 +288,9 @@ struct ReportStatPass : public ScriptPass
 
     // call 'max_level' command if not called yet
     //
-    run("max_level -noff"); // -> store 'maxlvl' in scratchpad with 'za_max_level'
+    run("max_level -noff"); // -> store 'maxlvl' in scratchpad with 'max_level.max_levels'
 
-    maxlvl = G_design->scratchpad_get_int("za_max_level", 0);
+    maxlvl = G_design->scratchpad_get_int("max_level.max_levels", 0);
 
     string start = G_design->scratchpad_get_string("time_chrono_start");
     string end =  G_design->scratchpad_get_string("time_chrono_end");
