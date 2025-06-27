@@ -24,9 +24,10 @@
 #include "kernel/celltypes.h"
 #include "kernel/rtlil.h"
 #include "kernel/log.h"
+#include "version.h"
 #include <chrono>
 
-#define SYNTH_FPGA_VERSION "1.0"
+#define SYNTH_FPGA_VERSION "1.0-" YOSYS_SYN_REVISION
 
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
