@@ -40,7 +40,7 @@ struct SynthFpgaPass : public ScriptPass
   string abc_script_version;
   bool no_flatten, dff_enable, dff_async_set, dff_async_reset;
   bool obs_clean, wait, show_max_level, csv, insbuf, resynthesis, autoname;
-  bool dsp48;
+  bool dsp48, opt_dff_with_sat;
   string sc_syn_lut_size;
 
   pool<string> opt_options  = {"default", "fast", "area", "delay"};
@@ -57,6 +57,7 @@ struct SynthFpgaPass : public ScriptPass
      int nb = 0;
 
      if (!G_design) {
+       log_warning("Design seems empty !\n");
        return -1;
      }
 
@@ -77,6 +78,7 @@ struct SynthFpgaPass : public ScriptPass
      int nb = 0;
 
      if (!G_design) {
+       log_warning("Design seems empty !\n");
        return -1;
      }
 
@@ -122,9 +124,9 @@ struct SynthFpgaPass : public ScriptPass
      //
      if (!show_max_level) {
          run("max_level -summary"); // -> store 'maxlvl' in scratchpad 
-	                            // with 'za_max_level'
+	                            // with 'max_level.max_levels'
 
-	 maxlvl = G_design->scratchpad_get_int("za_max_level", 0);
+	 maxlvl = G_design->scratchpad_get_int("max_level.max_levels", 0);
      }
 
      // -----
@@ -352,7 +354,9 @@ struct SynthFpgaPass : public ScriptPass
      // NB: Zero Asic multipliers are signed only
      //
 
-     run("techmap -map +/mul2dsp.v -map +/" SYN_SHARE_DIR "/Z1010/DSP/mult18x18_DSP48.v -D DSP_A_MAXWIDTH=18 -D DSP_B_MAXWIDTH=18 "
+     // Right now in Z1010 part name
+     //
+     run("techmap -map +/mul2dsp.v -map +/" SYN_SHARE_DIR "/" + part_name + "/DSP/mult18x18_DSP48.v -D DSP_A_MAXWIDTH=18 -D DSP_B_MAXWIDTH=18 "
          "-D DSP_A_MINWIDTH=2 -D DSP_B_MINWIDTH=2 " // Blocks Nx1 multipliers
          "-D DSP_Y_MINWIDTH=9 " // UG901 suggests small multiplies are those 4x4 and smaller
          "-D DSP_SIGNEDONLY=1 -D DSP_NAME=$__MUL18X18");
@@ -470,6 +474,10 @@ struct SynthFpgaPass : public ScriptPass
         log("        specifies the optimization target : area, delay, default, fast.\n");
         log("\n");
 
+        log("    -partname\n");
+        log("        Specifies the Architecture partname used. By default it is Z1000.\n");
+        log("\n");
+
         log("    -use_DSP48\n");
         log("        Invoke DSP48 inference. It is off by default.\n");
         log("\n");
@@ -501,6 +509,10 @@ struct SynthFpgaPass : public ScriptPass
         log("    -no_dff_async_reset\n");
         log("        specifies that DFF with asynchronous reset feature is not supported. By default,\n");
         log("        DFF with asynchronous reset is supported.\n");
+        log("\n");
+        log("    -opt_dff_with_sat\n");
+        log("        Use the SAT solver to find DFF inputs with same functionality in order to fold them.\n");
+        log("        This is off by default.\n");
         log("\n");
 
         log("    -obs_clean\n");
@@ -549,6 +561,7 @@ struct SynthFpgaPass : public ScriptPass
 	part_name = "Z1000";
 
 	no_flatten = false;
+	opt_dff_with_sat = false;
 	autoname = false;
 	dsp48 = false;
 	resynthesis = false;
@@ -607,6 +620,11 @@ struct SynthFpgaPass : public ScriptPass
 
           if (args[argidx] == "-no_flatten") {
              no_flatten = true;
+             continue;
+          }
+
+          if (args[argidx] == "-opt_dff_with_sat") {
+             opt_dff_with_sat = true;
              continue;
           }
 
@@ -723,6 +741,7 @@ struct SynthFpgaPass : public ScriptPass
   {
 
     if (!G_design) {
+       log_warning("Design seems empty !\n");
        return;
     }
 
@@ -833,7 +852,7 @@ struct SynthFpgaPass : public ScriptPass
     run("peepopt");
     run("opt_clean");
     run("share");
-    run("techmap -map +/cmp2lut.v -D LUT_WIDTH=4");
+    run("techmap -map +/cmp2lut.v -D LUT_WIDTH=" + sc_syn_lut_size);
     run("opt_expr");
     run("opt_clean");
 
@@ -932,6 +951,10 @@ struct SynthFpgaPass : public ScriptPass
     //
     run("opt -full");
     legalize_flops (); // C++ version of TCL call
+
+    if (opt_dff_with_sat) {
+      run("opt_dff -sat");
+    }
 
 #if 0
     // TCL scipt version of PLATYPUS
@@ -1069,7 +1092,7 @@ struct SynthFpgaPass : public ScriptPass
     // Show longest path in 'delay' mode
     //
     if (show_max_level) {
-      run("max_level"); // -> store 'maxlvl' in scratchpad with 'za_max_level'
+      run("max_level"); // -> store 'maxlvl' in scratchpad with 'max_level.max_levels'
     }
 
     if (csv) {

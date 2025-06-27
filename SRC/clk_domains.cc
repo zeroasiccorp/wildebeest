@@ -332,7 +332,7 @@ struct MaxLvlWorker
 	}
      }
 
-     design->scratchpad_set_int("za_max_level", maxlvl);
+     design->scratchpad_set_int("max_level.max_levels", maxlvl);
 
      if (summary) {
         log("\n");
