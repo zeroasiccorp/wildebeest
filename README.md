@@ -35,6 +35,18 @@ It will :
 
         - copy Architectures and support files under 'yosys/share'.
 
+
+How to build the 'yosys-syn' dynamic plugin against a different yosys install:
+------------------------------------------------------------------------------
+
+To build and install 'yosys-syn':
+
+        cmake -S . -B build -D yosys-config=<path to yosys config>
+        cmake --build build
+        cmake --install build
+
+
+
 How to use 'yosys-syn' plugin with Yosys :
 ------------------------------------------
 When the 'yosys-syn' plugin is built and installed, you can use the plugin either way: 
