@@ -1,5 +1,14 @@
 name: Build and test
-on: [push, pull_request]
+on:
+  # Runs on pushes to test/ branches and main
+  push:
+    branches:
+      - 'main'
+      - 'test/**'
+  # Runs on all PRs
+  pull_request:
+  # Manual Dispatch
+  workflow_dispatch:
 jobs:
   define-matrix:
     runs-on: ubuntu-24.04
