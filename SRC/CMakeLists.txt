@@ -12,6 +12,8 @@ add_library(yosys-syn SHARED
     dsp.cc
     obs_clean.cc
     synth_fpga.cc
+    zopt_dff.cc
+    zqcsat.cc
     ${CMAKE_CURRENT_BINARY_DIR}/version.h
 )
 target_include_directories(yosys-syn
