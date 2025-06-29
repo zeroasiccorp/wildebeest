@@ -41,10 +41,11 @@ struct SynthFpgaPass : public ScriptPass
   string abc_script_version;
   bool no_flatten, dff_enable, dff_async_set, dff_async_reset;
   bool obs_clean, wait, show_max_level, csv, insbuf, resynthesis, autoname;
-  bool dsp48, opt_dff_with_sat;
+  bool dsp48, seq_opt;
   string sc_syn_lut_size;
 
   pool<string> opt_options  = {"default", "fast", "area", "delay"};
+  pool<string> partnames  = {"Z1000", "Z1010"};
 
   // Methods
   //
@@ -511,9 +512,8 @@ struct SynthFpgaPass : public ScriptPass
         log("        specifies that DFF with asynchronous reset feature is not supported. By default,\n");
         log("        DFF with asynchronous reset is supported.\n");
         log("\n");
-        log("    -opt_dff_with_sat\n");
-        log("        Use the SAT solver to find DFF inputs with same functionality in order to fold them.\n");
-        log("        This is off by default.\n");
+        log("    -seq_opt\n");
+        log("        Performs SAT-based sequential optimizations. This is off by default.\n");
         log("\n");
 
         log("    -obs_clean\n");
@@ -562,7 +562,7 @@ struct SynthFpgaPass : public ScriptPass
 	part_name = "Z1000";
 
 	no_flatten = false;
-	opt_dff_with_sat = false;
+	seq_opt = false;
 	autoname = false;
 	dsp48 = false;
 	resynthesis = false;
@@ -594,6 +594,8 @@ struct SynthFpgaPass : public ScriptPass
 	string run_from, run_to;
 	clear_flags();
 
+        log_header(design, "Executing 'synth_fpga'\n\n");
+
 	G_design = design;
 
 	size_t argidx;
@@ -624,8 +626,8 @@ struct SynthFpgaPass : public ScriptPass
              continue;
           }
 
-          if (args[argidx] == "-opt_dff_with_sat") {
-             opt_dff_with_sat = true;
+          if (args[argidx] == "-seq_opt") {
+             seq_opt = true;
              continue;
           }
 
@@ -646,6 +648,14 @@ struct SynthFpgaPass : public ScriptPass
 
           if (args[argidx] == "-partname" && argidx+1 < args.size()) {
              part_name = args[++argidx];
+	     if (partnames.count(part_name) == 0) {
+                log("ERROR: -partname '%s' is unknown.\n", (args[argidx]).c_str());
+		log("       List of available partnames is :\n");
+		for (auto part_name : partnames) {
+                   log ("               - %s\n", part_name.c_str());
+		}
+                log_error("Please choose a correct partname within the list.\n");
+	     }
              continue;
           }
 
@@ -939,6 +949,13 @@ struct SynthFpgaPass : public ScriptPass
     run("demuxmap");
     run("simplemap");
 
+    // Call the zero asic version of 'opt_dff', e.g 'zopt_dff', especially 
+    // taking care of the -sat option.
+    //
+    if (seq_opt) {
+      run("zopt_dff -sat");
+    }
+
     // Extra lines that help to win Area (ex: vga_lcd from 31K Lut4 downto 14.8K)
     //
     // IMPROVE-2
@@ -951,11 +968,8 @@ struct SynthFpgaPass : public ScriptPass
     // original TCL call : legalize_flops $sc_syn_feature_set
     //
     run("opt -full");
-    legalize_flops (); // C++ version of TCL call
 
-    if (opt_dff_with_sat) {
-      run("opt_dff -sat");
-    }
+    legalize_flops (); // C++ version of TCL call
 
 #if 0
     // TCL scipt version of PLATYPUS
