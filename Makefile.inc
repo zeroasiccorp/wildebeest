@@ -1,12 +1,17 @@
 #
 # Makefile.inc is used to compile 'yosys-syn' with the global Makefile used to create the main Yosys executable.
 #
-OBJS += techlibs/yosys-syn/SRC/synth_fpga.o techlibs/yosys-syn/SRC/clk_domains.o techlibs/yosys-syn/SRC/load_models.o techlibs/yosys-syn/SRC/report_stat.o techlibs/yosys-syn/SRC/time_chrono.o techlibs/yosys-syn/SRC/obs_clean.o 
+OBJS += techlibs/yosys-syn/SRC/synth_fpga.o techlibs/yosys-syn/SRC/clk_domains.o techlibs/yosys-syn/SRC/load_models.o techlibs/yosys-syn/SRC/report_stat.o techlibs/yosys-syn/SRC/time_chrono.o techlibs/yosys-syn/SRC/obs_clean.o techlibs/yosys-syn/SRC/zopt_dff.o techlibs/yosys-syn/SRC/zqcsat.o
 
 $(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1000/techlib,techlibs/yosys-syn/ARCHITECTURE/Z1000/techlib/bram_memory_map_empty.txt))
 $(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1000/techlib,techlibs/yosys-syn/ARCHITECTURE/Z1000/techlib/tech_bram_empty.v))
 $(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1000/techlib,techlibs/yosys-syn/ARCHITECTURE/Z1000/techlib/tech_dsp_empty.v))
 $(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1000/techlib,techlibs/yosys-syn/ARCHITECTURE/Z1000/techlib/tech_flops.v))
+
+$(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1010/techlib,techlibs/yosys-syn/ARCHITECTURE/Z1010/techlib/bram_memory_map_empty.txt))
+$(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1010/techlib,techlibs/yosys-syn/ARCHITECTURE/Z1010/techlib/tech_bram_empty.v))
+$(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1010/techlib,techlibs/yosys-syn/ARCHITECTURE/Z1010/techlib/tech_dsp_empty.v))
+$(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1010/techlib,techlibs/yosys-syn/ARCHITECTURE/Z1010/techlib/tech_flops.v))
 
 
 #########################
