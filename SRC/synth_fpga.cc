@@ -900,7 +900,6 @@ struct SynthFpgaPass : public ScriptPass
     //
     infer_DSPs();
 
-
     // Mimic ICE40 flow by running an alumacc and memory -nomap passes
     // after DSP mapping
     //  
@@ -952,6 +951,7 @@ struct SynthFpgaPass : public ScriptPass
     // taking care of the -sat option.
     //
     if (seq_opt) {
+      run("stat");
       run("zopt_dff -sat");
     }
 
@@ -960,12 +960,18 @@ struct SynthFpgaPass : public ScriptPass
     // IMPROVE-2
     //
     run("techmap");
+
+#if 0
+    log("opt -fast");
     run("opt -fast");
+
     run("opt_clean");
     // END IMPROVE-2
+#endif
 
     // original TCL call : legalize_flops $sc_syn_feature_set
     //
+    log("opt -full");
     run("opt -full");
 
     legalize_flops (); // C++ version of TCL call
