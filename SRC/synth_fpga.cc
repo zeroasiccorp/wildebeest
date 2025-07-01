@@ -25,8 +25,13 @@
 #include "kernel/rtlil.h"
 #include "kernel/log.h"
 #include <chrono>
+#include <algorithm>
+#include <cctype>
 
 #define SYNTH_FPGA_VERSION "1.0"
+
+#define HUGE_NB_CELLS 5000000 // 5 Million cells
+#define BIG_NB_CELLS 500000   // 500K cells
 
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
@@ -40,7 +45,7 @@ struct SynthFpgaPass : public ScriptPass
   string abc_script_version;
   bool no_flatten, dff_enable, dff_async_set, dff_async_reset;
   bool obs_clean, wait, show_max_level, csv, insbuf, resynthesis, autoname;
-  bool dsp48, seq_opt;
+  bool dsp48, no_seq_opt;
   string sc_syn_lut_size;
 
   pool<string> opt_options  = {"default", "fast", "area", "delay"};
@@ -165,9 +170,9 @@ struct SynthFpgaPass : public ScriptPass
   }
 
   // -------------------------
-  // may_wait 
+  // dbg_wait 
   // -------------------------
-  void may_wait ()
+  void dbg_wait ()
   {  
      if (wait) {
        getchar();
@@ -175,11 +180,18 @@ struct SynthFpgaPass : public ScriptPass
   }
 
   // -------------------------
+  // getNumberOfCells
+  // -------------------------
+  int getNumberOfCells() {
+     return ((G_design->top_module()->cells()).size());
+  }
+
+  // -------------------------
   // clean_design 
   // -------------------------
   void clean_design(int use_dff_bb_models)
   {
-     if (obs_clean) {
+     if (1 || obs_clean) {
 
         run("splitcells");
 
@@ -221,8 +233,6 @@ struct SynthFpgaPass : public ScriptPass
 
     string mode = opt;
 
-    int nb_cells = (G_design->top_module()->cells()).size();
-
     // Switch to FAST ABC synthesis script for huge designs in order to avoid
     // runtime blow up.
     //
@@ -230,13 +240,21 @@ struct SynthFpgaPass : public ScriptPass
     // level degradation but with nice speed-up (ex: 'e203' from 5000 sec. downto
     // 1400 sec.)
     //
-    if (nb_cells >= 500000) {
+    int nb_cells = getNumberOfCells();
 
-      mode  = "fast"; 
+    if (nb_cells >= HUGE_NB_CELLS) { // example : 'zmcml' from Golden suite
+
+      mode  = "huge";
 
       log_warning("Optimization script changed from '%s' to '%s' due to design size (%d cells)\n",
                   opt.c_str(), mode.c_str(), nb_cells);
-      //getchar();
+
+    } else if (nb_cells >= BIG_NB_CELLS) { // example : 'e203_soc_top' from Golden suite
+
+      mode  = "fast";
+
+      log_warning("Optimization script changed from '%s' to '%s' due to design size (%d cells)\n",
+                  opt.c_str(), mode.c_str(), nb_cells);
     }
 
     // Otherwise specific ABC script based flow
@@ -425,7 +443,14 @@ struct SynthFpgaPass : public ScriptPass
     run("opt -fast");
     run("opt_clean");
 
-    run("opt -full");
+    // Call light 'opt' if design is huge (ex: 'zmcml')
+    //
+    if (getNumberOfCells() <= HUGE_NB_CELLS) {
+       run("opt -full");
+    } else {
+       run("opt_expr");
+       run("opt_clean");
+    }
 
     legalize_flops ();
 
@@ -434,7 +459,15 @@ struct SynthFpgaPass : public ScriptPass
     run("techmap -map " + sc_syn_flop_library);
 
     run("techmap");
-    run("opt -purge");
+    
+    // Call light 'opt' if design is huge (ex: 'zmcml')
+    //
+    if (getNumberOfCells() <= HUGE_NB_CELLS) {
+       run("opt -purge");
+    } else {
+       run("opt_expr");
+       run("opt_clean");
+    }
 
     if (insbuf) {
       run("insbuf");
@@ -511,8 +544,8 @@ struct SynthFpgaPass : public ScriptPass
         log("        specifies that DFF with asynchronous reset feature is not supported. By default,\n");
         log("        DFF with asynchronous reset is supported.\n");
         log("\n");
-        log("    -seq_opt\n");
-        log("        Performs SAT-based sequential optimizations. This is off by default.\n");
+        log("    -no_seq_opt\n");
+        log("        Disable SAT-based sequential optimizations. This is off by default.\n");
         log("\n");
 
         log("    -obs_clean\n");
@@ -561,7 +594,7 @@ struct SynthFpgaPass : public ScriptPass
 	part_name = "Z1000";
 
 	no_flatten = false;
-	seq_opt = false;
+	no_seq_opt = false;
 	autoname = false;
 	dsp48 = false;
 	resynthesis = false;
@@ -625,8 +658,8 @@ struct SynthFpgaPass : public ScriptPass
              continue;
           }
 
-          if (args[argidx] == "-seq_opt") {
-             seq_opt = true;
+          if (args[argidx] == "-no_seq_opt") {
+             no_seq_opt = true;
              continue;
           }
 
@@ -647,13 +680,17 @@ struct SynthFpgaPass : public ScriptPass
 
           if (args[argidx] == "-partname" && argidx+1 < args.size()) {
              part_name = args[++argidx];
+             // Converting 'partname' to upper case
+	     //
+             std::transform (part_name.begin(), part_name.end(), 
+			     part_name.begin(), ::toupper);
 	     if (partnames.count(part_name) == 0) {
                 log("ERROR: -partname '%s' is unknown.\n", (args[argidx]).c_str());
-		log("       List of available partnames is :\n");
+		log("       Available partnames are :\n");
 		for (auto part_name : partnames) {
                    log ("               - %s\n", part_name.c_str());
 		}
-                log_error("Please choose a correct partname within the list.\n");
+                log_error("Please select a correct partname.\n");
 	     }
              continue;
           }
@@ -743,9 +780,6 @@ struct SynthFpgaPass : public ScriptPass
   //        - we try to handle DFF legalization by taking care of DFF features
   //        support like handling DFF with 'enable', 'async_set', 'async_reset'.
   //
-  //        - other encapsulated code with #if 0 coming from 'sc_synth_fpga.tcl'
-  //        needs to be handled in this 'synth_fpga' command.
-  //
   // ---------------------------------------------------------------------------
   void script() override
   {
@@ -760,24 +794,6 @@ struct SynthFpgaPass : public ScriptPass
     log("\nPLATYPUS flow using 'synth_fpga' Yosys plugin command\n");
 
     log("'Zero Asic' FPGA Synthesis Version : %s\n", SYNTH_FPGA_VERSION);
-
-#if 0
-    // TCL scipt version of PLATYPUS
-    //
-
-    # Pre-processing step:  if DSPs instance are hard-coded into
-    # the users design, we can use a blackbox flow for DSP mapping
-    # as follows:
-
-    if { [sc_cfg_exists fpga $sc_partname file yosys_macrolib] } {
-        set sc_syn_macrolibs \
-            [sc_cfg_get fpga $sc_partname file yosys_macrolib]
-
-        foreach macrolib $sc_syn_macrolibs {
-            yosys read_verilog -lib $macrolib
-        }
-    }
-#endif
 
     // Extra line added versus 'sc_synth_fpga.tcl' tcl script version
     //
@@ -799,21 +815,7 @@ struct SynthFpgaPass : public ScriptPass
 
     run("proc");
 
-    // Print stat when design is flatened. We flatened a copy, stat the copy
-    // and get back to the original hierarchical design.
-    //
-#if 0
-    run("design -save original");
-    run("flatten");
-
-    log("\n# ------------------------- \n");
-    log("#  Design first statistics  \n");
-    log("# ------------------------- \n");
-    run("stat");
-    run("design -load original");
-#endif
-
-    may_wait();
+    dbg_wait();
 
     if (!no_flatten) {
       run("flatten");
@@ -830,21 +832,6 @@ struct SynthFpgaPass : public ScriptPass
     // An extract pass needs to happen prior to other optimizations,
     // otherwise yosys can transform its internal model into something
     // that doesn't match the patterns defined in the extract library
-
-#if 0
-    // TCL scipt version of PLATYPUS
-    //
-    
-    if { [sc_cfg_exists fpga $sc_partname file yosys_extractlib] } {
-        set sc_syn_extractlibs \
-            [sc_cfg_get fpga $sc_partname file yosys_extractlib]
-
-        foreach extractlib $sc_syn_extractlibs {
-            yosys log "Run extract with $extractlib"
-            yosys extract -map $extractlib
-        }
-    }
-#endif
 
     // Other hard macro passes can happen after the generic optimization
     // passes take place.
@@ -870,7 +857,7 @@ struct SynthFpgaPass : public ScriptPass
     //
     run("stat");
 
-    may_wait();
+    dbg_wait();
 
     // Here is a remaining customization pass for DSP tech mapping
 
@@ -878,24 +865,6 @@ struct SynthFpgaPass : public ScriptPass
     // so that we don't convert any math blocks
     // into other primitives
     //
-
-#if 0
-    // TCL scipt version of PLATYPUS
-    //
-
-    if { [sc_cfg_exists fpga $sc_partname file yosys_dsp_techmap] } {
-        set sc_syn_dsp_library \
-            [sc_cfg_get fpga $sc_partname file yosys_dsp_techmap]
-
-        yosys log "Run techmap flow for DSP Blocks"
-        set formatted_dsp_options [get_dsp_options $sc_syn_dsp_options]
-        yosys techmap -map +/mul2dsp.v -map $sc_syn_dsp_library \
-            {*}$formatted_dsp_options
-
-        post_techmap
-    }
-#endif
-
     // Map DSP components
     //
     infer_DSPs();
@@ -919,24 +888,7 @@ struct SynthFpgaPass : public ScriptPass
     run("techmap -map +/techmap.v");
 
 #if 0
-    // TCL scipt version of PLATYPUS
-    //
-
-    set sc_syn_memory_libmap ""
-    if { [sc_cfg_exists fpga $sc_partname file yosys_memory_libmap] } {
-        set sc_syn_memory_libmap \
-            [sc_cfg_get fpga $sc_partname file yosys_memory_libmap]
-    }
-    set sc_do_rom_map [expr { [lsearch -exact $sc_syn_feature_set mem_init] < 0 }]
-    set sc_syn_memory_library ""
-    if { [sc_cfg_exists fpga $sc_partname file yosys_memory_techmap] } {
-        set sc_syn_memory_library \
-            [sc_cfg_get fpga $sc_partname file yosys_memory_techmap]
-    }
-
-    if { [sc_map_memory $sc_syn_memory_libmap $sc_syn_memory_library $sc_do_rom_map] } {
-        post_techmap
-    }
+    // BRAM inference here
 #endif
 
     // After doing memory mapping, turn any remaining
@@ -950,7 +902,7 @@ struct SynthFpgaPass : public ScriptPass
     // Call the zero asic version of 'opt_dff', e.g 'zopt_dff', especially 
     // taking care of the -sat option.
     //
-    if (seq_opt) {
+    if (!no_seq_opt) {
       run("stat");
       run("zopt_dff -sat");
     }
@@ -962,34 +914,25 @@ struct SynthFpgaPass : public ScriptPass
     run("techmap");
 
 #if 0
-    log("opt -fast");
     run("opt -fast");
 
     run("opt_clean");
     // END IMPROVE-2
 #endif
 
-    // original TCL call : legalize_flops $sc_syn_feature_set
+    // Performs 'opt' pass with lightweight version for HUGE designs.
     //
-    log("opt -full");
-    run("opt -full");
-
-    legalize_flops (); // C++ version of TCL call
-
-#if 0
-    // TCL scipt version of PLATYPUS
-    //
-
-    if { [sc_cfg_exists fpga $sc_partname file yosys_flop_techmap] } {
-        set sc_syn_flop_library \
-            [sc_cfg_get fpga $sc_partname file yosys_flop_techmap]
-        yosys techmap -map $sc_syn_flop_library
-
-        post_techmap
+    if (getNumberOfCells() <= HUGE_NB_CELLS) {
+       run("opt -full");
+    } else {
+       run("opt_expr");
+       run("opt_clean");
     }
 
-#else
-    
+    // original TCL call : legalize_flops $sc_syn_feature_set
+    //
+    legalize_flops (); // C++ version of TCL call
+
     // C++ Version
     //
     // Map on the DFF of the architecture (partname)
@@ -998,62 +941,21 @@ struct SynthFpgaPass : public ScriptPass
 		                         part_name.c_str());
     run("techmap -map " + sc_syn_flop_library);
 
-
-#if 0
-    run("design -save first_solution");
-    run("stat");
-    int nb_cells1 = (G_design->top_module()->cells()).size();
-    log("**  First solution : %d\n", nb_cells1);
-
-
-    run("design -load copy");
-    
-    // Second strategy : we simply clean logic so that we keep its 
-    // nice structure than can map in nice DFF enable 
-    // (ex: big_designs/VexRiscv).
-    //
-    run("opt_clean");
-
-    run("techmap -map +/techmap.v");
-
-    run("memory_map");
-
-    run("demuxmap");
-    run("simplemap");
-
-    run("techmap");
-    run("opt -fast");
-    run("opt_clean");
-
-    run("opt -full");
-
-    legalize_flops (); // C++ version of TCL call
-
-    run("techmap -map " + sc_syn_flop_library);
-
-    run("stat");
-    int nb_cells2 = (G_design->top_module()->cells()).size();
-
-    log("**  First solution  : %d cells\n", nb_cells1);
-    log("**  Second solution : %d cells\n", nb_cells2);
-
-    //getchar();
-
-    // Choose best solution between the two strategies
-    //
-    if (1 && (nb_cells1 < nb_cells2)) {
-       run("design -load first_solution");
-    }
-#endif
-
     // 'post_techmap' without arguments gives the following 
     // according to '.../siliconcompiler/tools/yosys/procs.tcl'
     // IMPROVE-1
     //
     run("techmap");
-    run("opt -purge");
+
+    // Performs 'opt' pass with lightweight version for HUGE designs.
+    //
+    if (getNumberOfCells() <= HUGE_NB_CELLS) {
+       run("opt -purge");
+    } else {
+       run("opt_expr");
+       run("opt_clean");
+    }
     // END IMPROVE-1
-#endif
 
     // Perform preliminary buffer insertion before passing to ABC to help reduce
     // the overhead of final buffer insertion downstream
@@ -1064,13 +966,13 @@ struct SynthFpgaPass : public ScriptPass
 
     run("stat");
 
-    may_wait();
+    dbg_wait();
 
     clean_design(1);
 
     run("stat");
 
-    may_wait();
+    dbg_wait();
 
     // Optimize and map through ABC the combinational logic part of the design.
     //
@@ -1079,7 +981,7 @@ struct SynthFpgaPass : public ScriptPass
 
     run("stat");
 
-    may_wait();
+    dbg_wait();
 
     run("setundef -zero");
     run("clean -purge");
@@ -1092,8 +994,13 @@ struct SynthFpgaPass : public ScriptPass
     }
 
     if (!verilog_file.empty()) {
+
        log("Dump Verilog file '%s'\n", verilog_file.c_str()); 
        run(stringf("write_verilog -noexpr -nohex -nodec %s", verilog_file.c_str()));
+
+    } else { // Still dump verilog under the hood for debug/analysis reasons.
+
+       run(stringf("write_verilog -noexpr -nohex -nodec %s", "netlist_synth_fpga.verilog"));
     }
 
     run("stat");
@@ -1118,8 +1025,6 @@ struct SynthFpgaPass : public ScriptPass
     if (csv) {
        dump_csv_file("stat.csv", (int)totalTime);
     }
-
-    run(stringf("write_verilog -noexpr -nohex -nodec %s", "netlist_synth_fpga.verilog"));
 
   } // end script()
 
