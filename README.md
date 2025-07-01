@@ -84,3 +84,32 @@ To download it you can do :
            plugin -i yosys-syn
 
    
+FPGA Configuration Specification:
+---------------------------------
+
+```
+{
+        "version": <int, version of this file>,
+        "lut": <int, size of lut>,
+        "flipflops": {
+                "features": [<str, list of features file async, enable, reset, etc.>]
+                "models": {
+                        "<str, ff name>": <path, path to model file>
+                },
+                "techmap": <path, path to yosys techmapping file>
+        },
+        "brams": {
+                "memory_map": <path, path to yosys mapping file>,
+                "techmap": <path, path to yosys tech mapping>
+        },
+        "dsp": {
+                "family": <str, name of dsp family>,
+                "techmap": <path, path to yosys techmapping file>,
+                "techmap_parameters": {
+                        "<str, name of define>": <str or int, value of define>
+                }
+        }
+}
+```
+
+* paths are relative to the location of this file
