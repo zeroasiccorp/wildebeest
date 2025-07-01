@@ -88,6 +88,19 @@ $(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1010/DSP,techlibs/yos
 
 $(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1010/DSP,techlibs/yosys-syn/ARCHITECTURE/Z1010/DSP/mult18x18_DSP48.v))
 
+# Z1010 BRAM related
+#
+$(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1010/BRAM,techlibs/yosys-syn/ARCHITECTURE/Z1010/BRAM/bram_memory_map.txt))
+
+$(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1010/BRAM,techlibs/yosys-syn/ARCHITECTURE/Z1010/BRAM/tech_bram.v))
+
+$(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1010/BRAM,techlibs/yosys-syn/ARCHITECTURE/Z1010/BRAM/lutrams.txt))
+$(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1010/BRAM,techlibs/yosys-syn/ARCHITECTURE/Z1010/BRAM/brams.txt))
+
+$(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1010/BRAM,techlibs/yosys-syn/ARCHITECTURE/Z1010/BRAM/lutrams_map.v))
+$(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1010/BRAM,techlibs/yosys-syn/ARCHITECTURE/Z1010/BRAM/brams_map.v))
+
+
 
 OBJS += techlibs/yosys-syn/SRC/dsp.o
 
