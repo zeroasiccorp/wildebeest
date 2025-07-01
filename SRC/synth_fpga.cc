@@ -700,7 +700,7 @@ struct SynthFpgaPass : public ScriptPass
              continue;
           }
 
-          if (args[argidx] == "-bram") {
+          if (args[argidx] == "-use_BRAM") {
              bram = true;
              continue;
           }
