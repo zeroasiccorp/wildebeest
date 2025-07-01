@@ -24,6 +24,7 @@ $(eval $(call add_share_file,share/yosys-syn/ARCHITECTURE/Z1010/techlib,techlibs
 $(eval $(call add_share_file,share/yosys-syn/SRC/ABC_SCRIPTS/LUT4/BEST,techlibs/yosys-syn/SRC/ABC_SCRIPTS/LUT4/BEST/area_lut4.scr))
 $(eval $(call add_share_file,share/yosys-syn/SRC/ABC_SCRIPTS/LUT4/BEST,techlibs/yosys-syn/SRC/ABC_SCRIPTS/LUT4/BEST/delay_lut4.scr))
 $(eval $(call add_share_file,share/yosys-syn/SRC/ABC_SCRIPTS/LUT4/BEST,techlibs/yosys-syn/SRC/ABC_SCRIPTS/LUT4/BEST/fast_lut4.scr))
+$(eval $(call add_share_file,share/yosys-syn/SRC/ABC_SCRIPTS/LUT4/BEST,techlibs/yosys-syn/SRC/ABC_SCRIPTS/LUT4/BEST/huge_lut4.scr))
 
 #V1
 $(eval $(call add_share_file,share/yosys-syn/SRC/ABC_SCRIPTS/LUT4/V1,techlibs/yosys-syn/SRC/ABC_SCRIPTS/LUT4/V1/area_lut4.scr))
