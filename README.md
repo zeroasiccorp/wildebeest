@@ -90,6 +90,7 @@ FPGA Configuration Specification:
 ```
 {
         "version": <int, version of this file>,
+        "name": <str, name of the fpga part>,
         "lut": <int, size of lut>,
         "flipflops": {
                 "features": [<str, list of features file async, enable, reset, etc.>]
