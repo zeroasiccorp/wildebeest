@@ -45,7 +45,7 @@ struct SynthFpgaPass : public ScriptPass
   string abc_script_version;
   bool no_flatten, dff_enable, dff_async_set, dff_async_reset;
   bool obs_clean, wait, show_max_level, csv, insbuf, resynthesis, autoname;
-  bool dsp48, no_seq_opt;
+  bool bram, dsp48, no_seq_opt;
   string sc_syn_lut_size;
 
   pool<string> opt_options  = {"default", "fast", "area", "delay"};
@@ -191,7 +191,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void clean_design(int use_dff_bb_models)
   {
-     if (1 || obs_clean) {
+     if (0 || obs_clean) {
 
         run("splitcells");
 
@@ -357,6 +357,38 @@ struct SynthFpgaPass : public ScriptPass
   }
 
   // -------------------------
+  // infer_BRAMs
+  // -------------------------
+  void infer_BRAMs()
+  {
+     if (1 && !bram) {
+       return;
+     }
+
+#if 0
+     // Current Zero Asic calls to BRAM inference
+     //
+     run("stat");
+
+     run("memory_libmap -lib +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/bram_memory_map.txt");
+
+     run("techmap -map +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/tech_bram.v");
+
+#else
+
+     // Example of ECP5 calls to BRAM inference
+     //
+
+     run("memory_libmap -lib +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/lutrams.txt -lib +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/brams.txt", "(-no-auto-block if -nobram, -no-auto-distributed if -nolutram)");
+
+     run("techmap -map +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/lutrams_map.v -map +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/brams_map.v");
+
+#endif
+
+     run("stat");
+  }
+
+  // -------------------------
   // infer_DSPs
   // -------------------------
   void infer_DSPs()
@@ -512,6 +544,10 @@ struct SynthFpgaPass : public ScriptPass
         log("        Specifies the Architecture partname used. By default it is Z1000.\n");
         log("\n");
 
+        log("    -use_BRAM\n");
+        log("        Invoke BRAM inference. It is off by default.\n");
+        log("\n");
+
         log("    -use_DSP48\n");
         log("        Invoke DSP48 inference. It is off by default.\n");
         log("\n");
@@ -597,6 +633,7 @@ struct SynthFpgaPass : public ScriptPass
 	no_seq_opt = false;
 	autoname = false;
 	dsp48 = false;
+	bram = false;
 	resynthesis = false;
 	show_max_level = false;
 	csv = false;
@@ -660,6 +697,11 @@ struct SynthFpgaPass : public ScriptPass
 
           if (args[argidx] == "-no_seq_opt") {
              no_seq_opt = true;
+             continue;
+          }
+
+          if (args[argidx] == "-bram") {
+             bram = true;
              continue;
           }
 
@@ -887,9 +929,9 @@ struct SynthFpgaPass : public ScriptPass
     
     run("techmap -map +/techmap.v");
 
-#if 0
-    // BRAM inference here
-#endif
+    // BRAM inference 
+    //
+    infer_BRAMs();
 
     // After doing memory mapping, turn any remaining
     // $mem_v2 instances into flop arrays
