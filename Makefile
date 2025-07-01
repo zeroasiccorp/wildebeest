@@ -27,6 +27,9 @@ ARCHITECTURE		= ARCHITECTURE
 SRC			= SRC
 VERILOG_MODULES	= $(ARCHITECTURE)/Z1010/DSP/DSP48_sim.v \
 		  $(ARCHITECTURE)/Z1010/DSP/mult18x18_DSP48.v \
+		  $(ARCHITECTURE)/Z1010/BRAM/brams_map.v \
+		  $(ARCHITECTURE)/Z1010/BRAM/lutrams_map.v \
+		  $(ARCHITECTURE)/Z1010/BRAM/tech_bram.v \
 		  $(SRC)/FF_MODELS/dffers.v \
 		  $(SRC)/FF_MODELS/dffer.v \
 		  $(SRC)/FF_MODELS/dffes.v \
@@ -36,7 +39,6 @@ VERILOG_MODULES	= $(ARCHITECTURE)/Z1010/DSP/DSP48_sim.v \
 		  $(SRC)/FF_MODELS/dffs.v \
 		  $(SRC)/FF_MODELS/dff.v 
 
-
 NAME = yosys-syn
 SOURCES = $(SRC)/clk_domains.cc \
 	  $(SRC)/load_models.cc \
@@ -44,10 +46,16 @@ SOURCES = $(SRC)/clk_domains.cc \
 	  $(SRC)/time_chrono.cc \
 	  $(SRC)/dsp.cc \
 	  $(SRC)/obs_clean.cc \
+	  $(SRC)/zopt_dff.cc \
+	  $(SRC)/zqcsat.cc \
   	  $(SRC)/synth_fpga.cc
 
 DEPS = pmgen/dsp_cascade_pm.h \
        pmgen/dsp_CREG_pm.h \
+       $(ARCHITECTURE)/Z1010/BRAM/bram_memory_map.txt \
+       $(ARCHITECTURE)/Z1010/BRAM/brams.txt \
+       $(ARCHITECTURE)/Z1010/BRAM/lutrams.txt 
+
 
 all: $(NAME).so
 	echo "Plugin $(NAME).so has been generated"
