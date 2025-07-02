@@ -105,3 +105,37 @@ jobs:
           name: build-${{ matrix.yosys_version }}.tar.gz
           path: build.tar.gz
           retention-days: 1
+  test:
+    runs-on: ubuntu-24.04
+    needs: [build, define-matrix]
+    strategy:
+      matrix:
+        yosys_version: ${{ fromJSON(needs.define-matrix.outputs.all_versions) }}
+      fail-fast: false
+    steps:
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git build-essential pkg-config cmake ccache gperf bison flex libreadline-dev gawk tcl-dev libffi-dev graphviz xdot python3 libboost-system-dev libboost-python-dev libboost-filesystem-dev zlib1g-dev
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-${{ matrix.yosys_version }}.tar
+      - name: Unpack build
+        shell: bash
+        run:
+          tar -xvf build.tar
+      - name: Install Yosys
+        shell: bash
+        run: |
+          cd yosys
+          make install PREFIX=$HOME/.local
+      - name: Run tests
+        shell: bash
+        run: |
+          cd build
+          ctest --rerun-failed --output-on-failure
