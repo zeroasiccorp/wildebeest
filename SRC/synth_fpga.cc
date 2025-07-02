@@ -458,43 +458,67 @@ struct SynthFpgaPass : public ScriptPass
 	   ys_dsps_parameter_string[it.first] = it.second;
        }
 
-       return;
-    }
 
-    // Default settings when 'config' file is not specified.
+       // Processing cases where 'config' file overides user command options.
+       //
+       if (ys_dff_features.count("enable") == 0) {
+         log_warning("Config file will switch on '-no_dff_enable' option.\n");
+         dff_enable = false;
+       }
+
+       if (ys_dff_features.count("async reset") == 0) {
+         log_warning("Config file will switch on '-no_dff_async_reset' option.\n");
+         dff_async_reset = false;
+       }
+
+       if (ys_dff_features.count("async set") == 0) {
+         log_warning("Config file will switch on '-no_dff_async_set' option.\n");
+         dff_async_set = false;
+       }
+       
+       if (std::to_string(G_config.lut_size) != sc_syn_lut_size) {
+         log_warning("Config file will change lut size value from %s to %d.\n",
+	             sc_syn_lut_size.c_str(), G_config.lut_size);
+         sc_syn_lut_size = std::to_string(G_config.lut_size);
+       }
+
+    } else {
+
+      // Default settings when 'config' file is not specified.
     
-    // DFF setting
-    //
-    ys_dff_techmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/techlib/tech_flops.v";
-    ys_dff_features.insert("async reset");
-    ys_dff_features.insert("async set");
-    ys_dff_features.insert("enable");
+      // DFF setting
+      //
+      ys_dff_techmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/techlib/tech_flops.v";
+      ys_dff_features.insert("async reset");
+      ys_dff_features.insert("async set");
+      ys_dff_features.insert("enable");
 
-    ys_dff_models["dffers"] = "+/yosys-syn/SRC/FF_MODELS/dffers.v";
-    ys_dff_models["dffer"] = "+/yosys-syn/SRC/FF_MODELS/dffer.v";
-    ys_dff_models["dffes"] = "+/yosys-syn/SRC/FF_MODELS/dffes.v";
-    ys_dff_models["dffe"] = "+/yosys-syn/SRC/FF_MODELS/dffe.v";
-    ys_dff_models["dffrs"] = "+/yosys-syn/SRC/FF_MODELS/dffrs.v";
-    ys_dff_models["dffr"] = "+/yosys-syn/SRC/FF_MODELS/dffr.v";
-    ys_dff_models["dffs"] = "+/yosys-syn/SRC/FF_MODELS/dffs.v";
-    ys_dff_models["dff"] = "+/yosys-syn/SRC/FF_MODELS/dff.v";
+      ys_dff_models["dffers"] = "+/yosys-syn/SRC/FF_MODELS/dffers.v";
+      ys_dff_models["dffer"] = "+/yosys-syn/SRC/FF_MODELS/dffer.v";
+      ys_dff_models["dffes"] = "+/yosys-syn/SRC/FF_MODELS/dffes.v";
+      ys_dff_models["dffe"] = "+/yosys-syn/SRC/FF_MODELS/dffe.v";
+      ys_dff_models["dffrs"] = "+/yosys-syn/SRC/FF_MODELS/dffrs.v";
+      ys_dff_models["dffr"] = "+/yosys-syn/SRC/FF_MODELS/dffr.v";
+      ys_dff_models["dffs"] = "+/yosys-syn/SRC/FF_MODELS/dffs.v";
+      ys_dff_models["dff"] = "+/yosys-syn/SRC/FF_MODELS/dff.v";
 
-    // BRAM setting
-    //
-    ys_brams_memory_libmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/lutrams.txt -lib +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/brams.txt";
-    ys_brams_techmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/lutrams_map.v -map +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/brams_map.v";
-
-
-    // DSP setting
-    //
-    ys_dsps_techmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/mult18x18_DSP48.v ";
-    ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
-    ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
-    ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
-    ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
-    ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
-    ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
-    ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
+      // BRAM setting
+      //
+      ys_brams_memory_libmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/lutrams.txt -lib +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/brams.txt";
+      ys_brams_techmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/lutrams_map.v -map +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/brams_map.v";
+  
+  
+      // DSP setting
+      //
+      ys_dsps_techmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/mult18x18_DSP48.v ";
+      ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
+      ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
+      ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
+      ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
+      ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
+      ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
+      ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
+    }
 
   }
 
