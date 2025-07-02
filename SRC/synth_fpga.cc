@@ -27,6 +27,7 @@
 #include <chrono>
 #include <algorithm>
 #include <cctype>
+#include <filesystem>
 
 #define SYNTH_FPGA_VERSION "1.0"
 
@@ -45,15 +46,710 @@ struct SynthFpgaPass : public ScriptPass
   string abc_script_version;
   bool no_flatten, dff_enable, dff_async_set, dff_async_reset;
   bool obs_clean, wait, show_max_level, csv, insbuf, resynthesis, autoname;
-  bool bram, dsp48, no_seq_opt;
+  bool bram, dsp48, no_seq_opt, show_config;
   string sc_syn_lut_size;
+  string config_file = "";
+  bool config_file_success = false;
 
   pool<string> opt_options  = {"default", "fast", "area", "delay"};
   pool<string> partnames  = {"Z1000", "Z1010"};
 
+  // ----------------------------
+  // Key 'yosys-syn' parameters
+  //
+  string               ys_root_path = "";
+
+  // DFFs
+  //
+  pool<string>         ys_dff_features;
+  dict<string, string> ys_dff_models;
+  string               ys_dff_techmap = ""; 
+
+  // BRAMs
+  //
+  string ys_brams_memory_libmap = ""; 
+  string ys_brams_techmap = ""; 
+
+  // DSPs
+  //
+  string                  ys_dsps_techmap = "";
+  dict<string, int>       ys_dsps_parameter_int;
+  dict<string, string>    ys_dsps_parameter_string;
+
   // Methods
   //
   SynthFpgaPass() : ScriptPass("synth_fpga", "Zero Asic FPGA synthesis flow") { }
+
+
+  // -------------------------
+  // Json reader
+  // -------------------------
+  struct JsonNode
+  {
+	char type; // S=String, N=Number, A=Array, D=Dict
+	string data_string;
+	int64_t data_number;
+	vector<JsonNode*> data_array;
+	dict<string, JsonNode*> data_dict;
+	vector<string> data_dict_keys;
+
+	JsonNode(std::istream &f, string& cf_file, int& line)
+	{
+		type = 0;
+		data_number = 0;
+
+		while (1)
+		{
+			int ch = f.get();
+
+			if (ch == EOF)
+				log_error("Unexpected EOF in JSON file.\n");
+
+			if (ch == '\n')
+				line++;
+			if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n')
+				continue;
+
+			if (ch == '"')
+			{
+				type = 'S';
+
+				while (1)
+				{
+					ch = f.get();
+
+					if (ch == EOF)
+						log_error("Unexpected EOF in JSON string.\n");
+
+					if (ch == '"')
+						break;
+
+					if (ch == '\\') {
+						ch = f.get();
+
+						switch (ch) {
+							case EOF: log_error("Unexpected EOF in JSON string.\n"); break;
+							case '"':
+							case '/':
+							case '\\':           break;
+							case 'b': ch = '\b'; break;
+							case 'f': ch = '\f'; break;
+							case 'n': ch = '\n'; break;
+							case 'r': ch = '\r'; break;
+							case 't': ch = '\t'; break;
+							case 'u':
+								int val = 0;
+								for (int i = 0; i < 4; i++) {
+									ch = f.get();
+									val <<= 4;
+									if (ch >= '0' && '9' >= ch) {
+										val += ch - '0';
+									} else if (ch >= 'A' && 'F' >= ch) {
+										val += 10 + ch - 'A';
+									} else if (ch >= 'a' && 'f' >= ch) {
+										val += 10 + ch - 'a';
+									} else
+										log_error("Unexpected non-digit character in \\uXXXX sequence: %c at line %d.\n", ch, line);
+								}
+								if (val < 128)
+									ch = val;
+								else
+									log_error("Unsupported \\uXXXX sequence in JSON string: %04X at line %d.\n", val, line);
+								break;
+						}
+					}
+
+					data_string += ch;
+				}
+
+				break;
+			}
+
+			if (('0' <= ch && ch <= '9') || ch == '-')
+			{
+				bool negative = false;
+				type = 'N';
+				if (ch == '-') {
+					data_number = 0;
+				       	negative = true;
+				} else {
+					data_number = ch - '0';
+				}
+
+				data_string += ch;
+
+				while (1)
+				{
+					ch = f.get();
+
+					if (ch == EOF)
+						break;
+
+					if (ch == '.')
+						goto parse_real;
+
+					if (ch < '0' || '9' < ch) {
+						f.unget();
+						break;
+					}
+
+					data_number = data_number*10 + (ch - '0');
+					data_string += ch;
+				}
+
+				data_number = negative ? -data_number : data_number;
+				data_string = "";
+				break;
+
+			parse_real:
+				type = 'S';
+				data_number = 0;
+				data_string += ch;
+
+				while (1)
+				{
+					ch = f.get();
+
+					if (ch == EOF)
+						break;
+
+					if (ch < '0' || '9' < ch) {
+						f.unget();
+						break;
+					}
+
+					data_string += ch;
+				}
+
+				break;
+			}
+
+			if (ch == '[')
+			{
+				type = 'A';
+
+				while (1)
+				{
+					ch = f.get();
+
+					if (ch == EOF)
+						log_error("Unexpected EOF in JSON file '%s'.\n",
+							  cf_file.c_str());
+
+			                if (ch == '\n')
+				                line++;
+
+					if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == ',')
+						continue;
+
+					if (ch == ']')
+						break;
+
+					f.unget();
+					data_array.push_back(new JsonNode(f, cf_file, line));
+				}
+
+				break;
+			}
+
+			if (ch == '{')
+			{
+				type = 'D';
+
+				while (1)
+				{
+					ch = f.get();
+
+					if (ch == EOF)
+						log_error("Unexpected EOF in JSON file '%s'.\n",
+							  cf_file.c_str());
+
+			                if (ch == '\n')
+				                line++;
+
+					if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == ',')
+						continue;
+
+					if (ch == '}')
+						break;
+
+					f.unget();
+					JsonNode key(f, cf_file, line);
+
+					while (1)
+					{
+						ch = f.get();
+
+						if (ch == EOF)
+						       log_error("Unexpected EOF in JSON file '%s'.\n",
+							         cf_file.c_str());
+
+			                        if (ch == '\n')
+				                        line++;
+
+						if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == ':')
+							continue;
+
+						f.unget();
+						break;
+					}
+
+					JsonNode *value = new JsonNode(f, cf_file, line);
+
+					if (key.type != 'S')
+						log_error("Unexpected non-string key in JSON dict at line %d.\n", line);
+
+					data_dict[key.data_string] = value;
+					data_dict_keys.push_back(key.data_string);
+				}
+
+				break;
+			}
+
+			log_error("Unexpected character '%c' in config file '%s' at line %d.\n", 
+		                  ch, cf_file.c_str(), line);
+		}
+	}
+
+	~JsonNode()
+	{
+		for (auto it : data_array)
+			delete it;
+		for (auto &it : data_dict)
+			delete it.second;
+	}
+  };
+
+  typedef struct {
+	  string config_file;
+	  int    version;
+	  string partname;
+	  int    lut_size;
+	  string root_path;
+
+	  // DFF related
+	  //
+	  pool<string>         dff_features;
+	  dict<string, string> dff_models;
+	  string               dff_techmap;
+
+          // BRAM related
+	  //
+	  string brams_memory_libmap;
+	  string brams_techmap;
+	  
+	  //
+          // DSP related
+	  //
+	  string               dsps_family;
+	  string               dsps_techmap;
+	  dict<string, int>    dsps_parameter_int;
+	  dict<string, string> dsps_parameter_string;
+
+  } config_type;
+
+  // The global config object
+  //
+  config_type G_config;
+
+  // -------------------------
+  // show_config_file
+  // -------------------------
+  void show_config_file() 
+  {
+
+    if (!show_config) {
+      return;
+    }
+
+    log_header(G_design, "Show config file : \n");
+
+    log("\n");
+    log(" ==========================================================================\n");
+    log("  Config file        : %s\n", (G_config.config_file).c_str());
+    log("  Version            : %d\n", G_config.version);
+    log("  partname           : %s\n", (G_config.partname).c_str());
+    log("  lut_size           : %d\n", G_config.lut_size);
+    log("  root_path          : %s\n", (G_config.root_path).c_str());
+
+    log("  DFF Features       : \n");
+    for (auto it : G_config.dff_features) {
+       log("                       - %s\n", it.c_str());
+    }
+
+    log("  DFF MODELS         : \n");
+    for (auto it : G_config.dff_models) {
+       log("                       - %s %s\n", (it.first).c_str(), (it.second).c_str());
+    }
+
+    log("  DFF techmap        : \n");
+    log("                       %s\n", (G_config.dff_techmap).c_str());
+
+    log("  BRAM memory_libmap : \n");
+    log("                       %s\n", (G_config.brams_memory_libmap).c_str());
+
+    log("  BRAM techmap       : \n");
+    log("                       %s\n", (G_config.brams_techmap).c_str());
+
+    log("  DSP family         : \n");
+    log("                       %s\n", (G_config.dsps_family).c_str());
+
+    log("  DSP techmap        : \n");
+    log("                       %s\n", (G_config.dsps_techmap).c_str());
+
+    log("  DSP techparam      : \n");
+
+    log("      int param      : \n");
+    for (auto it : G_config.dsps_parameter_int) {
+       log("                       - %s = %d\n", (it.first).c_str(), it.second);
+    }
+
+    log("      string param   : \n");
+    for (auto it : G_config.dsps_parameter_string) {
+       log("                       - %s = %s\n", (it.first).c_str(), (it.second).c_str());
+    }
+    log("\n");
+
+    log(" ==========================================================================\n");
+  }
+
+  // -------------------------
+  // setup_options
+  // -------------------------
+  // We setup the options according to 'config' file, if any, and command
+  // line options.
+  // If options conflict (ex: lut_size) between the two, 'config' file 
+  // setting has the priority.
+  //
+  void setup_options()
+  {
+    // If there is a config file with successful analysis then we set up
+    // all the yosys-syn parameters with it.
+    //
+    if (config_file_success) {
+
+       ys_root_path = G_config.root_path;
+
+
+       // DFF parameters setting
+       //
+       for (auto it : G_config.dff_features) {
+          ys_dff_features.insert(it);
+       }
+       for (auto it : G_config.dff_models) {
+          ys_dff_models[it.first] = it.second;
+       }
+       ys_dff_techmap = G_config.root_path + G_config.dff_techmap;
+
+
+       // BRAMs parameters setting
+       //
+       ys_brams_memory_libmap = G_config.root_path + G_config.brams_memory_libmap; 
+       ys_brams_techmap = G_config.root_path + G_config.brams_techmap; 
+
+       
+       // DSPs parameters setting
+       //
+       ys_dsps_techmap = G_config.root_path + G_config.dsps_techmap;
+       for (auto it : G_config.dsps_parameter_int) {
+	   ys_dsps_parameter_int[it.first] = it.second;
+       }
+       for (auto it : G_config.dsps_parameter_string) {
+	   ys_dsps_parameter_string[it.first] = it.second;
+       }
+
+       return;
+    }
+
+    // Default settings when 'config' file is not specified.
+    
+    // DFF setting
+    //
+    ys_dff_techmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/techlib/tech_flops.v";
+    ys_dff_features.insert("async reset");
+    ys_dff_features.insert("async set");
+    ys_dff_features.insert("enable");
+
+    ys_dff_models["dffers"] = "+/yosys-syn/SRC/FF_MODELS/dffers.v";
+    ys_dff_models["dffer"] = "+/yosys-syn/SRC/FF_MODELS/dffer.v";
+    ys_dff_models["dffes"] = "+/yosys-syn/SRC/FF_MODELS/dffes.v";
+    ys_dff_models["dffe"] = "+/yosys-syn/SRC/FF_MODELS/dffe.v";
+    ys_dff_models["dffrs"] = "+/yosys-syn/SRC/FF_MODELS/dffrs.v";
+    ys_dff_models["dffr"] = "+/yosys-syn/SRC/FF_MODELS/dffr.v";
+    ys_dff_models["dffs"] = "+/yosys-syn/SRC/FF_MODELS/dffs.v";
+    ys_dff_models["dff"] = "+/yosys-syn/SRC/FF_MODELS/dff.v";
+
+    // BRAM setting
+    //
+    ys_brams_memory_libmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/lutrams.txt -lib +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/brams.txt";
+    ys_brams_techmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/lutrams_map.v -map +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/brams_map.v";
+
+
+    // DSP setting
+    //
+    ys_dsps_techmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/mult18x18_DSP48.v ";
+    ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
+    ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
+    ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
+    ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
+    ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
+    ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
+    ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
+
+  }
+
+
+  // -------------------------
+  // read_config
+  // -------------------------
+  // Read eventually config file that will setup main synthesis parameters like
+  // partname, lut size, DFF models, DSP and BRAM techmap files, ...
+  //
+  // This should be in sync with the 'config_type' type since we will fill up
+  // this data structure in this 'read_config' function.
+  //
+  void read_config() 
+  {
+
+    // if no 'config_file' specified return right away
+    //
+    if (config_file == "") {
+      return;
+    }
+
+    log_header(G_design, "Reading config file '%s'\n", config_file.c_str());
+
+    if (!std::filesystem::exists(config_file.c_str())) {
+      log_error("Cannot find file '%s'.\n", config_file.c_str());
+    }
+
+    // Read the config file
+    // 
+    std::ifstream f;
+
+    f.open(config_file);
+
+    int line = 1;
+    JsonNode root(f, config_file, line);
+
+    // Analyze the 'root' config data structre and fill up 'G_config' with it
+    //
+    if (root.type != 'D') {
+      log_error("'%s' file is not a dictionary.\n", config_file.c_str());
+    }
+
+    // Check that all sections are there and performs type verification.
+    //
+
+    // version
+    //
+    if (root.data_dict.count("version") == 0) {
+        log_error("'version' number is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *version = root.data_dict.at("version");
+    if (version->type != 'N') {
+        log_error("'version' must be an integer.\n");
+    }
+
+    // partname
+    //
+    if (root.data_dict.count("partname") == 0) {
+        log_error("'partname' is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *partname = root.data_dict.at("partname");
+    if (partname->type != 'S') {
+        log_error("'partname' must be a string.\n");
+    }
+
+    // lut_size
+    //
+    if (root.data_dict.count("lut_size") == 0) {
+        log_error("'lut_size' is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *lut_size = root.data_dict.at("lut_size");
+    if (lut_size->type != 'N') {
+        log_error("'lut_size' must be an integer.\n");
+    }
+
+    // root_path
+    //
+    if (root.data_dict.count("root_path") == 0) {
+        log_error("'root_path' is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *root_path = root.data_dict.at("root_path");
+    if (root_path->type != 'S') {
+        log_error("'root_path' must be a string.\n");
+    }
+
+    // flipflops
+    if (root.data_dict.count("flipflops") == 0) {
+        log_error("'flipflops' is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *flipflops = root.data_dict.at("flipflops");
+    if (flipflops->type != 'D') {
+        log_error("'flipflops' must be a dictionnary.\n");
+    }
+
+    // brams
+    //
+    if (root.data_dict.count("brams") == 0) {
+        log_error("'brams' is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *brams = root.data_dict.at("brams");
+    if (brams->type != 'D') {
+        log_error("'brams' must be a dictionnary.\n");
+    }
+
+    // dsps
+    //
+    if (root.data_dict.count("dsps") == 0) {
+        log_error("'dsps' is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *dsps = root.data_dict.at("dsps");
+    if (dsps->type != 'D') {
+        log_error("'dsps' must be a dictionnary.\n");
+    }
+
+
+    // Extract data and fill up 'G_config'
+    //
+    G_config.config_file = config_file;
+
+    G_config.version = version->data_number;
+
+    G_config.partname = partname->data_string;
+
+    G_config.lut_size = lut_size->data_number;
+
+    G_config.root_path = root_path->data_string;
+
+    // Extract DFF associated parameters
+    //
+    if (flipflops->data_dict.count("features") == 0) {
+        log_error("'features' from 'flipflops' is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *dff_features = flipflops->data_dict.at("features");
+    if (dff_features->type != 'A') {
+        log_error("'features' associated to 'flipflops' must be an array.\n");
+    }
+
+    for (auto it : dff_features->data_array) {
+          JsonNode *dff_mode = it;
+          if (dff_mode->type != 'S') {
+              log_error("Array associated to DFF 'features' must be contain only strings.\n");
+          }
+	  string dff_mode_str = dff_mode->data_string;
+
+	  (G_config.dff_features).insert(dff_mode_str);
+    }
+
+    JsonNode *dff_models = flipflops->data_dict.at("models");
+    if (dff_models->type != 'D') {
+        log_error("'models' associated to 'flipflops' must be a dictionnary.\n");
+    }
+
+    for (auto it : dff_models->data_dict) {
+	  string dff_model_str = it.first;
+	  JsonNode* dff_model_path = it.second;
+          if (dff_model_path->type != 'S') {
+              log_error("Second element associated to DFF models '%s' must be a string.\n",
+                        dff_model_str.c_str());
+          }
+	  G_config.dff_models[dff_model_str] = dff_model_path->data_string;
+    }
+
+
+    if (flipflops->data_dict.count("techmap") == 0) {
+        log_error("'techmap' from 'flipflops' is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *techmap_dff = flipflops->data_dict.at("techmap");
+    if (techmap_dff->type != 'S') {
+        log_error("'techmap' associated to 'flipflops' must be a string.\n");
+    }
+    G_config.dff_techmap = techmap_dff->data_string;
+
+
+
+    // Extract 'brams' associated parameters
+    // 
+    if (brams->data_dict.count("memory_libmap") == 0) {
+        log_error("'memory_libmap' from 'brams' is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *memory_libmap = brams->data_dict.at("memory_libmap");
+    if (memory_libmap->type != 'S') {
+        log_error("'memory_libmap' associated to 'brams' must be a string.\n");
+    }
+    G_config.brams_memory_libmap = memory_libmap->data_string;
+
+
+    if (brams->data_dict.count("techmap") == 0) {
+        log_error("'techmap' from 'brams' is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *brams_techmap = brams->data_dict.at("techmap");
+    if (brams_techmap->type != 'S') {
+        log_error("'techmap' associated to 'brams' must be a string.\n");
+    }
+    G_config.brams_techmap = brams_techmap->data_string;
+
+
+
+
+    // Extract 'dsps' associated parameters
+    // 
+    if (dsps->data_dict.count("family") == 0) {
+        log_error("'family' from 'dsps' is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *family = dsps->data_dict.at("family");
+    if (family->type != 'S') {
+        log_error("'family' associated to 'dsps' must be a string.\n");
+    }
+    G_config.dsps_family = family->data_string;
+
+
+    if (dsps->data_dict.count("techmap") == 0) {
+        log_error("'techmap' from 'dsps' is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *dsps_techmap = dsps->data_dict.at("techmap");
+    if (family->type != 'S') {
+        log_error("'techmap' associated to 'dsps' must be a string.\n");
+    }
+    G_config.dsps_techmap = dsps_techmap->data_string;
+
+
+    if (dsps->data_dict.count("techmap_parameters") == 0) {
+        log_error("'techmap_parameters' from 'dsps' is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *dsps_param = dsps->data_dict.at("techmap_parameters");
+    if (dsps_param->type != 'D') {
+        log_error("'techmap_parameters' associated to 'dsps' must be a dictionnary.\n");
+    }
+
+    for (auto it : dsps_param->data_dict) {
+          string param_str = it.first;
+          JsonNode* param_value = it.second;
+
+          if ((param_value->type != 'S') && (param_value->type != 'N')) {
+              log_error("Second element associated to dsps 'techmap_parameters' '%s' must be either a string or an integer.\n",
+                        param_str.c_str());
+          }
+	  if (param_value->type == 'S') {
+            G_config.dsps_parameter_string[param_str] = param_value->data_string;
+	    continue;
+	  }
+	  if (param_value->type == 'N') {
+            G_config.dsps_parameter_int[param_str] = param_value->data_number;
+	    continue;
+	  }
+	  log_warning("Ignoring 'dsps' parameter '%s'\n", param_str.c_str());
+    }
+
+    log_header(G_design, "Reading config file '%s' done !\n", config_file.c_str());
+
+    show_config_file();
+
+    config_file_success = true;
+  }
+
 
   // -------------------------
   // getNumberOfLuts
@@ -365,6 +1061,17 @@ struct SynthFpgaPass : public ScriptPass
        return;
      }
 
+     string sc_syn_bram_memory_libmap = "memory_libmap -lib " + ys_brams_memory_libmap;
+     string sc_syn_bram_techmap = "techmap -map " + ys_brams_techmap;
+
+     //log("Call %s\n", sc_syn_bram_memory_libmap.c_str());
+     //
+     run(sc_syn_bram_memory_libmap);
+
+     //log("Call %s\n", sc_syn_bram_techmap.c_str());
+     //
+     run(sc_syn_bram_techmap);
+
 #if 0
      // Current Zero Asic calls to BRAM inference
      //
@@ -373,15 +1080,6 @@ struct SynthFpgaPass : public ScriptPass
      run("memory_libmap -lib +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/bram_memory_map.txt");
 
      run("techmap -map +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/tech_bram.v");
-
-#else
-
-     // Example of ECP5 calls to BRAM inference
-     //
-
-     run("memory_libmap -lib +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/lutrams.txt -lib +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/brams.txt", "(-no-auto-block if -nobram, -no-auto-distributed if -nolutram)");
-
-     run("techmap -map +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/lutrams_map.v -map +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/brams_map.v");
 
 #endif
 
@@ -393,7 +1091,6 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void infer_DSPs()
   {
-
      if (!dsp48) {
        return;
      }
@@ -402,15 +1099,22 @@ struct SynthFpgaPass : public ScriptPass
 
      run("memory_dff"); // 'dsp' will merge registers, reserve memory port registers first
 
-     // NB: Zero Asic multipliers are signed only
-     //
+     string sc_syn_dsps_techmap = "techmap -map +/mul2dsp.v -map " + ys_dsps_techmap + " ";
 
-     // Right now in Z1010 part name
-     //
-     run("techmap -map +/mul2dsp.v -map +/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/mult18x18_DSP48.v -D DSP_A_MAXWIDTH=18 -D DSP_B_MAXWIDTH=18 "
-         "-D DSP_A_MINWIDTH=2 -D DSP_B_MINWIDTH=2 " // Blocks Nx1 multipliers
-         "-D DSP_Y_MINWIDTH=9 " // UG901 suggests small multiplies are those 4x4 and smaller
-         "-D DSP_SIGNEDONLY=1 -D DSP_NAME=$__MUL18X18");
+     for (auto it : ys_dsps_parameter_int) {
+         sc_syn_dsps_techmap += "-D " + it.first + "=" + std::to_string(it.second) + " ";
+     }
+     for (auto it : ys_dsps_parameter_string) {
+         sc_syn_dsps_techmap += "-D " + it.first + "=" + it.second + " ";
+     }
+
+#if 0
+     log("Call %s\n", sc_syn_dsps_techmap.c_str());
+#endif
+
+     run(sc_syn_dsps_techmap);
+
+     run("stat");
 
      run("select a:mul2dsp");
      run("setattr -unset mul2dsp");
@@ -437,38 +1141,7 @@ struct SynthFpgaPass : public ScriptPass
 
     run("flatten");
 
-#if 0
-    run("opt_expr");
-    run("opt_clean");
-    run("check");
-    run("opt -nodffe -nosdff");
-    run("fsm");
-    run("opt");
-    run("wreduce");
-    run("peepopt");
-    run("opt_clean");
-    run("share");
-    run("techmap -map +/cmp2lut.v -D LUT_WIDTH=4");
-    run("opt_expr");
-    run("opt_clean");
-
-    run("alumacc");
-    run("opt");
-    run("memory -nomap");
-
-    run("design -save copy");
-
-    run("opt -full");
-#endif
-    
     run("techmap -map +/techmap.v");
-
-#if 0
-    run("memory_map");
-
-    run("demuxmap");
-    run("simplemap");
-#endif
 
     run("techmap");
 
@@ -486,8 +1159,7 @@ struct SynthFpgaPass : public ScriptPass
 
     legalize_flops ();
 
-    string sc_syn_flop_library = stringf("+/yosys-syn/ARCHITECTURE/%s/techlib/tech_flops.v",
-                                         part_name.c_str());
+    string sc_syn_flop_library = ys_dff_techmap;
     run("techmap -map " + sc_syn_flop_library);
 
     run("techmap");
@@ -517,6 +1189,26 @@ struct SynthFpgaPass : public ScriptPass
   }
 
   // -------------------------
+  // coarse_synthesis
+  // -------------------------
+  void coarse_synthesis()
+  {
+    run("opt_expr");
+    run("opt_clean");
+    run("check");
+    run("opt -nodffe -nosdff");
+    run("fsm");
+    run("opt");
+    run("wreduce");
+    run("peepopt");
+    run("opt_clean");
+    run("share");
+    run("techmap -map +/cmp2lut.v -D LUT_WIDTH=" + sc_syn_lut_size);
+    run("opt_expr");
+    run("opt_clean");
+  }
+
+  // -------------------------
   // help
   // -------------------------
   //
@@ -530,6 +1222,14 @@ struct SynthFpgaPass : public ScriptPass
 	log("\n");
 	log("    -top <module>\n");
 	log("        use the specified module as top module\n");
+        log("\n");
+
+	log("    -config <file name>\n");
+	log("        Specifies the config file setting main 'synth_fpga' parameters.\n");
+        log("\n");
+
+	log("    -show_config\n");
+	log("        Show the parameters set by the config file.\n");
         log("\n");
 
         log("    -no_flatten\n");
@@ -635,6 +1335,7 @@ struct SynthFpgaPass : public ScriptPass
 	dsp48 = false;
 	bram = false;
 	resynthesis = false;
+	show_config = false;
 	show_max_level = false;
 	csv = false;
 	insbuf = false;
@@ -652,6 +1353,7 @@ struct SynthFpgaPass : public ScriptPass
 	abc_script_version = "BEST";
 
 	sc_syn_lut_size = "4";
+	config_file = "";
   }
 
   // -------------------------
@@ -675,6 +1377,16 @@ struct SynthFpgaPass : public ScriptPass
  	     top_opt = "-top " + args[++argidx];
 	     continue;
 	  }
+
+          if (args[argidx] == "-config" && argidx+1 < args.size()) {
+ 	     config_file = args[++argidx];
+	     continue;
+	  }
+
+          if (args[argidx] == "-show_config") {
+             show_config = true;
+             continue;
+          }
 
 	  if (args[argidx] == "-opt" && argidx+1 < args.size()) {
 	     opt = args[++argidx];
@@ -837,6 +1549,18 @@ struct SynthFpgaPass : public ScriptPass
 
     log("'Zero Asic' FPGA Synthesis Version : %s\n", SYNTH_FPGA_VERSION);
 
+    // Read eventually config file that will setup main synthesis parameters like
+    // partname, lut size, DFF models, DSP and BRAM techmap files, ...
+    //
+    read_config();
+
+    // We setup the options according to 'config' file, if any, and command
+    // line options.
+    // If options conflict (ex: lut_size) between the two, 'config' file 
+    // setting has the priority.
+    //
+    setup_options();
+
     // Extra line added versus 'sc_synth_fpga.tcl' tcl script version
     //
     run(stringf("hierarchy -check %s", help_mode ? "-top <top>" : top_opt.c_str()));
@@ -848,10 +1572,12 @@ struct SynthFpgaPass : public ScriptPass
        return;
     }
 
+    // In case user invokes resynthsis at the command line level, 
+    // performs a light weight synthesis for the second time.
+    //
     if (resynthesis) {
 
        resynthesize();
-
        return;
     }
 
@@ -881,19 +1607,7 @@ struct SynthFpgaPass : public ScriptPass
     // Generic optimization passes; this is a fusion of the VTR reference
     // flow and the Yosys synth_ice40 flow
     //
-    run("opt_expr");
-    run("opt_clean");
-    run("check");
-    run("opt -nodffe -nosdff");
-    run("fsm");
-    run("opt");
-    run("wreduce");
-    run("peepopt");
-    run("opt_clean");
-    run("share");
-    run("techmap -map +/cmp2lut.v -D LUT_WIDTH=" + sc_syn_lut_size);
-    run("opt_expr");
-    run("opt_clean");
+    coarse_synthesis();
 
     // Extra line added versus 'sc_synth_fpga.tcl' tcl script version
     //
@@ -902,7 +1616,6 @@ struct SynthFpgaPass : public ScriptPass
     dbg_wait();
 
     // Here is a remaining customization pass for DSP tech mapping
-
     // Map DSP blocks before doing anything else,
     // so that we don't convert any math blocks
     // into other primitives
@@ -979,8 +1692,7 @@ struct SynthFpgaPass : public ScriptPass
     //
     // Map on the DFF of the architecture (partname)
     //
-    string sc_syn_flop_library = stringf("+/yosys-syn/ARCHITECTURE/%s/techlib/tech_flops.v", 
-		                         part_name.c_str());
+    string sc_syn_flop_library = ys_dff_techmap;
     run("techmap -map " + sc_syn_flop_library);
 
     // 'post_techmap' without arguments gives the following 
