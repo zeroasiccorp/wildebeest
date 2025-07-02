@@ -1,6 +1,6 @@
 
 set(ALL_TESTS
-    unit/heartbeat.ys
+    unit/heartbeat-z1010.ys
 )
 
 foreach(test_script ${ALL_TESTS})
