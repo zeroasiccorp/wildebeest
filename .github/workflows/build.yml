@@ -124,11 +124,11 @@ jobs:
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: build-${{ matrix.yosys_version }}.tar
+          name: build-${{ matrix.yosys_version }}.tar.gz
       - name: Unpack build
         shell: bash
         run:
-          tar -xvf build.tar
+          tar -xvf build.tar.gz
       - name: Install Yosys
         shell: bash
         run: |
