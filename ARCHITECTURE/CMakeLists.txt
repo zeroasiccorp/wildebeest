@@ -1,8 +1,4 @@
 include(PMGen)
-set(Z1000_TECHLIB_VERILOG_FILES
-    Z1000/techlib/tech_flops.v
-)
-install(FILES ${Z1000_TECHLIB_VERILOG_FILES} DESTINATION ${YOSYS_SHARE_DIR}/Z1000/techlib)
 
 pmgen_lib(
     NAME z1010_dsp_cascade
@@ -13,11 +9,3 @@ pmgen_lib(
     NAME z1010_dsp_CREG
     PMG_FILE Z1010/DSP/dsp_CREG.pmg
 )
-set(Z1010_TECHLIB_VERILOG_FILES
-    Z1010/techlib/tech_flops.v
-)
-set(Z1010_VERILOG_FILES
-    Z1010/DSP/DSP48_sim.v
-    Z1010/DSP/mult18x18_DSP48.v)
-install(FILES ${Z1010_VERILOG_FILES} DESTINATION ${YOSYS_SHARE_DIR}/Z1010/DSP)
-install(FILES ${Z1010_TECHLIB_VERILOG_FILES} DESTINATION ${YOSYS_SHARE_DIR}/Z1000/techlib)
