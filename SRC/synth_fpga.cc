@@ -596,16 +596,6 @@ struct SynthFpgaPass : public ScriptPass
         log_error("'lut_size' must be an integer.\n");
     }
 
-    // root_path
-    //
-    if (root.data_dict.count("root_path") == 0) {
-        log_error("'root_path' is missing in config file '%s'.\n", config_file.c_str());
-    }
-    JsonNode *root_path = root.data_dict.at("root_path");
-    if (root_path->type != 'S') {
-        log_error("'root_path' must be a string.\n");
-    }
-
     // flipflops
     if (root.data_dict.count("flipflops") == 0) {
         log_error("'flipflops' is missing in config file '%s'.\n", config_file.c_str());
@@ -646,7 +636,8 @@ struct SynthFpgaPass : public ScriptPass
 
     G_config.lut_size = lut_size->data_number;
 
-    G_config.root_path = root_path->data_string;
+   const std::filesystem::path config_path(config_file);
+    G_config.root_path = std::filesystem::absolute(config_path.parent_path());
 
     // Extract DFF associated parameters
     //
