@@ -165,6 +165,13 @@ struct ReportStatPass : public ScriptPass
             continue;
         }
 	
+        // Microchip 'polarfire' Luts
+        //
+        if (cell->type.in(ID(SLE))) {
+            nb++;
+	    continue;
+        }
+
         // Intel 'cycloneiv' DFFs
         //
         if (cell->type.in(ID(dffeas))) { 

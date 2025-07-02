@@ -1,6 +1,7 @@
 #include "kernel/sigtools.h"
 #include "kernel/yosys.h"
 #include <set>
+#include <chrono>
 
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
@@ -305,6 +306,9 @@ struct ObsClean : public ScriptPass {
 			return;
 		}
 		log_header(design, "Running obs_clean pass\n");
+
+                auto startTime = std::chrono::high_resolution_clock::now();
+
 		log_flush();
 		for (auto module : design->selected_modules()) {
 			// We cannot safely perform this analysis when processes or memories are present
@@ -341,7 +345,16 @@ struct ObsClean : public ScriptPass {
 			log("      o Removed %d '%s' cells\n", cell.second, log_id(cell.first));
                 }
 		log_header(design, "End obs_clean pass\n");
+
+                auto endTime = std::chrono::high_resolution_clock::now();
+                auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
+
+                float totalTime = 1 + elapsed.count() * 1e-9;
+
+                log("[Run Time = %.1f sec.]\n", totalTime);
+
 		log_flush();
+
 	}
 } SplitNetlist;
 
