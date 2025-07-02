@@ -2,7 +2,6 @@
     "version": 1,
     "partname": "z1010",
     "lut_size": 4,
-    "root_path": "/home/pgadfort/yosys-syn/tests/unit/data/z1010",
     "flipflops": {
         "features": ["async reset", "async set", "enable"],
         "models": {
