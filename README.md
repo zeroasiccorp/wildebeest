@@ -89,7 +89,7 @@ FPGA Configuration Specification:
 
 ```
 {
-        "version": <int, version of this file>,
+        "version": <int, version of file schema, current version is 1>,
         "name": <str, name of the fpga part>,
         "lut": <int, size of lut>,
         "flipflops": {
