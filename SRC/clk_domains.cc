@@ -69,6 +69,11 @@ struct MaxLvlWorker
      ff_celltypes.setup_type(ID(IBUF), {}, {});
      ff_celltypes.setup_type(ID(OBUF), {}, {});
    }
+   void setup_internals_xilinx_bram_xc4v(CellTypes& ff_celltypes)
+   {
+     ff_celltypes.setup_type(ID(RAMB16), {}, {});
+     ff_celltypes.setup_type(ID(OBUF), {}, {});
+   }
 
    // ------------------------------------
    // setup_internals_lattice_ff_xo2
@@ -78,6 +83,12 @@ struct MaxLvlWorker
      // Simply list the DFF cells names is enough as cut points
      //
      ff_celltypes.setup_type(ID(TRELLIS_FF), {}, {});
+   }
+   void setup_internals_lattice_bram_xo2(CellTypes& ff_celltypes)
+   {
+     // Simply list the BRAM cells names is enough as cut points
+     //
+     ff_celltypes.setup_type(ID(DP8KC), {}, {});
    }
    
    // ------------------------------------
@@ -118,6 +129,12 @@ struct MaxLvlWorker
      //
      ff_celltypes.setup_type(ID(SLE), {}, {});
    }
+   void setup_internals_microchip_bram_polarfire(CellTypes& ff_celltypes)
+   {
+     // Simply list the BRAM cells names is enough as cut points
+     //
+     ff_celltypes.setup_type(ID(RAM1K20), {}, {});
+   }
    
    // ------------------------------------
    // setup_internals_intel_ff_cycloneiv
@@ -151,11 +168,13 @@ struct MaxLvlWorker
 	 // Xilinx
 	 //
          setup_internals_xilinx_ff_xc4v(ff_celltypes);
+         setup_internals_xilinx_bram_xc4v(ff_celltypes);
          setup_internals_xilinx_io_xc4v(ff_celltypes);
 
 	 // Lattice
 	 //
          setup_internals_lattice_ff_xo2(ff_celltypes);
+         setup_internals_lattice_bram_xo2(ff_celltypes);
 
 	 // ICE40
 	 //
@@ -168,6 +187,7 @@ struct MaxLvlWorker
 	 // Microchip
 	 //
          setup_internals_microchip_ff_polarfire(ff_celltypes);
+         setup_internals_microchip_bram_polarfire(ff_celltypes);
 
 	 // Intel (Altera)
 	 //
