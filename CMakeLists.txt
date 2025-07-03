@@ -27,5 +27,5 @@ add_subdirectory(SRC)
 add_subdirectory(ARCHITECTURE)
 
 # Add back once testing is possible
-# enable_testing()
-# add_subdirectory(tests)
+enable_testing()
+add_subdirectory(tests)
