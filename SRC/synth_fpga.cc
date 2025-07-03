@@ -1122,10 +1122,13 @@ struct SynthFpgaPass : public ScriptPass
 
      //log("Call %s\n", sc_syn_bram_memory_libmap.c_str());
      //
+     log("\nWARNING: Make sure you are using the right 'partname' for the BRAM inference in case of failure.\n");
      run(sc_syn_bram_memory_libmap);
+
 
      //log("Call %s\n", sc_syn_bram_techmap.c_str());
      //
+     log("\nWARNING: Make sure you are using the right 'partname' for the BRAM inference in case of failure.\n");
      run(sc_syn_bram_techmap);
 
 #if 0
@@ -1168,6 +1171,7 @@ struct SynthFpgaPass : public ScriptPass
      log("Call %s\n", sc_syn_dsps_techmap.c_str());
 #endif
 
+     log("\nWARNING: Make sure you are using the right 'partname' for the DSP inference in case of failure.\n");
      run(sc_syn_dsps_techmap);
 
      run("stat");
