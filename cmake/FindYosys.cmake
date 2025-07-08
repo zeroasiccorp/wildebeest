@@ -3,36 +3,59 @@
 if(TARGET yosys::yosys)
 else()
     set(YOSYS_CONFIG "yosys-config" CACHE STRING "Location of yosys-config utility")
-    message(STATUS "Using yosys: ${YOSYS_CONFIG}")
+    if(DEFINED YOSYS_TREE)
+        message(STATUS "Using yosys tree: ${YOSYS_TREE}")
 
-    execute_process(
-        COMMAND ${YOSYS_CONFIG} --bindir
-        OUTPUT_VARIABLE YOSYS_BINDIR 
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        COMMAND_ERROR_IS_FATAL ANY
-    )
-    message(STATUS "yosys-config --bindir: ${YOSYS_BINDIR}")
+        set(YOSYS_CONFIG "${YOSYS_TREE}/yosys-config")
+        set(YOSYS_BINDIR "${YOSYS_TREE}")
+        set(YOSYS_DATDIR "${YOSYS_TREE}/share")
 
-    execute_process(
-        COMMAND ${YOSYS_CONFIG} --datdir
-        OUTPUT_VARIABLE YOSYS_DATDIR
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        COMMAND_ERROR_IS_FATAL ANY
-    )
-    message(STATUS "yosys-config --datdir: ${YOSYS_DATDIR}")
+        message(STATUS "yosys-config --bindir (override): ${YOSYS_BINDIR}")
+        message(STATUS "yosys-config --datdir (override): ${YOSYS_DATDIR}")
 
-    execute_process(
-        COMMAND ${YOSYS_CONFIG} --cxxflags
-        OUTPUT_VARIABLE YOSYS_CXXFLAGS
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        COMMAND_ERROR_IS_FATAL ANY
-    )
-    string(REGEX REPLACE " +" ";" YOSYS_CXXFLAGS ${YOSYS_CXXFLAGS})
-    list(FILTER YOSYS_CXXFLAGS INCLUDE REGEX "^-[ID]")
-    message(STATUS "yosys-config --cxxflags (filtered): ${YOSYS_CXXFLAGS}")
+        execute_process(
+            COMMAND ${YOSYS_CONFIG} --cxxflags
+            OUTPUT_VARIABLE YOSYS_CXXFLAGS
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            COMMAND_ERROR_IS_FATAL ANY
+        )
+        # Prepend to ensure tree include paths are used
+        string(PREPEND YOSYS_CXXFLAGS "-I${YOSYS_DATDIR}/include ")
+        string(REGEX REPLACE " +" ";" YOSYS_CXXFLAGS ${YOSYS_CXXFLAGS})
+        list(FILTER YOSYS_CXXFLAGS INCLUDE REGEX "^-[ID]")
+        message(STATUS "yosys-config --cxxflags (filtered): ${YOSYS_CXXFLAGS}")
+    else()
+        message(STATUS "Using yosys: ${YOSYS_CONFIG}")
 
-    set(YOSYS_BINDIR ${YOSYS_BINDIR})
-    set(YOSYS_DATDIR ${YOSYS_DATDIR})
+        execute_process(
+            COMMAND ${YOSYS_CONFIG} --bindir
+            OUTPUT_VARIABLE YOSYS_BINDIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            COMMAND_ERROR_IS_FATAL ANY
+        )
+        message(STATUS "yosys-config --bindir: ${YOSYS_BINDIR}")
+
+        execute_process(
+            COMMAND ${YOSYS_CONFIG} --datdir
+            OUTPUT_VARIABLE YOSYS_DATDIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            COMMAND_ERROR_IS_FATAL ANY
+        )
+        message(STATUS "yosys-config --datdir: ${YOSYS_DATDIR}")
+
+        execute_process(
+            COMMAND ${YOSYS_CONFIG} --cxxflags
+            OUTPUT_VARIABLE YOSYS_CXXFLAGS
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            COMMAND_ERROR_IS_FATAL ANY
+        )
+        string(REGEX REPLACE " +" ";" YOSYS_CXXFLAGS ${YOSYS_CXXFLAGS})
+        list(FILTER YOSYS_CXXFLAGS INCLUDE REGEX "^-[ID]")
+        message(STATUS "yosys-config --cxxflags (filtered): ${YOSYS_CXXFLAGS}")
+
+        set(YOSYS_BINDIR ${YOSYS_BINDIR})
+        set(YOSYS_DATDIR ${YOSYS_DATDIR})
+    endif()
 
     add_library(yosys::yosys INTERFACE IMPORTED)
     target_compile_options(yosys::yosys INTERFACE ${YOSYS_CXXFLAGS})
