@@ -26,12 +26,14 @@
 #include "kernel/sigtools.h"
 #include "kernel/ffinit.h"
 #include "kernel/ff.h"
-#include "passes/techmap/simplemap.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <chrono>
 
 USING_YOSYS_NAMESPACE
+
+extern void simplemap(RTLIL::Module *module, RTLIL::Cell *cell);
+
 PRIVATE_NAMESPACE_BEGIN
 
 struct ZOptDffOptions

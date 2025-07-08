@@ -25,10 +25,10 @@
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
 
-#include "../ARCHITECTURE/Z1010/DSP/dsp_CREG_pm.h"
-#include "../ARCHITECTURE/Z1010/DSP/dsp_cascade_pm.h"
+#include "z1010_dsp_cascade.h"
+#include "z1010_dsp_CREG.h"
 
-void dsp_packC(dsp_CREG_pm &pm)
+void dsp_packC(z1010_dsp_CREG_pm &pm)
 {
 	auto &st = pm.st_dsp_packC;
 
@@ -146,14 +146,14 @@ struct Yosys_syn_DspPass : public Pass {
 			//   PREG of an upstream DSP that had not been visited
 			//   yet
 			{
-				dsp_CREG_pm pm(module, module->selected_cells());
+				z1010_dsp_CREG_pm pm(module, module->selected_cells());
 				pm.run_dsp_packC(dsp_packC);
 			}
 			// Lastly, identify and utilise PCOUT -> PCIN,
 			//   ACOUT -> ACIN, and BCOUT-> BCIN dedicated cascade
 			//   chains
 			{
-				dsp_cascade_pm pm(module, module->selected_cells());
+				z1010_dsp_cascade_pm pm(module, module->selected_cells());
 				pm.run_dsp_cascade();
 			}
 		}

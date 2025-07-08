@@ -24,12 +24,13 @@
 #include "kernel/celltypes.h"
 #include "kernel/rtlil.h"
 #include "kernel/log.h"
+#include "version.h"
 #include <chrono>
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
 
-#define SYNTH_FPGA_VERSION "1.0"
+#define SYNTH_FPGA_VERSION "1.0-" YOSYS_SYN_REVISION
 
 #define HUGE_NB_CELLS 5000000 // 5 Million cells
 #define BIG_NB_CELLS 500000   // 500K cells
@@ -627,16 +628,6 @@ struct SynthFpgaPass : public ScriptPass
         log_error("'lut_size' must be an integer.\n");
     }
 
-    // root_path
-    //
-    if (root.data_dict.count("root_path") == 0) {
-        log_error("'root_path' is missing in config file '%s'.\n", config_file.c_str());
-    }
-    JsonNode *root_path = root.data_dict.at("root_path");
-    if (root_path->type != 'S') {
-        log_error("'root_path' must be a string.\n");
-    }
-
     // flipflops
     if (root.data_dict.count("flipflops") == 0) {
         log_error("'flipflops' is missing in config file '%s'.\n", config_file.c_str());
@@ -677,7 +668,8 @@ struct SynthFpgaPass : public ScriptPass
 
     G_config.lut_size = lut_size->data_number;
 
-    G_config.root_path = root_path->data_string;
+   const std::filesystem::path config_path(config_file);
+    G_config.root_path = std::filesystem::absolute(config_path.parent_path());
 
     // Extract DFF associated parameters
     //
@@ -909,14 +901,14 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void load_dff_bb_models()
   {
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dff.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffe.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffr.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffs.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffrs.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffer.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffes.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffers.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dff.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dffe.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dffr.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dffs.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dffrs.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dffer.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dffes.v");
+     run("read_verilog +/" SYN_SHARE_DIR "/FF_MODELS/dffers.v");
 
      run("blackbox dff dffe dffr dffs dffrs dffer dffes dffers");
   }
@@ -1011,7 +1003,7 @@ struct SynthFpgaPass : public ScriptPass
 
     // Otherwise specific ABC script based flow
     //
-    string abc_script = "+/yosys-syn/SRC/ABC_SCRIPTS/LUT" + sc_syn_lut_size + 
+    string abc_script = "+/" SYN_SHARE_DIR "/ABC_SCRIPTS/LUT" + sc_syn_lut_size +
 	                "/" + abc_script_version + "/" + mode + "_lut" + 
 			sc_syn_lut_size + ".scr";
 
