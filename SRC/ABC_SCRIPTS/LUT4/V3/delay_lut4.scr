@@ -111,8 +111,8 @@ echo "&mfs -W 2 -D 15 -C 600 ;"
 &mfs -W 2 -D 15 -C 600 ; &ps; time
 
 echo " "
-echo "lutpack -S 1;"
-&put; lutpack -S 1; &get -n -m; &ps; &save; time
+echo "lutpack -S 3;"
+&put; lutpack -S 3; &get -n -m; &ps; &save; time
 
 echo " "
 echo "&load; &ps"
@@ -128,8 +128,36 @@ echo "&synch2 -W 2 -K 4; &if -sz -C 5 -K 7 -S 44"
 
 echo " "
 echo "&load; &ps"
-&load; &ps -s; time
+&load; &ps; time
 
+echo "&satlut -d -N 31; "
+&satlut -d -N 31; &ps; &save; time
+
+echo " "
+echo "&sopb -C 5; &ps; time"
+&sopb -C 5; &ps; time
+
+echo " "
+echo "&synch2 -W 2 -K 4; &lf -K 4 -e -C 32; &ps; &save; time"
+&synch2 -W 2 -K 4; &lf -K 4 -e -C 32; &ps; &save; time
+
+echo " "
+echo "&sopb -C 5; &ps; time"
+&sopb -C 5; &ps; time
+
+echo " "
+echo "&synch2 -W 2 -K 4; &lf -K 4 -e -C 32; &ps; &save; time"
+&synch2 -W 2 -K 4; &lf -K 4 -e -C 32; &ps; &save; time
+
+echo " "
+echo "&put; lutpack -S 3; &get -n -m; &ps; &save; time"
+&put; lutpack -S 3; &get -n -m; &ps; &save; time
+
+echo " "
+echo "Final stat: "
+echo " "
+&load; &ps -s; time
+ 
 echo " "
 echo "** ABC DELAY optimization done !!!"
 &put
