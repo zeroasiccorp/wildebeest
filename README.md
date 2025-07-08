@@ -49,7 +49,17 @@ How to build the 'yosys-syn' dynamic plugin against a different yosys install:
 
 To build and install 'yosys-syn':
 
-        cmake -S . -B build -D yosys-config=<path to yosys config>
+        cmake -S . -B build -D YOSYS_CONFIG=<path to yosys config>
+        cmake --build build
+        cmake --install build
+
+
+How to build the 'yosys-syn' dynamic plugin against a non-installed version of yosys:
+------------------------------------------------------------------------------
+
+To build and install 'yosys-syn':
+
+        cmake -S . -B build -D YOSYS_TREE=<path to yosys git tree>
         cmake --build build
         cmake --install build
 
