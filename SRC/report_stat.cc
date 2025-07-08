@@ -183,6 +183,7 @@ struct ReportStatPass : public ScriptPass
     return nb;
   }
 
+
   // -------------------------
   // getNumberOfDSPs
   // -------------------------
@@ -217,7 +218,56 @@ struct ReportStatPass : public ScriptPass
     return nb;
   }
 
+  // -------------------------
+  // getNumberOfBRAMs
+  // -------------------------
+  int getNumberOfBRAMs() {
 
+    int nb = 0;
+
+    for (auto cell : G_design->top_module()->cells()) {
+
+        // Xilinx xc4v
+        //
+        if (cell->type.in(ID(RAMB16))) {
+             nb++;
+             continue;
+        }
+
+        // Ice40
+        //
+        if (cell->type.in(ID(SB_RAM40_4K))) {
+             nb++;
+             continue;
+        }
+	
+        // Lattice xo2
+        //
+        if (cell->type.in(ID(DP8KC))) {
+             nb++;
+             continue;
+        }
+	
+        // Intel cycloneiv
+        //
+        if (cell->type.in(ID(altsyncram))) {
+             nb++;
+             continue;
+        }
+	
+        // Microchip polarfire
+        //
+        if (cell->type.in(ID(RAM1K20))) {
+             nb++;
+             continue;
+        }
+    }
+
+    return nb;
+  }
+
+
+  // -------------------------
   void help() override
   {
 	//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
@@ -291,6 +341,8 @@ struct ReportStatPass : public ScriptPass
 
     int nbDSPs = getNumberOfDSPs();
 
+    int nbBRAMs = getNumberOfBRAMs();
+
     int maxlvl = -1;
 
     // call 'max_level' command if not called yet
@@ -325,6 +377,7 @@ struct ReportStatPass : public ScriptPass
     csv_file << std::to_string(nbLuts) + ",";
     csv_file << std::to_string(nbDffs) + ",";
     csv_file << std::to_string(nbDSPs) + ",";
+    csv_file << std::to_string(nbBRAMs) + ",";
     csv_file << std::to_string(maxlvl) + ",";
     csv_file << std::to_string(duration);
     csv_file << std::endl;

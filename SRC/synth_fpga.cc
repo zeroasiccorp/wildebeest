@@ -504,9 +504,10 @@ struct SynthFpgaPass : public ScriptPass
       ys_dff_models["dff"] = "+/yosys-syn/SRC/FF_MODELS/dff.v";
 
       // BRAM setting
+      // Picked up from Micro chip
       //
-      ys_brams_memory_libmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/lutrams.txt -lib +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/brams.txt";
-      ys_brams_techmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/lutrams_map.v -map +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/brams_map.v";
+      ys_brams_memory_libmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM.txt -lib +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM.txt";
+      ys_brams_techmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM_map.v -map +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM_map.v";
   
   
       // DSP setting
@@ -523,6 +524,37 @@ struct SynthFpgaPass : public ScriptPass
 
   }
 
+  // -------------------------
+  // check_options
+  // -------------------------
+  void check_options()
+  {
+     if (!config_file_success) {
+
+       // Converting 'partname' to upper case only if part name is 
+       // used as 'synth_fpga' option and not through config file. 
+       // If we do that also for partname set from config file, we may 
+       // have trouble since we may upper case 3rd party partnames and
+       // we would have no way to refer to the exact partname name,
+       // set from config file, therefore the check on 'config_file_success'.
+       //
+       std::transform (part_name.begin(), part_name.end(), 
+		       part_name.begin(), ::toupper);
+     }
+
+     if (partnames.count(part_name) == 0) {
+        log("ERROR: -partname '%s' is unknown.\n", part_name.c_str());
+        log("       Available partnames are :\n");
+        for (auto part_name : partnames) {
+           log ("               - %s\n", part_name.c_str());
+        }
+        log_error("Please select a correct partname.\n");
+    }
+
+    if ((sc_syn_lut_size != "4") && (sc_syn_lut_size != "6")) {
+        log_error("Lut sizes can be only 4 or 6.\n");
+    }
+  }
 
   // -------------------------
   // read_config
@@ -1082,10 +1114,13 @@ struct SynthFpgaPass : public ScriptPass
 
      //log("Call %s\n", sc_syn_bram_memory_libmap.c_str());
      //
+     log("\nWARNING: Make sure you are using the right 'partname' for the BRAM inference in case of failure.\n");
      run(sc_syn_bram_memory_libmap);
+
 
      //log("Call %s\n", sc_syn_bram_techmap.c_str());
      //
+     log("\nWARNING: Make sure you are using the right 'partname' for the BRAM inference in case of failure.\n");
      run(sc_syn_bram_techmap);
 
 #if 0
@@ -1128,6 +1163,7 @@ struct SynthFpgaPass : public ScriptPass
      log("Call %s\n", sc_syn_dsps_techmap.c_str());
 #endif
 
+     log("\nWARNING: Make sure you are using the right 'partname' for the DSP inference in case of failure.\n");
      run(sc_syn_dsps_techmap);
 
      run("stat");
@@ -1370,6 +1406,7 @@ struct SynthFpgaPass : public ScriptPass
 
 	sc_syn_lut_size = "4";
 	config_file = "";
+	config_file_success = false;
   }
 
   // -------------------------
@@ -1450,18 +1487,6 @@ struct SynthFpgaPass : public ScriptPass
 
           if (args[argidx] == "-partname" && argidx+1 < args.size()) {
              part_name = args[++argidx];
-             // Converting 'partname' to upper case
-	     //
-             std::transform (part_name.begin(), part_name.end(), 
-			     part_name.begin(), ::toupper);
-	     if (partnames.count(part_name) == 0) {
-                log("ERROR: -partname '%s' is unknown.\n", (args[argidx]).c_str());
-		log("       Available partnames are :\n");
-		for (auto part_name : partnames) {
-                   log ("               - %s\n", part_name.c_str());
-		}
-                log_error("Please select a correct partname.\n");
-	     }
              continue;
           }
 
@@ -1565,7 +1590,7 @@ struct SynthFpgaPass : public ScriptPass
 
     log("'Zero Asic' FPGA Synthesis Version : %s\n", SYNTH_FPGA_VERSION);
 
-    // Read eventually config file that will setup main synthesis parameters like
+    // Read eventually config file that will setup main synthesis options like
     // partname, lut size, DFF models, DSP and BRAM techmap files, ...
     //
     read_config();
@@ -1573,11 +1598,16 @@ struct SynthFpgaPass : public ScriptPass
     // We setup the options according to 'config' file, if any, and command
     // line options.
     // If options conflict (ex: lut_size) between the two, 'config' file 
-    // setting has the priority.
+    // setting has the priority over 'synth_fpga' explicit option setting.
     //
     setup_options();
 
-    // Extra line added versus 'sc_synth_fpga.tcl' tcl script version
+    // Check that all options are valid. 
+    // Example : check that the 'partname' do exist.
+    //
+    check_options();
+
+    // Check hierarch and find the TOP
     //
     run(stringf("hierarchy -check %s", help_mode ? "-top <top>" : top_opt.c_str()));
 
