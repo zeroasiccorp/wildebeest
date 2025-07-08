@@ -1,6 +1,8 @@
 #include "kernel/yosys.h"
 #include "kernel/celltypes.h"
 #include "kernel/sigtools.h"
+#include <cassert>
+#include <chrono>
 
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
@@ -18,8 +20,9 @@ struct MaxLvlWorker
    //    - level
    //    - sigBit
    //    - driven cell from the sigbit
+   //    - heigth
    //
-   dict<SigBit, tuple<int, SigBit, Cell*>> bits;
+   dict<SigBit, tuple<int, SigBit, Cell*, int>> bits;
 
    // Traversal table : from a sigBit gives the fanout
    // SigBits
@@ -28,7 +31,11 @@ struct MaxLvlWorker
 
    dict<SigBit, tuple<SigBit, Cell*>> bit2ff;
 
+   pool<SigBit> cps;
+   pool<SigBit> driven_bits;
+
    int maxlvl;
+   int max_heigth;
    SigBit maxbit;
 
    pool<SigBit> visited_bits;
@@ -69,6 +76,11 @@ struct MaxLvlWorker
      ff_celltypes.setup_type(ID(IBUF), {}, {});
      ff_celltypes.setup_type(ID(OBUF), {}, {});
    }
+   void setup_internals_xilinx_bram_xc4v(CellTypes& ff_celltypes)
+   {
+     ff_celltypes.setup_type(ID(RAMB16), {}, {});
+     ff_celltypes.setup_type(ID(OBUF), {}, {});
+   }
 
    // ------------------------------------
    // setup_internals_lattice_ff_xo2
@@ -78,6 +90,12 @@ struct MaxLvlWorker
      // Simply list the DFF cells names is enough as cut points
      //
      ff_celltypes.setup_type(ID(TRELLIS_FF), {}, {});
+   }
+   void setup_internals_lattice_bram_xo2(CellTypes& ff_celltypes)
+   {
+     // Simply list the BRAM cells names is enough as cut points
+     //
+     ff_celltypes.setup_type(ID(DP8KC), {}, {});
    }
    
    // ------------------------------------
@@ -118,6 +136,12 @@ struct MaxLvlWorker
      //
      ff_celltypes.setup_type(ID(SLE), {}, {});
    }
+   void setup_internals_microchip_bram_polarfire(CellTypes& ff_celltypes)
+   {
+     // Simply list the BRAM cells names is enough as cut points
+     //
+     ff_celltypes.setup_type(ID(RAM1K20), {}, {});
+   }
    
    // ------------------------------------
    // setup_internals_intel_ff_cycloneiv
@@ -151,11 +175,13 @@ struct MaxLvlWorker
 	 // Xilinx
 	 //
          setup_internals_xilinx_ff_xc4v(ff_celltypes);
+         setup_internals_xilinx_bram_xc4v(ff_celltypes);
          setup_internals_xilinx_io_xc4v(ff_celltypes);
 
 	 // Lattice
 	 //
          setup_internals_lattice_ff_xo2(ff_celltypes);
+         setup_internals_lattice_bram_xo2(ff_celltypes);
 
 	 // ICE40
 	 //
@@ -168,6 +194,7 @@ struct MaxLvlWorker
 	 // Microchip
 	 //
          setup_internals_microchip_ff_polarfire(ff_celltypes);
+         setup_internals_microchip_bram_polarfire(ff_celltypes);
 
 	 // Intel (Altera)
 	 //
@@ -181,7 +208,7 @@ struct MaxLvlWorker
 
          for (auto bit : sigmap(wire)) {
 
-            bits[bit] = tuple<int, SigBit, Cell*>(-1, State::Sx, nullptr);
+            bits[bit] = tuple<int, SigBit, Cell*, int>(-1, State::Sx, nullptr, -1);
          }
      }
 
@@ -245,6 +272,42 @@ struct MaxLvlWorker
      maxlvl = -1;
      maxbit = State::Sx;
    }
+
+   // ---------------------
+   // get_heigth
+   // ---------------------
+   int get_heigth(SigBit bit)
+   {
+     auto &bitinfo = bits.at(bit);
+
+     int heigth = get<3>(bitinfo);
+
+     if (heigth >= 0) {
+        return heigth;
+     }
+
+     if (!get<2>(bitinfo)) { // if 'bit' has no cell driving it it is a PI
+       get<3>(bitinfo) = 0;
+       return 0;
+     }
+
+     if (visited_bits.count(bit) > 0) {
+        get<3>(bitinfo) = 0;
+        log_warning("Detected loop at %s in %s\n", log_signal(bit), log_id(module));
+        return heigth;
+     }
+
+     visited_bits.insert(bit);
+
+     heigth = get_heigth(get<1>(bitinfo));
+
+     heigth += 1;
+
+     get<3>(bitinfo) = heigth;
+
+     return heigth;
+   }
+
 
    // ---------------------
    // runner
@@ -320,10 +383,81 @@ struct MaxLvlWorker
    }
 
    // ---------------------
+   // get_cps_rec
+   // ---------------------
+   void get_cps_rec(SigBit bit, int heigth)
+   {
+     auto &bitinfo = bits.at(bit);
+
+     // Bit already traversed and TFI added in 'cps'
+     //
+     if (cps.count(bit)) {
+        return;
+     }
+
+     // return if a PI
+     //
+     if (get<3>(bitinfo) == 0) {
+        return;
+     }
+
+     // If on the CP then add it
+     //
+     if (get<3>(bitinfo) == heigth) {
+        assert(get<2>(bitinfo)); // make sure it is driven
+        cps.insert(bit);
+     }
+
+     // return if not on the CP
+     //
+     if (get<3>(bitinfo) < heigth) {
+        return;
+     }
+
+     visited_bits.insert(bit);
+  
+     SigBit from = get<1>(bitinfo);
+
+     // Collect 'from' bit with heigth 'heigth-1'
+     //
+     get_cps_rec(from, heigth-1);
+   
+   }
+
+
+   // ---------------------
+   // get_cps
+   // ---------------------
+   void get_cps()
+   {
+     for (auto &it : bits) {
+
+        if (get<3>(it.second) == max_heigth) {
+          get_cps_rec(it.first, max_heigth);
+	}
+     }
+   }
+
+   // ---------------------
+   // get_driven_bits
+   // ---------------------
+   void get_driven_bits()
+   {
+     for (auto &it : bits) {
+
+        if (get<2>(it.second)) {
+          driven_bits.insert(it.first);
+	}
+     }
+   }
+
+   // ---------------------
    // run
    // ---------------------
    void run()
    {
+     visited_bits.clear();
+
      for (auto &it : bits) {
 
         if (get<0>(it.second) < 0) {
@@ -334,9 +468,43 @@ struct MaxLvlWorker
 
      design->scratchpad_set_int("max_level.max_levels", maxlvl);
 
+     auto startTime = std::chrono::high_resolution_clock::now();
+
+     visited_bits.clear();
+
+     max_heigth = -1;
+
+     for (auto &it : bits) {
+
+        visited_bits.clear();
+
+        if (get<3>(it.second) < 0) {
+
+           int heigth = get_heigth(it.first);
+
+	   if (heigth > max_heigth) {
+	      max_heigth = heigth;
+	   }
+	}
+     }
+
+     get_cps();
+     get_driven_bits();
+
+     auto endTime = std::chrono::high_resolution_clock::now();
+     auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
+
+     float totalTime = 1 + elapsed.count() * 1e-9;
+
+     log("[Run Time = %.1f sec.]\n", totalTime);
+
+
      if (summary) {
         log("\n");
         log("   Max logic level = %d\n", maxlvl);
+        log("   Max heigth      = %d\n", max_heigth);
+        log("   CP size         = %ld\n", cps.size());
+        log("   Total bits      = %ld\n", driven_bits.size());
 
      } else {
 
@@ -355,6 +523,9 @@ struct MaxLvlWorker
 
         log("\n");
         log("   Max logic level = %d\n", maxlvl);
+        log("   Max heigth      = %d\n", max_heigth);
+        log("   CP size         = %ld\n", cps.size());
+        log("   Total bits      = %ld\n", driven_bits.size());
      }
    }
 };
