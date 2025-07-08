@@ -1,0 +1,36 @@
+{
+    "version": 1,
+    "partname": "z1010",
+    "lut_size": 4,
+    "flipflops": {
+        "features": ["async reset", "async set", "enable"],
+        "models": {
+            "dffers": "/ffs/dffers.v",
+            "dffer": "/ffs/dffer.v",
+            "dffes": "/ffs/dffes.v",
+            "dffe": "/ffs/dffe.v",
+            "dffrs": "/ffs/dffrs.v",
+            "dffr": "/ffs/dffr.v",
+            "dffs": "/ffs/dffs.v",
+            "dff": "/ffs/dff.v"
+        },
+        "techmap": "/tech_flops.v"
+    },
+    "brams": {
+        "memory_libmap": "/bram_memory_map.txt",
+        "techmap": "/tech_bram.v"
+    },
+    "dsps": {
+        "family": "DSP48",
+        "techmap": "/mult18x18_DSP48.v",
+        "techmap_parameters": {
+            "DSP_A_MAXWIDTH": 18,
+            "DSP_B_MAXWIDTH": 18,
+            "DSP_A_MINWIDTH": 2,
+            "DSP_B_MINWIDTH": 2,
+            "DSP_Y_MINWIDTH": 9,
+            "DSP_SIGNEDONLY": 1,
+            "DSP_NAME": "$__MUL18X18"
+        }
+    }
+}

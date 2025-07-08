@@ -19,17 +19,21 @@ The plugin is called 'yosys-syn' and it provides two top level commands :
 
 How to build the 'yosys-syn' dynamic plugin:
 --------------------------------------------
-In case you want to use the plugin in a static mode there is nothing to do. This plugin should be put under the 'yosys/techlibs' and yosys should be compiled as usual. This plugin will be automatically part of the 'yosys' executable. 
 
-In case you want this plugin to be used as a 'so' shared library, e.g dynamic plugin, you need to read the following.
- 
-Since the goal is to link this plugin into a Yosys executable, you need to have a Yosys repository already installed. Under this yosys repository you need to see a 'yosys-config' necessary to build the plugin.
+*Prerequisities:*
 
-Right under your 'yosys' repository you need to put/copy this 'yosys-syn' directory.
+ * Yosys installed: supported versions are **0.47 0.48 0.49 0.50 0.51 0.52 0.53 0.54**
 
-Then, to build and install 'yosys-syn' under your Yosys repository, you have to go under 'yosys/yosys-syn' and type :
+ * C++ compiler: GCC 11 and clang 17 are minimum supported versions
 
-          make install
+ * Usual toolchains, CMake
+
+To build and install 'yosys-syn':
+
+        cmake -S . -B build
+        cmake --build build
+        cmake --install build
+
 
 It will : 
 
@@ -37,7 +41,19 @@ It will :
 
         - copy it under your 'yosys/share/plugins'
 
-        - copy Zero Asic Src/Architectures files under 'yosys'/share/plugins'.
+        - copy Architectures and support files under 'yosys/share/plugins'.
+
+
+How to build the 'yosys-syn' dynamic plugin against a different yosys install:
+------------------------------------------------------------------------------
+
+To build and install 'yosys-syn':
+
+        cmake -S . -B build -D yosys-config=<path to yosys config>
+        cmake --build build
+        cmake --install build
+
+
 
 How to use 'yosys-syn' plugin with Yosys :
 ------------------------------------------
@@ -72,7 +88,7 @@ Here is below a classical sequence of commands to install the 'yosys-syn' plugin
         
         // Install 'yosys-plugin' under 'yosys'
         //
-        7. make install
+        7. cmake -S . -B build && cmake --build build && cmake --install build
 
 Your 'yosys-syn' plugin can now be part of your 'yosys' executable as soon as you download it.
 
