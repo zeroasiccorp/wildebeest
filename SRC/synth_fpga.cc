@@ -656,18 +656,15 @@ struct SynthFpgaPass : public ScriptPass
     JsonNode *brams = NULL;
     if (root.data_dict.count("brams") == 0) {
         log_warning("'brams' is missing in config file '%s'.\n", config_file.c_str());
-<<<<<<< HEAD
     } else {
         brams = root.data_dict.at("brams");
         if (brams->type != 'D') {
             log_error("'brams' must be a dictionnary.\n");
         }
-=======
     }
     JsonNode *brams = root.data_dict.at("brams");
     if (brams->type != 'D') {
         log_error("'brams' must be a dictionnary.\n");
->>>>>>> 177700b697a03ab2d707a3e94402d2114631ff53
     }
 
     // dsps
@@ -675,18 +672,15 @@ struct SynthFpgaPass : public ScriptPass
     JsonNode *dsps = NULL;
     if (root.data_dict.count("dsps") == 0) {
         log_warning("'dsps' is missing in config file '%s'.\n", config_file.c_str());
-<<<<<<< HEAD
     } else {
        dsps = root.data_dict.at("dsps");
        if (dsps->type != 'D') {
            log_error("'dsps' must be a dictionnary.\n");
        }
-=======
     }
     JsonNode *dsps = root.data_dict.at("dsps");
     if (dsps->type != 'D') {
         log_error("'dsps' must be a dictionnary.\n");
->>>>>>> 177700b697a03ab2d707a3e94402d2114631ff53
     }
 
 
