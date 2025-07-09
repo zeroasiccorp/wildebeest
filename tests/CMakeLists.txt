@@ -1,5 +1,6 @@
 
 set(ALL_TESTS
+    unit/heartbeat-z1000.ys
     unit/heartbeat-z1010.ys
 )
 
