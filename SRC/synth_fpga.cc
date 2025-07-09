@@ -662,10 +662,6 @@ struct SynthFpgaPass : public ScriptPass
             log_error("'brams' must be a dictionnary.\n");
         }
     }
-    JsonNode *brams = root.data_dict.at("brams");
-    if (brams->type != 'D') {
-        log_error("'brams' must be a dictionnary.\n");
-    }
 
     // dsps
     //
@@ -677,10 +673,6 @@ struct SynthFpgaPass : public ScriptPass
        if (dsps->type != 'D') {
            log_error("'dsps' must be a dictionnary.\n");
        }
-    }
-    JsonNode *dsps = root.data_dict.at("dsps");
-    if (dsps->type != 'D') {
-        log_error("'dsps' must be a dictionnary.\n");
     }
 
 
