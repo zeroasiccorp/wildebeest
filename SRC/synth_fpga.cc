@@ -653,22 +653,26 @@ struct SynthFpgaPass : public ScriptPass
 
     // brams
     //
+    JsonNode *brams = NULL;
     if (root.data_dict.count("brams") == 0) {
         log_warning("'brams' is missing in config file '%s'.\n", config_file.c_str());
-    }
-    JsonNode *brams = root.data_dict.at("brams");
-    if (brams->type != 'D') {
-        log_error("'brams' must be a dictionnary.\n");
+    } else {
+        brams = root.data_dict.at("brams");
+        if (brams->type != 'D') {
+            log_error("'brams' must be a dictionnary.\n");
+        }
     }
 
     // dsps
     //
+    JsonNode *dsps = NULL;
     if (root.data_dict.count("dsps") == 0) {
         log_warning("'dsps' is missing in config file '%s'.\n", config_file.c_str());
-    }
-    JsonNode *dsps = root.data_dict.at("dsps");
-    if (dsps->type != 'D') {
-        log_error("'dsps' must be a dictionnary.\n");
+    } else {
+       dsps = root.data_dict.at("dsps");
+       if (dsps->type != 'D') {
+           log_error("'dsps' must be a dictionnary.\n");
+       }
     }
 
 
@@ -734,7 +738,7 @@ struct SynthFpgaPass : public ScriptPass
 
     // Extract 'brams' associated parameters
     // 
-    if (brams->data_dict.count("memory_libmap") == 0) {
+    if (!brams || (brams->data_dict.count("memory_libmap") == 0)) {
         log_warning("'memory_libmap' from 'brams' is missing in config file '%s'.\n", config_file.c_str());
         log_warning("Assuming that this technology has no BRAM support.\n");
         G_config.brams_memory_libmap = "";
@@ -749,7 +753,7 @@ struct SynthFpgaPass : public ScriptPass
     }
 
 
-    if (brams->data_dict.count("techmap") == 0) {
+    if (!brams || (brams->data_dict.count("techmap") == 0)) {
         log_warning("'techmap' from 'brams' is missing in config file '%s'.\n", config_file.c_str());
         log_warning("Assuming that this technology has no BRAM support.\n");
         G_config.brams_techmap = "";
@@ -771,7 +775,7 @@ struct SynthFpgaPass : public ScriptPass
     
     // DSP Family
     //
-    if (dsps->data_dict.count("family") == 0) {
+    if (!dsps || (dsps->data_dict.count("family") == 0)) {
         log_warning("'family' from 'dsps' is missing in config file '%s'.\n", config_file.c_str());
         log_warning("Assuming that this technology has no DSP support.\n");
         G_config.dsps_family = "";
@@ -788,7 +792,7 @@ struct SynthFpgaPass : public ScriptPass
 
     // DSP techmap file
     //
-    if (dsps->data_dict.count("techmap") == 0) {
+    if (!dsps || (dsps->data_dict.count("techmap") == 0)) {
         log_warning("'techmap' from 'dsps' is missing in config file '%s'.\n", config_file.c_str());
         log_warning("Assuming that this technology has no DSP support.\n");
         G_config.dsps_techmap = "";
@@ -805,7 +809,7 @@ struct SynthFpgaPass : public ScriptPass
 
     // DSP techmap parameters : parameters can be string or int.
     //
-    if (dsps->data_dict.count("techmap_parameters") == 0) {
+    if (!dsps || (dsps->data_dict.count("techmap_parameters")) == 0) {
         log_warning("'techmap_parameters' from 'dsps' is missing in config file '%s'.\n", config_file.c_str());
         log_warning("Assuming that this technology has no DSP support.\n");
 
