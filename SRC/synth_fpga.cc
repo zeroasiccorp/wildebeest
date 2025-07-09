@@ -445,18 +445,32 @@ struct SynthFpgaPass : public ScriptPass
 
        // BRAMs parameters setting
        //
-       ys_brams_memory_libmap = G_config.root_path + G_config.brams_memory_libmap; 
-       ys_brams_techmap = G_config.root_path + G_config.brams_techmap; 
+       if (G_config.brams_memory_libmap == "") {
+         ys_brams_memory_libmap = ""; 
+       } else {
+         ys_brams_memory_libmap = G_config.root_path + G_config.brams_memory_libmap; 
+       }
+
+       if (G_config.brams_techmap == "") {
+          ys_brams_techmap = ""; 
+       } else { 
+	  ys_brams_techmap = G_config.root_path + G_config.brams_techmap; 
+       }
 
        
        // DSPs parameters setting
        //
-       ys_dsps_techmap = G_config.root_path + G_config.dsps_techmap;
-       for (auto it : G_config.dsps_parameter_int) {
-	   ys_dsps_parameter_int[it.first] = it.second;
-       }
-       for (auto it : G_config.dsps_parameter_string) {
-	   ys_dsps_parameter_string[it.first] = it.second;
+       if (G_config.dsps_techmap == "") {
+          ys_dsps_techmap = "";
+       } else {
+
+          ys_dsps_techmap = G_config.root_path + G_config.dsps_techmap;
+          for (auto it : G_config.dsps_parameter_int) {
+	      ys_dsps_parameter_int[it.first] = it.second;
+          }
+          for (auto it : G_config.dsps_parameter_string) {
+	      ys_dsps_parameter_string[it.first] = it.second;
+          }
        }
 
 
@@ -721,58 +735,88 @@ struct SynthFpgaPass : public ScriptPass
     // Extract 'brams' associated parameters
     // 
     if (brams->data_dict.count("memory_libmap") == 0) {
-        log_error("'memory_libmap' from 'brams' is missing in config file '%s'.\n", config_file.c_str());
+        log_warning("'memory_libmap' from 'brams' is missing in config file '%s'.\n", config_file.c_str());
+        log_warning("Assuming that this technology has no BRAM support.\n");
+        G_config.brams_memory_libmap = "";
+
+    } else {
+
+       JsonNode *memory_libmap = brams->data_dict.at("memory_libmap");
+       if (memory_libmap->type != 'S') {
+           log_error("'memory_libmap' associated to 'brams' must be a string.\n");
+       }
+       G_config.brams_memory_libmap = memory_libmap->data_string;
     }
-    JsonNode *memory_libmap = brams->data_dict.at("memory_libmap");
-    if (memory_libmap->type != 'S') {
-        log_error("'memory_libmap' associated to 'brams' must be a string.\n");
-    }
-    G_config.brams_memory_libmap = memory_libmap->data_string;
 
 
     if (brams->data_dict.count("techmap") == 0) {
-        log_error("'techmap' from 'brams' is missing in config file '%s'.\n", config_file.c_str());
+        log_warning("'techmap' from 'brams' is missing in config file '%s'.\n", config_file.c_str());
+        log_warning("Assuming that this technology has no BRAM support.\n");
+        G_config.brams_techmap = "";
+
+    } else {
+
+       JsonNode *brams_techmap = brams->data_dict.at("techmap");
+       if (brams_techmap->type != 'S') {
+           log_error("'techmap' associated to 'brams' must be a string.\n");
+       }
+       G_config.brams_techmap = brams_techmap->data_string;
     }
-    JsonNode *brams_techmap = brams->data_dict.at("techmap");
-    if (brams_techmap->type != 'S') {
-        log_error("'techmap' associated to 'brams' must be a string.\n");
-    }
-    G_config.brams_techmap = brams_techmap->data_string;
 
 
 
 
-    // Extract 'dsps' associated parameters
+    // Extract 'dsps' associated information
     // 
+    
+    // DSP Family
+    //
     if (dsps->data_dict.count("family") == 0) {
-        log_error("'family' from 'dsps' is missing in config file '%s'.\n", config_file.c_str());
+        log_warning("'family' from 'dsps' is missing in config file '%s'.\n", config_file.c_str());
+        log_warning("Assuming that this technology has no DSP support.\n");
+        G_config.dsps_family = "";
+
+    } else {
+
+       JsonNode *family = dsps->data_dict.at("family");
+       if (family->type != 'S') {
+           log_error("'family' associated to 'dsps' must be a string.\n");
+       }
+       G_config.dsps_family = family->data_string;
     }
-    JsonNode *family = dsps->data_dict.at("family");
-    if (family->type != 'S') {
-        log_error("'family' associated to 'dsps' must be a string.\n");
-    }
-    G_config.dsps_family = family->data_string;
 
 
+    // DSP techmap file
+    //
     if (dsps->data_dict.count("techmap") == 0) {
-        log_error("'techmap' from 'dsps' is missing in config file '%s'.\n", config_file.c_str());
+        log_warning("'techmap' from 'dsps' is missing in config file '%s'.\n", config_file.c_str());
+        log_warning("Assuming that this technology has no DSP support.\n");
+        G_config.dsps_techmap = "";
+
+    } else {
+
+       JsonNode *dsps_techmap = dsps->data_dict.at("techmap");
+       if (dsps_techmap->type != 'S') {
+           log_error("'techmap' associated to 'dsps' must be a string.\n");
+       }
+       G_config.dsps_techmap = dsps_techmap->data_string;
     }
-    JsonNode *dsps_techmap = dsps->data_dict.at("techmap");
-    if (family->type != 'S') {
-        log_error("'techmap' associated to 'dsps' must be a string.\n");
-    }
-    G_config.dsps_techmap = dsps_techmap->data_string;
 
 
+    // DSP techmap parameters : parameters can be string or int.
+    //
     if (dsps->data_dict.count("techmap_parameters") == 0) {
-        log_error("'techmap_parameters' from 'dsps' is missing in config file '%s'.\n", config_file.c_str());
-    }
-    JsonNode *dsps_param = dsps->data_dict.at("techmap_parameters");
-    if (dsps_param->type != 'D') {
-        log_error("'techmap_parameters' associated to 'dsps' must be a dictionnary.\n");
-    }
+        log_warning("'techmap_parameters' from 'dsps' is missing in config file '%s'.\n", config_file.c_str());
+        log_warning("Assuming that this technology has no DSP support.\n");
 
-    for (auto it : dsps_param->data_dict) {
+    } else {
+
+       JsonNode *dsps_param = dsps->data_dict.at("techmap_parameters");
+       if (dsps_param->type != 'D') {
+           log_error("'techmap_parameters' associated to 'dsps' must be a dictionnary.\n");
+       }
+
+       for (auto it : dsps_param->data_dict) {
           string param_str = it.first;
           JsonNode* param_value = it.second;
 
@@ -789,6 +833,7 @@ struct SynthFpgaPass : public ScriptPass
 	    continue;
 	  }
 	  log_warning("Ignoring 'dsps' parameter '%s'\n", param_str.c_str());
+       }
     }
 
     log_header(G_design, "Reading config file '%s' done !\n", config_file.c_str());
@@ -1103,9 +1148,27 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // infer_BRAMs
   // -------------------------
+  // In order that BRAM inference kicks in, we need to have both "ys_brams_memory_libmap"
+  // and "ys_brams_techmap" defined. It one of two is not defined then BRAM inference
+  // is ignored.
+  //
   void infer_BRAMs()
   {
      if (1 && !bram) {
+       return;
+     }
+
+     if (ys_brams_memory_libmap == "") {
+       if (ys_brams_techmap != "") {
+          log_warning("BRAM inference ignored because no memory libmap file has been provided !\n");
+       }
+       return;
+     }
+
+     if (ys_brams_techmap == "") {
+       if (ys_brams_memory_libmap != "") {
+          log_warning("BRAM inference ignored because no memory techmap file has been provided !\n");
+       }
        return;
      }
 
@@ -1143,6 +1206,10 @@ struct SynthFpgaPass : public ScriptPass
   void infer_DSPs()
   {
      if (!dsp48) {
+       return;
+     }
+
+     if (ys_dsps_techmap == "") {
        return;
      }
 
