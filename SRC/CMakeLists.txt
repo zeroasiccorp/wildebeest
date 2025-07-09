@@ -11,6 +11,7 @@ add_library(yosys-syn SHARED
     time_chrono.cc
     report_stat.cc
     dsp.cc
+    cp.cc
     obs_clean.cc
     synth_fpga.cc
     zopt_dff.cc
