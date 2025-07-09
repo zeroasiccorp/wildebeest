@@ -21,7 +21,7 @@ struct MaxHeigthWorker
    //    - level
    //    - sigBit
    //    - driven cell from the sigbit
-   //    - heigth
+   //    - height
    //
    dict<SigBit, tuple<pool<SigBit>*, Cell*, int>> bits;
 
@@ -95,7 +95,7 @@ struct MaxHeigthWorker
    // ---------------------
    // get_cp_logic_rec
    // ---------------------
-   void get_cp_logic_rec(SigBit bit, int heigth)
+   void get_cp_logic_rec(SigBit bit, int height)
    {
      auto &bitinfo = bits.at(bit);
 
@@ -113,29 +113,29 @@ struct MaxHeigthWorker
 
      // If on the CP then add it
      //
-     if (HEIGTH(bitinfo) == heigth) {
+     if (HEIGTH(bitinfo) == height) {
         assert(CELL(bitinfo)); // make sure it is driven
         cps.insert(bit);
      }
 
      // return if not on the CP
      //
-     if (HEIGTH(bitinfo) < heigth) {
+     if (HEIGTH(bitinfo) < height) {
         return;
      }
 
-     if (HEIGTH(bitinfo) > heigth) {
+     if (HEIGTH(bitinfo) > height) {
        log_error("Problem in the CP extractor : Height %d must be less than height %d\n", 
-		 HEIGTH(bitinfo), heigth);
+		 HEIGTH(bitinfo), height);
      }
 
      pool<SigBit>* inputs = INPUTS(bitinfo);
 
      for (auto from : *inputs) {
 	     
-       // Collect recursivelet from the TFI from 'from' with heigth 'heigth-1'
+       // Collect recursivelet from the TFI from 'from' with height 'height-1'
        //
-       get_cp_logic_rec(from, heigth-1);
+       get_cp_logic_rec(from, height-1);
      }
    
    }
@@ -144,14 +144,14 @@ struct MaxHeigthWorker
    // ---------------------
    // get_cp_logic
    // ---------------------
-   void get_cp_logic(int max_heigth)
+   void get_cp_logic(int max_height)
    {
      // Extract CP from the 'bits' starting with 'max_height'.
      //
      for (auto &it : bits) {
 
-        if (HEIGTH(it.second) == max_heigth) {
-          get_cp_logic_rec(it.first, max_heigth);
+        if (HEIGTH(it.second) == max_height) {
+          get_cp_logic_rec(it.first, max_height);
 	}
      }
    }
@@ -239,7 +239,7 @@ struct MaxHeigthWorker
         auto &bitinfo = bits.at(bit);
 
         Cell* cell = CELL(bitinfo);
-        int heigth= HEIGTH(bitinfo);
+        int height= HEIGTH(bitinfo);
         pool<SigBit>* inputs = INPUTS(bitinfo);
 
         cells.insert(cell);
@@ -248,7 +248,7 @@ struct MaxHeigthWorker
 	legalize_dot_name(cell_name);
 	int fo = fanout[bit];
 	long unsigned int nb = inputs->size();
-        cells_dot << cell_name << " [shape=box, label=\"" << cell_name << "\nLUT" << nb << "\nheigth=" << heigth << "\nfo=" << fo << "\"]\n"; 
+        cells_dot << cell_name << " [shape=box, label=\"" << cell_name << "\nLUT" << nb << "\nheight=" << height << "\nfo=" << fo << "\"]\n"; 
      }
 
      // Dump definition and Collect cells periphery bits
@@ -267,12 +267,12 @@ struct MaxHeigthWorker
 	    legalize_dot_name(name);
 
             auto &bitinfo = bits.at(bit);
-            int heigth= HEIGTH(bitinfo);
+            int height= HEIGTH(bitinfo);
 
             if (cps.count(bit)) {
-              cells_dot << name << " [color=\"red\" style=filled label=\"" << name << "\nheigth=" << heigth << "\"]\n"; 
+              cells_dot << name << " [color=\"red\" style=filled label=\"" << name << "\nheight=" << height << "\"]\n"; 
 	    } else {
-              cells_dot << name << " [color=\"green\" style=filled label=\"" << name << "\nheigth=" << heigth << "\"]\n"; 
+              cells_dot << name << " [color=\"green\" style=filled label=\"" << name << "\nheight=" << height << "\"]\n"; 
 	    }
          }
        }
@@ -288,18 +288,18 @@ struct MaxHeigthWorker
 
 
    // ---------------------
-   // get_heigth_rec
+   // get_height_rec
    // ---------------------
-   int get_heigth_rec(SigBit bit)
+   int get_height_rec(SigBit bit)
    {
      auto &bitinfo = bits.at(bit);
 
      fanout[bit] += 1;
 
-     int heigth = HEIGTH(bitinfo);
+     int height = HEIGTH(bitinfo);
 
-     if (heigth >= 0) {
-        return heigth;
+     if (height >= 0) {
+        return height;
      }
 
      if (!CELL(bitinfo)) { // if 'bit' has no cell driving it it is a PI or undriven wire
@@ -317,20 +317,20 @@ struct MaxHeigthWorker
 
      pool<SigBit>* inputs = INPUTS(bitinfo);
 
-     int max_heigth = -1;
+     int max_height = -1;
 
      for (auto in : *inputs) {
 
-         int in_heigth = get_heigth_rec(in);
+         int in_height = get_height_rec(in);
 
-	 if (in_heigth > max_heigth) {
-            max_heigth = in_heigth;
+	 if (in_height > max_height) {
+            max_height = in_height;
 	 }
      }
 
-     HEIGTH(bitinfo) = max_heigth+1;
+     HEIGTH(bitinfo) = max_height+1;
 
-     return max_heigth+1;
+     return max_height+1;
    }
 
    // ---------------------
@@ -338,7 +338,7 @@ struct MaxHeigthWorker
    // ---------------------
    int get_max_height()
    {
-     int max_heigth = -1;
+     int max_height = -1;
 
      for (auto &it : bits) {
        fanout[it.first] = 0;
@@ -350,15 +350,15 @@ struct MaxHeigthWorker
 
            visited_bits.clear();
 
-           int heigth = get_heigth_rec(it.first);
+           int height = get_height_rec(it.first);
 
-           if (heigth > max_heigth) {
-              max_heigth = heigth;
+           if (height > max_height) {
+              max_height = height;
            }
         }
      }
 
-     return max_heigth;
+     return max_height;
    }
 
    // ---------------------
@@ -368,15 +368,15 @@ struct MaxHeigthWorker
    {
      auto startTime = std::chrono::high_resolution_clock::now();
 
-     // get the max heigth of the whole LUT logic
+     // get the max height of the whole LUT logic
      //
-     int max_heigth = get_max_height();
+     int max_height = get_max_height();
 
-     design->scratchpad_set_int("max_heigth.max_heigth", max_heigth);
+     design->scratchpad_set_int("max_height.max_height", max_height);
 
-     // get the logic on the critical paths starting with heigth 'max_heigth'
+     // get the logic on the critical paths starting with height 'max_height'
      //
-     get_cp_logic(max_heigth);
+     get_cp_logic(max_height);
 
      // Eventually dump the dot file fo the CP logic
      //
@@ -385,7 +385,7 @@ struct MaxHeigthWorker
      }
 
      log("\n");
-     log("   Max heigth / Max levels    = %d\n", max_heigth);
+     log("   Max height / Max levels    = %d\n", max_height);
      log("   CP bits size               = %ld\n", cps.size());
      log("   Total lut output bits      = %ld\n", luts.size());
 
@@ -403,7 +403,7 @@ struct MaxHeigthPass : public ScriptPass {
 
    RTLIL::Design *G_design = NULL; 
 
-   MaxHeigthPass() : ScriptPass("max_heigth", "print max logic heigth") { }
+   MaxHeigthPass() : ScriptPass("max_height", "print max logic height") { }
 
    // ---------------------
    // help
@@ -412,7 +412,7 @@ struct MaxHeigthPass : public ScriptPass {
    {
       //   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
       log("\n");
-      log("    max_heigth [options] \n");
+      log("    max_height [options] \n");
       log("\n");
       log("This command prints the max logic height in the design. (Only considers\n");
       log("paths within a single module, so the design must be flattened to get the)\n");
@@ -440,7 +440,7 @@ struct MaxHeigthPass : public ScriptPass {
 
      clear_flags();
 
-     log_header(design, "Executing 'max_heigth' command (find max logic level).\n");
+     log_header(design, "Executing 'max_height' command (find max logic level).\n");
 
      size_t argidx;
 
