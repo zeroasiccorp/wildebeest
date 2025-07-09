@@ -9,6 +9,11 @@ on:
   pull_request:
   # Manual Dispatch
   workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   define-matrix:
     runs-on: ubuntu-24.04
