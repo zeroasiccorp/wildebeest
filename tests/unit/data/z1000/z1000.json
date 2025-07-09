@@ -1,0 +1,19 @@
+{
+    "version": 1,
+    "partname": "z1000",
+    "lut_size": 4,
+    "flipflops": {
+        "features": ["async reset", "async set", "enable"],
+        "models": {
+            "dffers": "/ffs/dffers.v",
+            "dffer": "/ffs/dffer.v",
+            "dffes": "/ffs/dffes.v",
+            "dffe": "/ffs/dffe.v",
+            "dffrs": "/ffs/dffrs.v",
+            "dffr": "/ffs/dffr.v",
+            "dffs": "/ffs/dffs.v",
+            "dff": "/ffs/dff.v"
+        },
+        "techmap": "/tech_flops.v"
+    }
+}
