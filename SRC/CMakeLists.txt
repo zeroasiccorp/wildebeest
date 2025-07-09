@@ -9,6 +9,7 @@ add_library(yosys-syn SHARED
     clk_domains.cc
     load_models.cc
     time_chrono.cc
+    report_stat.cc
     dsp.cc
     obs_clean.cc
     synth_fpga.cc
