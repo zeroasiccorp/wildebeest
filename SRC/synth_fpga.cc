@@ -1362,11 +1362,6 @@ struct SynthFpgaPass : public ScriptPass
         log("        wait after each 'stat' report for user to touch <enter> key. Help for \n");
         log("        flow analysis/debug.\n");
         log("\n");
-
-	log("The following Yosys commands are executed underneath by 'synth_fpga' :\n");
-
-	help_script();
-	log("\n");
   }
 
   // -------------------------

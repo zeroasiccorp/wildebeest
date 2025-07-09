@@ -48,9 +48,6 @@ struct TimeChronoPass : public ScriptPass
 	log("This command stores time in order to use it afterward in 'report_stat'\n");
 	log("command.\n");
 	log("\n");
-
-	help_script();
-	log("\n");
   }
 
   void clear_flags() override
