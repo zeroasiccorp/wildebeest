@@ -23,6 +23,7 @@
 #include "kernel/log.h"
 #include <chrono>
 #include <iomanip>
+#include <cassert>
 
 #define SYNTH_FPGA_VERSION "1.0"
 
@@ -35,6 +36,7 @@ struct ReportStatPass : public ScriptPass
   //
   RTLIL::Design *G_design = NULL; 
   string csv_stat_file;
+  bool dot;
 
   // Methods
   //
@@ -290,6 +292,7 @@ struct ReportStatPass : public ScriptPass
   void clear_flags() override
   {
         csv_stat_file = "stat.csv";
+	dot = false;
   }
 
   void execute(std::vector<std::string> args, RTLIL::Design *design) override
@@ -306,6 +309,11 @@ struct ReportStatPass : public ScriptPass
                         csv_stat_file = args[++argidx];
                         continue;
                 }
+                if (args[argidx] == "-dot") {
+                   dot = true;
+                   continue;
+                }
+
 	}
 	extra_args(args, argidx, design);
 
@@ -349,12 +357,24 @@ struct ReportStatPass : public ScriptPass
     int nbBRAMs = getNumberOfBRAMs();
 
     int maxlvl = -1;
+    int maxheigth = -1;
 
     // call 'max_level' command if not called yet
     //
     run("max_level -noff"); // -> store 'maxlvl' in scratchpad with 'max_level.max_levels'
 
+    if (dot) {
+      run("max_heigth -dot"); // -> store 'maxheigth' in scratchpad with 'max_heigth.max_heigth'
+    } else {
+      run("max_heigth"); // -> store 'maxheigth' in scratchpad with 'max_heigth.max_heigth'
+    }
+
     maxlvl = G_design->scratchpad_get_int("max_level.max_levels", 0);
+    maxheigth = G_design->scratchpad_get_int("max_heigth.max_heigth", 0);
+
+    if (maxlvl != maxheigth) {
+      log_warning("Max level and Max height computations give different values !\n");
+    }
 
     string start = G_design->scratchpad_get_string("time_chrono_start");
     string end =  G_design->scratchpad_get_string("time_chrono_end");
