@@ -97,6 +97,11 @@ struct TimeChronoPass : public ScriptPass
   // ---------------------------------------------------------------------------
   void script() override
   {
+    if (!G_design) {
+       log_warning("Design seems empty !\n");
+       return;
+    }
+
     Module* topModule = G_design->top_module();
 
     if (!topModule) {
