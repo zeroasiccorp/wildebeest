@@ -19,5 +19,5 @@ help obs_clean
 logger -expect log ".* dsp.*options.*selection*" 1
 help dsp
 
-logger -expect log ".* max_heigth.*options.*" 1
-help max_heigth
+logger -expect log ".* max_height.*options.*" 1
+help max_height
