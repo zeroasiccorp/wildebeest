@@ -357,22 +357,22 @@ struct ReportStatPass : public ScriptPass
     int nbBRAMs = getNumberOfBRAMs();
 
     int maxlvl = -1;
-    int maxheigth = -1;
+    int maxheight = -1;
 
     // call 'max_level' command if not called yet
     //
     run("max_level -noff"); // -> store 'maxlvl' in scratchpad with 'max_level.max_levels'
 
     if (dot) {
-      run("max_heigth -dot"); // -> store 'maxheigth' in scratchpad with 'max_heigth.max_heigth'
+      run("max_height -dot"); // -> store 'maxheight' in scratchpad with 'max_height.max_height'
     } else {
-      run("max_heigth"); // -> store 'maxheigth' in scratchpad with 'max_heigth.max_heigth'
+      run("max_height"); // -> store 'maxheight' in scratchpad with 'max_height.max_height'
     }
 
     maxlvl = G_design->scratchpad_get_int("max_level.max_levels", 0);
-    maxheigth = G_design->scratchpad_get_int("max_heigth.max_heigth", 0);
+    maxheight = G_design->scratchpad_get_int("max_height.max_height", 0);
 
-    if (maxlvl != maxheigth) {
+    if (maxlvl != maxheight) {
       log_warning("Max level and Max height computations give different values !\n");
     }
 
