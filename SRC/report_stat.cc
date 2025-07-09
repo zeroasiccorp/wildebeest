@@ -283,10 +283,6 @@ struct ReportStatPass : public ScriptPass
         log("        write design statistics into a CSV file. Default file name\n");
         log("        is 'stat.csv'.\n");
 	log("\n");
-
-
-	help_script();
-	log("\n");
   }
 
   void clear_flags() override
