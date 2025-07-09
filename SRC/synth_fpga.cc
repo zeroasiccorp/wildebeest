@@ -654,7 +654,7 @@ struct SynthFpgaPass : public ScriptPass
     // brams
     //
     if (root.data_dict.count("brams") == 0) {
-        log_error("'brams' is missing in config file '%s'.\n", config_file.c_str());
+        log_warning("'brams' is missing in config file '%s'.\n", config_file.c_str());
     }
     JsonNode *brams = root.data_dict.at("brams");
     if (brams->type != 'D') {
@@ -664,7 +664,7 @@ struct SynthFpgaPass : public ScriptPass
     // dsps
     //
     if (root.data_dict.count("dsps") == 0) {
-        log_error("'dsps' is missing in config file '%s'.\n", config_file.c_str());
+        log_warning("'dsps' is missing in config file '%s'.\n", config_file.c_str());
     }
     JsonNode *dsps = root.data_dict.at("dsps");
     if (dsps->type != 'D') {
