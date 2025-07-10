@@ -675,7 +675,6 @@ struct SynthFpgaPass : public ScriptPass
        }
     }
 
-
     // Extract data and fill up 'G_config'
     //
     G_config.config_file = config_file;
@@ -686,8 +685,12 @@ struct SynthFpgaPass : public ScriptPass
 
     G_config.lut_size = lut_size->data_number;
 
+    // Add extra "./" otherwise root path extraction code can fail.
+    //
+    config_file = "./" + config_file;
     const std::filesystem::path config_path(config_file);
     G_config.root_path = std::filesystem::absolute(config_path.parent_path());
+    log("NOTE: Config Root path = %s\n", (G_config.root_path).c_str());
 
     // Extract DFF associated parameters
     //
@@ -709,6 +712,9 @@ struct SynthFpgaPass : public ScriptPass
 	  (G_config.dff_features).insert(dff_mode_str);
     }
 
+    if (flipflops->data_dict.count("models") == 0) {
+        log_error("'models' from 'flipflops' is missing in config file '%s'.\n", config_file.c_str());
+    }
     JsonNode *dff_models = flipflops->data_dict.at("models");
     if (dff_models->type != 'D') {
         log_error("'models' associated to 'flipflops' must be a dictionnary.\n");
@@ -735,7 +741,7 @@ struct SynthFpgaPass : public ScriptPass
     G_config.dff_techmap = techmap_dff->data_string;
 
 
-
+    
     // Extract 'brams' associated parameters
     // 
     if (!brams || (brams->data_dict.count("memory_libmap") == 0)) {
