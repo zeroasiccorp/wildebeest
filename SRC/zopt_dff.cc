@@ -22,6 +22,7 @@
 #include "kernel/register.h"
 #include "kernel/rtlil.h"
 #include "zqcsat.h"
+#include "zsimplemap.h"
 #include "kernel/modtools.h"
 #include "kernel/sigtools.h"
 #include "kernel/ffinit.h"
@@ -31,8 +32,6 @@
 #include <chrono>
 
 USING_YOSYS_NAMESPACE
-
-extern void simplemap(RTLIL::Module *module, RTLIL::Cell *cell);
 
 PRIVATE_NAMESPACE_BEGIN
 
@@ -198,7 +197,7 @@ struct ZOptDffWorker
 			RTLIL::Cell *c = module->addNe(NEW_ID, s1, s2, y);
 
 			if (make_gates) {
-				simplemap(module, c);
+				zsimplemap(module, c);
 				module->remove(c);
 			}
 
@@ -223,7 +222,7 @@ struct ZOptDffWorker
 		RTLIL::Cell *c = module->addReduceAnd(NEW_ID, or_input, y);
 
 		if (make_gates) {
-			simplemap(module, c);
+			zsimplemap(module, c);
 			module->remove(c);
 		}
 
@@ -257,7 +256,7 @@ struct ZOptDffWorker
 		RTLIL::Cell *c = final_pol ? module->addReduceOr(NEW_ID, or_input, y) : module->addReduceAnd(NEW_ID, or_input, y);
 
 		if (make_gates) {
-			simplemap(module, c);
+			zsimplemap(module, c);
 			module->remove(c);
 		}
 

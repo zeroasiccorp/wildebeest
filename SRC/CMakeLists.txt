@@ -16,6 +16,7 @@ add_library(yosys-syn SHARED
     synth_fpga.cc
     zopt_dff.cc
     zqcsat.cc
+    zsimplemap.cc
     ${CMAKE_CURRENT_BINARY_DIR}/version.h
 )
 target_include_directories(yosys-syn
@@ -46,6 +47,7 @@ set_target_properties(yosys-syn PROPERTIES
 set(SHARE_DIRECTORIES
     FF_MODELS
     ABC_SCRIPTS
+    ../ARCHITECTURE
 )
 
 if (WIN32)
