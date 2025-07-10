@@ -148,7 +148,8 @@ The template of this file is as follows:
 
 Note that all sections like "version", "name", "lut", ... are required except "brams" and "dsps"
 which are optional.
-...
+
+```
 Example : z1010 architecture (with brams and dsps)
 {
     "version": 1,
@@ -207,4 +208,4 @@ Example : z1000 architecture (without brams and dsps)
         "techmap": "/tech_flops.v"
     }
 }
-...
+```
