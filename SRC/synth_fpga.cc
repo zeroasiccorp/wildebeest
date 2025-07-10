@@ -476,17 +476,17 @@ struct SynthFpgaPass : public ScriptPass
 
        // Processing cases where 'config' file overides user command options.
        //
-       if (ys_dff_features.count("enable") == 0) {
+       if (ys_dff_features.count("flop_enable") == 0) {
          log_warning("Config file will switch on '-no_dff_enable' option.\n");
          dff_enable = false;
        }
 
-       if (ys_dff_features.count("async reset") == 0) {
+       if (ys_dff_features.count("async_reset") == 0) {
          log_warning("Config file will switch on '-no_dff_async_reset' option.\n");
          dff_async_reset = false;
        }
 
-       if (ys_dff_features.count("async set") == 0) {
+       if (ys_dff_features.count("async_set") == 0) {
          log_warning("Config file will switch on '-no_dff_async_set' option.\n");
          dff_async_set = false;
        }
@@ -504,8 +504,8 @@ struct SynthFpgaPass : public ScriptPass
       // DFF setting
       //
       ys_dff_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/techlib/tech_flops.v";
-      ys_dff_features.insert("async reset");
-      ys_dff_features.insert("async set");
+      ys_dff_features.insert("async_reset");
+      ys_dff_features.insert("async_set");
       ys_dff_features.insert("enable");
 
       ys_dff_models["dffers"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffers.v";
