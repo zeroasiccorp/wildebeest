@@ -503,30 +503,30 @@ struct SynthFpgaPass : public ScriptPass
     
       // DFF setting
       //
-      ys_dff_techmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/techlib/tech_flops.v";
+      ys_dff_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/techlib/tech_flops.v";
       ys_dff_features.insert("async reset");
       ys_dff_features.insert("async set");
       ys_dff_features.insert("enable");
 
-      ys_dff_models["dffers"] = "+/yosys-syn/SRC/FF_MODELS/dffers.v";
-      ys_dff_models["dffer"] = "+/yosys-syn/SRC/FF_MODELS/dffer.v";
-      ys_dff_models["dffes"] = "+/yosys-syn/SRC/FF_MODELS/dffes.v";
-      ys_dff_models["dffe"] = "+/yosys-syn/SRC/FF_MODELS/dffe.v";
-      ys_dff_models["dffrs"] = "+/yosys-syn/SRC/FF_MODELS/dffrs.v";
-      ys_dff_models["dffr"] = "+/yosys-syn/SRC/FF_MODELS/dffr.v";
-      ys_dff_models["dffs"] = "+/yosys-syn/SRC/FF_MODELS/dffs.v";
-      ys_dff_models["dff"] = "+/yosys-syn/SRC/FF_MODELS/dff.v";
+      ys_dff_models["dffers"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffers.v";
+      ys_dff_models["dffer"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffer.v";
+      ys_dff_models["dffes"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffes.v";
+      ys_dff_models["dffe"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffe.v";
+      ys_dff_models["dffrs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffrs.v";
+      ys_dff_models["dffr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffr.v";
+      ys_dff_models["dffs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffs.v";
+      ys_dff_models["dff"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dff.v";
 
       // BRAM setting
       // Picked up from Micro chip
       //
-      ys_brams_memory_libmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM.txt -lib +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM.txt";
-      ys_brams_techmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM_map.v -map +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM_map.v";
+      ys_brams_memory_libmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM.txt -lib +/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM.txt";
+      ys_brams_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM_map.v -map +/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM_map.v";
   
   
       // DSP setting
       //
-      ys_dsps_techmap = "+/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/mult18x18_DSP48.v ";
+      ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/mult18x18_DSP48.v ";
       ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
       ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
       ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
@@ -950,14 +950,14 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void load_dff_bb_models()
   {
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dff.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffe.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffr.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffs.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffrs.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffer.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffes.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffers.v");
+     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dff.v");
+     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dffe.v");
+     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dffr.v");
+     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dffs.v");
+     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dffrs.v");
+     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dffer.v");
+     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dffes.v");
+     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dffers.v");
 
      run("blackbox dff dffe dffr dffs dffrs dffer dffes dffers");
   }
@@ -1052,7 +1052,7 @@ struct SynthFpgaPass : public ScriptPass
 
     // Otherwise specific ABC script based flow
     //
-    string abc_script = "+/yosys-syn/SRC/ABC_SCRIPTS/LUT" + sc_syn_lut_size +
+    string abc_script = "+/plugins/yosys-syn/ABC_SCRIPTS/LUT" + sc_syn_lut_size +
 	                "/" + abc_script_version + "/" + mode + "_lut" + 
 			sc_syn_lut_size + ".scr";
 
