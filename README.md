@@ -54,7 +54,7 @@ To build and install 'yosys-syn':
         cmake --install build
 
 
-How to build the 'yosys-syn' dynamic plugin against a non-installed version of yosys:
+How to build the 'yosys-syn' dynamic plugin against an installed version of yosys:
 ------------------------------------------------------------------------------
 
 To build and install 'yosys-syn':
@@ -98,7 +98,9 @@ Here is below a classical sequence of commands to install the 'yosys-syn' plugin
         
         // Install 'yosys-plugin' under 'yosys'
         //
-        7. cmake -S . -B build && cmake --build build && cmake --install build
+        7. cmake -S . -B build -D YOSYS_TREE=<path to yosys git tree in 2.>
+        8. cmake --build build
+        9. cmake --install build 
 
 Your 'yosys-syn' plugin can now be part of your 'yosys' executable as soon as you download it.
 
@@ -110,8 +112,12 @@ To download it you can do :
            plugin -i yosys-syn
 
    
-FPGA Configuration Specification:
----------------------------------
+FPGA Configuration file :
+------------------------
+The configuration file helps to configure important technology parameters used by the
+'synth_fpga' command. It is provided through the option 'synth_fpga -config <configuration file>".
+
+The template of this file is as follows:
 
 ```
 {
@@ -129,7 +135,7 @@ FPGA Configuration Specification:
                 "memory_map": <path, path to yosys mapping file>,
                 "techmap": <path, path to yosys tech mapping>
         },
-        "dsp": {
+        "dsps": {
                 "family": <str, name of dsp family>,
                 "techmap": <path, path to yosys techmapping file>,
                 "techmap_parameters": {
@@ -138,5 +144,67 @@ FPGA Configuration Specification:
         }
 }
 ```
+* paths are relative to the location of this configuration file.
 
-* paths are relative to the location of this file
+Note that all sections like "version", "name", "lut", ... are required except "brams" and "dsps"
+which are optional.
+
+Example : z1010 architecture (with brams and dsps)
+{
+    "version": 1,
+    "partname": "z1010",
+    "lut_size": 4,
+    "flipflops": {
+        "features": ["async reset", "async set", "enable"],
+        "models": {
+            "dffers": "/ffs/dffers.v",
+            "dffer": "/ffs/dffer.v",
+            "dffes": "/ffs/dffes.v",
+            "dffe": "/ffs/dffe.v",
+            "dffrs": "/ffs/dffrs.v",
+            "dffr": "/ffs/dffr.v",
+            "dffs": "/ffs/dffs.v",
+            "dff": "/ffs/dff.v"
+        },
+        "techmap": "/tech_flops.v"
+    },
+    "brams": {
+        "memory_libmap": "/bram_memory_map.txt",
+        "techmap": "/tech_bram.v"
+    },
+    "dsps": {
+        "family": "DSP48",
+        "techmap": "/mult18x18_DSP48.v",
+        "techmap_parameters": {
+            "DSP_A_MAXWIDTH": 18,
+            "DSP_B_MAXWIDTH": 18,
+            "DSP_A_MINWIDTH": 2,
+            "DSP_B_MINWIDTH": 2,
+            "DSP_Y_MINWIDTH": 9,
+            "DSP_SIGNEDONLY": 1,
+            "DSP_NAME": "$__MUL18X18"
+        }
+    }
+}
+
+Example : z1000 architecture (without brams and dsps)
+{
+    "version": 1,
+    "partname": "z1000",
+    "lut_size": 4,
+    "flipflops": {
+        "features": ["async reset", "async set", "enable"],
+        "models": {
+            "dffers": "/ffs/dffers.v",
+            "dffer": "/ffs/dffer.v",
+            "dffes": "/ffs/dffes.v",
+            "dffe": "/ffs/dffe.v",
+            "dffrs": "/ffs/dffrs.v",
+            "dffr": "/ffs/dffr.v",
+            "dffs": "/ffs/dffs.v",
+            "dff": "/ffs/dff.v"
+        },
+        "techmap": "/tech_flops.v"
+    }
+}
+
