@@ -125,7 +125,7 @@ The template of this file is as follows:
         "name": <str, name of the fpga part>,
         "lut": <int, size of lut>,
         "flipflops": {
-                "features": [<str, list of features file async, enable, reset, etc.>]
+                "features": [<str, list of features file async_set, flop_enable, async_reset, etc.>]
                 "models": {
                         "<str, ff name>": <path, path to model file>
                 },
@@ -156,7 +156,7 @@ Example : z1010 architecture (with brams and dsps)
     "partname": "z1010",
     "lut_size": 4,
     "flipflops": {
-        "features": ["async reset", "async set", "enable"],
+        "features": ["async_reset", "async_set", "flop_enable"],
         "models": {
             "dffers": "/ffs/dffers.v",
             "dffer": "/ffs/dffer.v",
@@ -194,7 +194,7 @@ Example : z1000 architecture (without brams and dsps)
     "partname": "z1000",
     "lut_size": 4,
     "flipflops": {
-        "features": ["async reset", "async set", "enable"],
+        "features": ["async_reset", "async_set", "flop_enable"],
         "models": {
             "dffers": "/ffs/dffers.v",
             "dffer": "/ffs/dffer.v",
