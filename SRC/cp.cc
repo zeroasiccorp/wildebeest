@@ -97,6 +97,10 @@ struct MaxHeigthWorker
    // ---------------------
    void get_cp_logic_rec(SigBit bit, int height)
    {
+     if (bits.count(bit) == 0) { // constant case
+       return;
+     }
+
      auto &bitinfo = bits.at(bit);
 
      // Bit already in 'cps' so already traversed and TFI already added in 'cps'
@@ -292,6 +296,10 @@ struct MaxHeigthWorker
    // ---------------------
    int get_height_rec(SigBit bit)
    {
+     if (bits.count(bit) == 0) { // constant case
+       return 0;
+     }
+
      auto &bitinfo = bits.at(bit);
 
      fanout[bit] += 1;
