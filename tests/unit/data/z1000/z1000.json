@@ -3,7 +3,7 @@
     "partname": "z1000",
     "lut_size": 4,
     "flipflops": {
-        "features": ["async reset", "async set", "enable"],
+        "features": ["async_reset", "async_set", "flop_enable"],
         "models": {
             "dffers": "/ffs/dffers.v",
             "dffer": "/ffs/dffer.v",
