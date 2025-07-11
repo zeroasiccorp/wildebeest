@@ -122,38 +122,39 @@ The template of this file is as follows:
 ```
 {
         "version": <int, version of file schema, current version is 1>,
-        "name": <str, name of the fpga part>,
-        "lut": <int, size of lut>,
+        "partname": <str, name of the fpga part>,
+        "root_path": <path, absolute path where all other paths are relative to>,
+        "lut_size": <int, size of lut>,
         "flipflops": {
                 "features": [<str, list of features file async_set, flop_enable, async_reset, etc.>]
                 "models": {
-                        "<str, ff name>": <path, path to model file>
+                        "<str, ff name>": <path, relative path to DFFs model file>
                 },
-                "techmap": <path, path to yosys techmapping file>
+                "techmap": <path, relative path to yosys DFFs tech mapping file>
         },
         "brams": {
-                "memory_map": <path, path to yosys mapping file>,
-                "techmap": <path, path to yosys tech mapping>
+                "memory_map": <path, relative path to yosys memory mapping file>,
+                "techmap": <path, relative path to yosys memory tech mapping>
         },
         "dsps": {
                 "family": <str, name of dsp family>,
-                "techmap": <path, path to yosys techmapping file>,
+                "techmap": <path, relative path to yosys dsp tech mapping file>,
                 "techmap_parameters": {
                         "<str, name of define>": <str or int, value of define>
                 }
         }
 }
 ```
-* paths are relative to the location of this configuration file.
 
-Note that all sections like "version", "name", "lut", ... are required except "brams" and "dsps"
-which are optional.
+Note that all sections like "version", "part_name", "lut_size", ... are required except "root_path", "brams" and "dsps" which are optional.
+If "root_path" is not specified, it will correspond to the path where the config file is located.
 
 ```
 Example : z1010 architecture (with brams and dsps)
 {
     "version": 1,
     "partname": "z1010",
+    "root_path": "/home/thierry/myarch/z1010",
     "lut_size": 4,
     "flipflops": {
         "features": ["async_reset", "async_set", "flop_enable"],
