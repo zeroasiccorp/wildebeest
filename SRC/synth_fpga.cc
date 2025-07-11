@@ -324,9 +324,9 @@ struct SynthFpgaPass : public ScriptPass
   typedef struct {
 	  string config_file;
 	  int    version;
+	  string root_path;
 	  string partname;
 	  int    lut_size;
-	  string root_path;
 
 	  // DFF related
 	  //
@@ -368,7 +368,7 @@ struct SynthFpgaPass : public ScriptPass
     log("\n");
     log(" ==========================================================================\n");
     log("  Config file        : %s\n", (G_config.config_file).c_str());
-    log("  Version            : %d\n", G_config.version);
+    log("  version            : %d\n", G_config.version);
     log("  partname           : %s\n", (G_config.partname).c_str());
     log("  lut_size           : %d\n", G_config.lut_size);
     log("  root_path          : %s\n", (G_config.root_path).c_str());
@@ -621,6 +621,19 @@ struct SynthFpgaPass : public ScriptPass
     if (version->type != 'N') {
         log_error("'version' must be an integer.\n");
     }
+    
+    // root_path
+    //
+    JsonNode *root_path = NULL;
+    if (root.data_dict.count("root_path") == 0) {
+      log("NOTE: no 'root_path' section found in the config file : %s.\n",
+          config_file.c_str());
+    } else {
+        root_path = root.data_dict.at("root_path");
+        if (root_path->type != 'S') {
+            log_error("'root_path' must be a string.\n");
+        }
+    }
 
     // partname
     //
@@ -681,16 +694,27 @@ struct SynthFpgaPass : public ScriptPass
 
     G_config.version = version->data_number;
 
+    if (!root_path) {
+       G_config.root_path = "";
+    } else {
+       G_config.root_path = root_path->data_string;
+    }
+
     G_config.partname = partname->data_string;
 
     G_config.lut_size = lut_size->data_number;
 
-    // Add extra "./" otherwise root path extraction code can fail.
+    // In case there was no explicit setting on "root_path" section
+    // in the config file then pick up the config file location.
     //
-    config_file = "./" + config_file;
-    const std::filesystem::path config_path(config_file);
-    G_config.root_path = std::filesystem::absolute(config_path.parent_path());
-    log("NOTE: Config Root path = %s\n", (G_config.root_path).c_str());
+    if (G_config.root_path == "") {
+      // Add extra "./" otherwise root path extraction code can fail.
+      //
+      config_file = "./" + config_file;
+      const std::filesystem::path config_path(config_file);
+      G_config.root_path = std::filesystem::absolute(config_path.parent_path());
+      log("NOTE: Pick up Config file location as root path : %s\n", (G_config.root_path).c_str());
+    }
 
     // Extract DFF associated parameters
     //
