@@ -136,7 +136,7 @@ echo "&satlut -d -N 31; "
 echo " "
 echo "Final stat: "
 echo " "
-&load; &ps -s; time
+&load; &ps; time
  
 echo " "
 echo "** ABC DELAY optimization done !!!"
@@ -144,13 +144,6 @@ echo "** ABC DELAY optimization done !!!"
 
 write_blif out.blif
 time
-
-echo ""
-echo ""
-echo "Skip Equivalence Checking ..."
-echo "Skip cec in.blif out.blif; time"
-echo ""
-echo ""
 
 time
 
