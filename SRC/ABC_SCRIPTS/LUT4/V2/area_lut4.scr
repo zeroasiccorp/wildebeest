@@ -1,10 +1,24 @@
 time
 
+echo " "
+echo "** Starting ABC AREA LUT4 optimization and mapping !!!"
+
+write_blif in.blif 
+
+strash
+dc2
+strash
+dch -f
+if -K 4
+mfs2
+
 &get -n -m; 
 
+&save -a; 
+
 echo ""
-echo "&synch2 -K 4 -C 500; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m;  &save -a; &load; &synch2 -K 4 -C 500; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m;"
-&synch2 -K 4 -C 500; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m;  &save -a; &load; &synch2 -K 4 -C 500; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m; &save -a; &load; &ps; time
+echo "&synch2 -K 4 -C 500; &dch -c 600; &if -K 4 -a; &save -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m;  &save -a; &load; &synch2 -K 4 -C 500; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m;"
+&synch2 -K 4 -C 500; &if -K 4 -a; &save -a; &load; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m;  &save -a; &load; &synch2 -K 4 -C 500; &if -K 4 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m; &save -a; &load; &ps; time
 
 
 echo ""
@@ -19,15 +33,11 @@ echo ""
 echo "mfs2 -W 4 -M 1000 -C 7000; "
 &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &save -a; &ps; time 
 
-echo ""
-echo "&satlut;" 
-&load; &satlut; &ps; time;
-
-&put
+&load
 
 echo ""
 echo "lutpack -S 1"
-lutpack -S 1; time
+&put; lutpack -S 1; time
 
 &get -n -m; &ps; 
 
