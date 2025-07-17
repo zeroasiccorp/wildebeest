@@ -32,8 +32,8 @@ echo "dch -f"
 dch -f
 
 echo ""
-echo "if -K 4"
-if -K 4
+echo "if -K 4 -a"
+if -K 4 -a
 &get -n -m; &ps ; &put
 
 echo ""
