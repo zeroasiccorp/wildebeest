@@ -215,6 +215,13 @@ struct ReportStatPass : public ScriptPass
              nb++;
              continue;
         }
+	
+	// Microchip
+	//
+        if (cell->type.in(ID(MACC_PA))) {
+             nb++;
+             continue;
+        }
     }
 
     return nb;
