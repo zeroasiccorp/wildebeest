@@ -882,7 +882,7 @@ struct ZOptDffWorker
 			// we may blow up its runtime.
 			// Therefore, after a given limit, we restart from scratch.
 			//
-			if (1 && (qcsat1->nbImportedCells() > 30000)) {
+			if (1 && (qcsat1->nbImportedCells() > 5000)) {
 		          delete qcsat1;
 		          qcsat1 = new ZQuickConeSat(modwalker);
 			}
