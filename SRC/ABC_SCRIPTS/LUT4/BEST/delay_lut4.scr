@@ -139,11 +139,8 @@ echo " "
 &load; &ps; time
  
 echo " "
-echo "** ABC DELAY optimization done !!!"
+echo "** ABC DELAY optimization and mapping done !!!"
 &put
-
-write_blif out.blif
-time
 
 time
 
