@@ -1408,8 +1408,8 @@ struct SynthFpgaPass : public ScriptPass
         log("        Invoke BRAM inference. It is off by default.\n");
         log("\n");
 
-        log("    -use_DSP48\n");
-        log("        Invoke DSP48 inference. It is off by default.\n");
+        log("    -use_DSP\n");
+        log("        Invoke DSP inference. It is off by default.\n");
         log("\n");
 
         log("    -resynthesis\n");
@@ -1573,7 +1573,7 @@ struct SynthFpgaPass : public ScriptPass
              continue;
           }
 
-          if (args[argidx] == "-use_DSP48") {
+          if (args[argidx] == "-use_DSP") {
              dsp48 = true;
              continue;
           }
