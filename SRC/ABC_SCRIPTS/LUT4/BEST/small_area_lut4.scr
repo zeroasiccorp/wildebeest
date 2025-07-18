@@ -14,6 +14,49 @@ echo "&st; &if -sz -C 5 -K 7 -S 44 -a"
 
 read_blif in.blif
 
+&get -n -m
+
+echo ""
+echo "&st; &lf -K 4 -e;"
+&st; &lf -K 4 -e; &save -a; &ps; time
+&put
+
+read_blif in.blif
+
+&get -n -m
+
+echo ""
+&st; &lf -K 4 -e; &save -a; &ps; time
+&put
+
+read_blif in.blif
+
+strash
+
+echo ""
+echo "&fraig"
+&get -n
+&sopb -C 3
+&fraig -x -L 200
+&put
+
+echo ""
+echo "dc2"
+dc2
+
+strash
+echo ""
+echo "dch -f"
+dch -f
+
+echo ""
+echo "if -K 4 -a"
+if -K 4 -a
+&get -n -m; &save -a; &ps ; time
+&put
+
+read_blif in.blif
+
 strash
 
 echo ""
@@ -34,7 +77,11 @@ dch -f
 echo ""
 echo "if -K 4 -a"
 if -K 4 -a
-&get -n -m; &ps ; &put
+&get -n -m; &ps ; &save -a;
+
+&load;
+&put
+
 
 echo ""
 echo "mfs2 -W 4 -M 500 -C 7000"
@@ -70,6 +117,14 @@ lutpack -S 1;
 &get -n -m;
 
 &save -a;
+
+echo ""
+echo "&satlut -r -C 500; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &save -a; &load;"
+&satlut -r -C 500; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &save -a; &ps; &load; 
+
+echo ""
+echo "&satlut -r -C 500; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &save -a; &load;"
+&satlut -r -C 500; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &save -a; &ps; &load; 
 
 &load; &ps; 
 

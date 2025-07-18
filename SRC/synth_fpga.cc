@@ -34,6 +34,7 @@
 
 #define HUGE_NB_CELLS 5000000 // 5 Million cells
 #define BIG_NB_CELLS 500000   // 500K cells
+#define SMALL_NB_CELLS 300000 // 300K cells
 
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
@@ -1065,7 +1066,13 @@ struct SynthFpgaPass : public ScriptPass
     //
     int nb_cells = getNumberOfCells();
 
-    if (nb_cells >= HUGE_NB_CELLS) { // example : 'zmcml' from Golden suite
+    if (nb_cells <= SMALL_NB_CELLS) { 
+
+      if (mode == "area") {
+         mode  = "small_area";
+      }
+
+    } else if (nb_cells >= HUGE_NB_CELLS) { // example : 'zmcml' from Golden suite
 
       mode  = "huge";
 
