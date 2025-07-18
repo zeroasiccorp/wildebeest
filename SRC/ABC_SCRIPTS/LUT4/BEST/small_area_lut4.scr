@@ -112,19 +112,24 @@ echo "mfs2 -W 4 -M 1000 -C 7000; "
 
 &put
 
+echo ""
+echo "lutpack -S 1"
 lutpack -S 1;
+time
 
 &get -n -m;
 
 &save -a;
 
 echo ""
-echo "&satlut -r -C 500; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &save -a; &load;"
+echo "&satlut -r; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &save -a; &load;"
 &satlut -r; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &save -a; &ps; &load; 
+time
 
 echo ""
-echo "&satlut -r -C 500; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &save -a; &load;"
+echo "&satlut -r; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &save -a; &load;"
 &satlut -r; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &save -a; &ps; &load; 
+time
 
 &load; &ps; 
 
