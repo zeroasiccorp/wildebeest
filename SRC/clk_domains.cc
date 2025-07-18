@@ -142,12 +142,14 @@ struct MaxLvlWorker
      //
      ff_celltypes.setup_type(ID(RAM1K20), {}, {});
    }
-   void setup_internals_microchip_iobuf_polarfire(CellTypes& ff_celltypes)
+   void setup_internals_microchip_cells_polarfire(CellTypes& ff_celltypes)
    {
-     // Simply list the IO buf cells names is enough as cut points
+     // Simply list the cells names is enough as cut points
      //
      ff_celltypes.setup_type(ID(INBUF), {}, {});
      ff_celltypes.setup_type(ID(OUTBUF), {}, {});
+     ff_celltypes.setup_type(ID(SLE), {}, {});
+     ff_celltypes.setup_type(ID(CLKINT), {}, {});
    }
    
    // ------------------------------------
@@ -202,7 +204,7 @@ struct MaxLvlWorker
 	 //
          setup_internals_microchip_ff_polarfire(ff_celltypes);
          setup_internals_microchip_bram_polarfire(ff_celltypes);
-         setup_internals_microchip_iobuf_polarfire(ff_celltypes);
+         setup_internals_microchip_cells_polarfire(ff_celltypes);
 
 	 // Intel (Altera)
 	 //
