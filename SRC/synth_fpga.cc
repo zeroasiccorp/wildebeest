@@ -48,13 +48,16 @@ struct SynthFpgaPass : public ScriptPass
   string abc_script_version;
   bool no_flatten, dff_enable, dff_async_set, dff_async_reset;
   bool obs_clean, wait, show_max_level, csv, insbuf, resynthesis, autoname;
-  bool bram, dsp48, no_seq_opt, show_config;
+  bool bram, no_seq_opt, show_config;
   string sc_syn_lut_size;
   string config_file = "";
   bool config_file_success = false;
+  bool dsp;
+  string dsp_tech;
 
   pool<string> opt_options  = {"default", "fast", "area", "delay"};
   pool<string> partnames  = {"Z1000", "Z1010"};
+  pool<string> dsp_arch  = {"none", "xilinx", "microchip"};
 
   // ----------------------------
   // Key 'yosys-syn' parameters
@@ -525,16 +528,40 @@ struct SynthFpgaPass : public ScriptPass
       ys_brams_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM_map.v -map +/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM_map.v";
   
   
+      if (dsp) {
+        dsp_tech = "microchip";
+      }
+
       // DSP setting
       //
-      ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/mult18x18_DSP48.v ";
-      ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
-      ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
-      ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
-      ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
-      ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
-      ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
-      ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
+      if (dsp_tech == "xilinx") {
+
+        ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/mult18x18_DSP48.v ";
+        ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
+        ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
+        ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
+        ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
+        ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
+        ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
+        ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
+
+      } else if (dsp_tech == "microchip") {
+
+        ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/polarfire_dsp_map.v ";
+        ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
+        ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
+        ys_dsps_parameter_int["DSP_A_MAXWIDTH_PARTIAL"] = 18;  // Partial multipliers are intentionally
+                                                               // limited to 18x18 in order to take
+                                                               // advantage of the (PCOUT >> 17) -> PCIN
+                                                               // dedicated cascade chain capability
+
+        ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
+        ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
+        ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
+        ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
+        ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
+
+      }
     }
 
   }
@@ -564,6 +591,15 @@ struct SynthFpgaPass : public ScriptPass
            log ("               - %s\n", part_name.c_str());
         }
         log_error("Please select a correct partname.\n");
+    }
+
+     if (dsp_arch.count(dsp_tech) == 0) {
+        log("ERROR: -use_DSP_TECH '%s' is unknown.\n", dsp_tech.c_str());
+        log("       Available DSP architectures are :\n");
+        for (auto dsp : dsp_arch) {
+           log ("               - %s\n", dsp_tech.c_str());
+        }
+        log_error("Please select a correct DSP architecture.\n");
     }
 
     if ((sc_syn_lut_size != "4") && (sc_syn_lut_size != "6")) {
@@ -1246,7 +1282,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void infer_DSPs()
   {
-     if (!dsp48) {
+     if ((dsp_tech == "none") && (!config_file_success)) {
        return;
      }
 
@@ -1281,10 +1317,43 @@ struct SynthFpgaPass : public ScriptPass
      run("opt_expr -fine");
      run("wreduce");
      run("select -clear");
-     run("dsp -family DSP48");
+
+     if (!config_file_success) {
+
+       if (dsp_tech == "xilinx") {
+
+         run("dsp -family DSP48");
+
+       } else if (dsp_tech == "microchip") {
+
+         run("microchip_dsp -family polarfire");
+       }
+     }
+
      run("chtype -set $mul t:$__soft_mul");
 
      run("stat");
+     
+#if 0
+     run("memory_dff"); // microchip_dsp will merge registers, reserve memory port registers first
+                                run("techmap -map +/mul2dsp.v -map +/microchip/polarfire_dsp_map.v -D DSP_A_MAXWIDTH=18 -D DSP_B_MAXWIDTH=18 "
+                                    "-D DSP_A_MAXWIDTH_PARTIAL=18 " // Partial multipliers are intentionally
+                                                                    // limited to 18x18 in order to take
+                                                                    // advantage of the (PCOUT >> 17) -> PCIN
+                                                                    // dedicated cascade chain capability
+                                    "-D DSP_A_MINWIDTH=2 -D DSP_B_MINWIDTH=2 " // Blocks Nx1 multipliers
+                                    "-D DSP_Y_MINWIDTH=9 "
+                                    "-D DSP_SIGNEDONLY=1 -D DSP_NAME=$__MUL18X18");
+
+                                run("select a:mul2dsp");
+                                run("setattr -unset mul2dsp");
+                                run("opt_expr -fine");
+                                run("wreduce");
+                                run("select -clear");
+                                run("microchip_dsp -family polarfire");
+                                run("chtype -set $mul t:$__soft_mul");
+#endif
+
   }
 
   // -------------------------
@@ -1409,7 +1478,12 @@ struct SynthFpgaPass : public ScriptPass
         log("\n");
 
         log("    -use_DSP\n");
-        log("        Invoke DSP inference. It is off by default.\n");
+        log("        Invoke DSP microchip-like inference. It is off by default.\n");
+        log("\n");
+
+        log("    -use_DSP_TECH ['none', 'xilinx', 'microchip']\n");
+        log("        Invoke architecture specific DSP inference. It is off by default. -use_DSP \n");
+        log("        overides -use_DSP_TECH.\n");
         log("\n");
 
         log("    -resynthesis\n");
@@ -1487,7 +1561,8 @@ struct SynthFpgaPass : public ScriptPass
 	no_flatten = false;
 	no_seq_opt = false;
 	autoname = false;
-	dsp48 = false;
+	dsp_tech = "none";
+	dsp = false;
 	bram = false;
 	resynthesis = false;
 	show_config = false;
@@ -1574,7 +1649,12 @@ struct SynthFpgaPass : public ScriptPass
           }
 
           if (args[argidx] == "-use_DSP") {
-             dsp48 = true;
+             dsp = true;
+             continue;
+          }
+
+          if (args[argidx] == "-use_DSP_TECH" && argidx+1 < args.size()) {
+             dsp_tech = args[++argidx];
              continue;
           }
 
@@ -1916,7 +1996,8 @@ struct SynthFpgaPass : public ScriptPass
 
     float totalTime = 1 + elapsed.count() * 1e-9;
 
-    log("   PartName : %s\n", part_name.c_str());
+    log("   PartName  : %s\n", part_name.c_str());
+    log("   DSP Style : %s\n", dsp_tech.c_str());
     log("\n");
     log("   'Zero Asic' FPGA Synthesis Version : %s\n", SYNTH_FPGA_VERSION);
     log("\n");

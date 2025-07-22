@@ -149,6 +149,8 @@ struct Yosys_syn_DspPass : public Pass {
 				z1010_dsp_CREG_pm pm(module, module->selected_cells());
 				pm.run_dsp_packC(dsp_packC);
 			}
+
+#if 0
 			// Lastly, identify and utilise PCOUT -> PCIN,
 			//   ACOUT -> ACIN, and BCOUT-> BCIN dedicated cascade
 			//   chains
@@ -156,6 +158,7 @@ struct Yosys_syn_DspPass : public Pass {
 				z1010_dsp_cascade_pm pm(module, module->selected_cells());
 				pm.run_dsp_cascade();
 			}
+#endif
 		}
 	}
 } Yosys_syn_DspPass;
