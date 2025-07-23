@@ -747,9 +747,8 @@ struct SynthFpgaPass : public ScriptPass
     if (G_config.root_path == "") {
       // Add extra "./" otherwise root path extraction code can fail.
       //
-      config_file = "./" + config_file;
-      const std::filesystem::path config_path(config_file);
-      G_config.root_path = std::filesystem::absolute(config_path.parent_path());
+      const std::filesystem::path config_path(std::filesystem::absolute(config_file));
+      G_config.root_path = config_path.parent_path();
       log("NOTE: Pick up Config file location as root path : %s\n", (G_config.root_path).c_str());
     }
 
