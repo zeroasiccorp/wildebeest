@@ -444,7 +444,7 @@ struct SynthFpgaPass : public ScriptPass
        for (auto it : G_config.dff_models) {
           ys_dff_models[it.first] = it.second;
        }
-       ys_dff_techmap = G_config.root_path + G_config.dff_techmap;
+       ys_dff_techmap = G_config.root_path + "/" + G_config.dff_techmap;
 
 
        // BRAMs parameters setting
@@ -452,13 +452,13 @@ struct SynthFpgaPass : public ScriptPass
        if (G_config.brams_memory_libmap == "") {
          ys_brams_memory_libmap = ""; 
        } else {
-         ys_brams_memory_libmap = G_config.root_path + G_config.brams_memory_libmap; 
+         ys_brams_memory_libmap = G_config.root_path + "/" + G_config.brams_memory_libmap; 
        }
 
        if (G_config.brams_techmap == "") {
           ys_brams_techmap = ""; 
        } else { 
-	  ys_brams_techmap = G_config.root_path + G_config.brams_techmap; 
+	  ys_brams_techmap = G_config.root_path + "/" + G_config.brams_techmap; 
        }
 
        
@@ -468,7 +468,7 @@ struct SynthFpgaPass : public ScriptPass
           ys_dsps_techmap = "";
        } else {
 
-          ys_dsps_techmap = G_config.root_path + G_config.dsps_techmap;
+          ys_dsps_techmap = G_config.root_path + "/" + G_config.dsps_techmap;
           for (auto it : G_config.dsps_parameter_int) {
 	      ys_dsps_parameter_int[it.first] = it.second;
           }
@@ -747,9 +747,8 @@ struct SynthFpgaPass : public ScriptPass
     if (G_config.root_path == "") {
       // Add extra "./" otherwise root path extraction code can fail.
       //
-      config_file = "./" + config_file;
-      const std::filesystem::path config_path(config_file);
-      G_config.root_path = std::filesystem::absolute(config_path.parent_path());
+      const std::filesystem::path config_path(std::filesystem::absolute(config_file));
+      G_config.root_path = config_path.parent_path();
       log("NOTE: Pick up Config file location as root path : %s\n", (G_config.root_path).c_str());
     }
 
