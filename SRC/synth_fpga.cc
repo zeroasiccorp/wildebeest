@@ -52,15 +52,15 @@ struct SynthFpgaPass : public ScriptPass
   string sc_syn_lut_size;
   string config_file = "";
   bool config_file_success = false;
-  bool dsp;
-  bool bram;
+  bool no_dsp;
+  bool no_bram;
   string dsp_tech;
   string bram_tech;
 
   pool<string> opt_options  = {"default", "fast", "area", "delay"};
   pool<string> partnames  = {"Z1000", "Z1010"};
-  pool<string> dsp_arch  = {"none", "xilinx", "microchip"};
-  pool<string> bram_arch  = {"none", "zeroasic", "microchip"};
+  pool<string> dsp_arch  = {"xilinx", "microchip", "config"};
+  pool<string> bram_arch  = {"zeroasic", "microchip", "config"};
 
   // ----------------------------
   // Key 'yosys-syn' parameters
@@ -463,6 +463,7 @@ struct SynthFpgaPass : public ScriptPass
        } else { 
 	  ys_brams_techmap = G_config.root_path + "/" + G_config.brams_techmap; 
        }
+       bram_tech = "config";
 
        
        // DSPs parameters setting
@@ -479,6 +480,7 @@ struct SynthFpgaPass : public ScriptPass
 	      ys_dsps_parameter_string[it.first] = it.second;
           }
        }
+       dsp_tech = "config";
 
 
        // Processing cases where 'config' file overides user command options.
@@ -530,10 +532,6 @@ struct SynthFpgaPass : public ScriptPass
       ys_brams_memory_libmap = "";
       ys_brams_techmap = "";
 
-      if (bram) {
-        bram_tech = "zeroasic";
-      }
-
       if (bram_tech == "microchip") {
          ys_brams_memory_libmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM.txt -lib +/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM.txt";
          ys_brams_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM_map.v -map +/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM_map.v";
@@ -550,10 +548,6 @@ struct SynthFpgaPass : public ScriptPass
       ys_dsps_techmap = "";
       ys_dsps_parameter_int.clear();
       ys_dsps_parameter_string.clear();
-
-      if (dsp) {
-        dsp_tech = "microchip";
-      }
 
       if (dsp_tech == "xilinx") {
 
@@ -615,7 +609,7 @@ struct SynthFpgaPass : public ScriptPass
     }
 
     if (dsp_arch.count(dsp_tech) == 0) {
-        log("ERROR: -use_DSP_TECH '%s' is unknown.\n", dsp_tech.c_str());
+        log("ERROR: -use_dsp_tech '%s' is unknown.\n", dsp_tech.c_str());
         log("       Available DSP architectures are :\n");
         for (auto dsp : dsp_arch) {
            log ("               - %s\n", dsp.c_str());
@@ -624,7 +618,7 @@ struct SynthFpgaPass : public ScriptPass
     }
 
     if (bram_arch.count(bram_tech) == 0) {
-        log("ERROR: -use_BRAM_TECH '%s' is unknown.\n", bram_tech.c_str());
+        log("ERROR: -use_bram_tech '%s' is unknown.\n", bram_tech.c_str());
         log("       Available BRAM architectures are :\n");
         for (auto bram : bram_arch) {
            log ("               - %s\n", bram.c_str());
@@ -1260,7 +1254,7 @@ struct SynthFpgaPass : public ScriptPass
   //
   void infer_BRAMs()
   {
-     if (bram_tech == "none") {
+     if (no_bram) {
        return;
      }
 
@@ -1302,7 +1296,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void infer_DSPs()
   {
-     if ((dsp_tech == "none") && (!config_file_success)) {
+     if (no_dsp) {
        return;
      }
 
@@ -1493,22 +1487,22 @@ struct SynthFpgaPass : public ScriptPass
         log("        Specifies the Architecture partname used. By default it is Z1000.\n");
         log("\n");
 
-        log("    -use_BRAM\n");
-        log("        Invoke BRAM inference. It is off by default.\n");
+        log("    -no_bram\n");
+        log("        Bypass BRAM inference. It is off by default.\n");
         log("\n");
 
-        log("    -use_BRAM_TECH ['none', 'zeroasic', 'microchip']\n");
-        log("        Invoke architecture specific DSP inference. It is off by default. -use_BRAM \n");
-        log("        overides -use_BRAM_TECH and will select 'zeroasic'.\n");
+        log("    -use_bram_tech ['zeroasic', 'microchip']\n");
+        log("        Invoke architecture specific DSP inference. It is off by default. -no_BRAM \n");
+        log("        overides -use_BRAM_TECH.\n");
         log("\n");
 
-        log("    -use_DSP\n");
-        log("        Invoke DSP microchip-like inference. It is off by default.\n");
+        log("    -no_dsp\n");
+        log("        Bypass DSP inference. It is off by default.\n");
         log("\n");
 
-        log("    -use_DSP_TECH ['none', 'xilinx', 'microchip']\n");
-        log("        Invoke architecture specific DSP inference. It is off by default. -use_DSP \n");
-        log("        overides -use_DSP_TECH and will use 'microchip'.\n");
+        log("    -use_DSP_TECH ['xilinx', 'microchip']\n");
+        log("        Invoke architecture specific DSP inference. It is off by default. -no_DSP \n");
+        log("        overides -use_DSP_TECH.\n");
         log("\n");
 
         log("    -resynthesis\n");
@@ -1586,10 +1580,13 @@ struct SynthFpgaPass : public ScriptPass
 	no_flatten = false;
 	no_seq_opt = false;
 	autoname = false;
-	dsp_tech = "none";
-	dsp = false;
-	bram_tech = "none";
-	bram = false;
+
+	dsp_tech = "microchip";
+	no_dsp = false;
+
+	bram_tech = "microchip";
+	no_bram = false;
+
 	resynthesis = false;
 	show_config = false;
 	show_max_level = false;
@@ -1669,22 +1666,22 @@ struct SynthFpgaPass : public ScriptPass
              continue;
           }
 
-          if (args[argidx] == "-use_BRAM") {
-             bram = true;
+          if (args[argidx] == "-no_bram") {
+             no_bram = true;
              continue;
           }
 
-          if (args[argidx] == "-use_BRAM_TECH" && argidx+1 < args.size()) {
+          if (args[argidx] == "-use_bram_tech" && argidx+1 < args.size()) {
              bram_tech = args[++argidx];
              continue;
           }
 
-          if (args[argidx] == "-use_DSP") {
-             dsp = true;
+          if (args[argidx] == "-no_dsp") {
+             no_dsp = true;
              continue;
           }
 
-          if (args[argidx] == "-use_DSP_TECH" && argidx+1 < args.size()) {
+          if (args[argidx] == "-use_dsp_tech" && argidx+1 < args.size()) {
              dsp_tech = args[++argidx];
              continue;
           }
@@ -1817,7 +1814,7 @@ struct SynthFpgaPass : public ScriptPass
     setup_options();
 
     // Check that all options are valid. 
-    // Example : check that the 'partname' do exist.
+    // Example : check that the 'partname' exists.
     //
     check_options();
 
