@@ -270,6 +270,34 @@ struct ReportStatPass : public ScriptPass
              nb++;
              continue;
         }
+	
+        // Zeroasic 
+        //
+        if (cell->type.in(ID(spram_512x64),
+                          ID(spram_1024x32), 
+                          ID(spram_2048x16), 
+			  ID(spram_4096x8), 
+			  ID(spram_8192x4), 
+			  ID(spram_16384x2), 
+			  ID(spram_32768x1), 
+
+			  ID(sdpram_1024x32), 
+			  ID(sdpram_2048x16), 
+			  ID(sdpram_4096x8), 
+			  ID(sdpram_8192x4), 
+			  ID(sdpram_16384x2), 
+			  ID(sdpram_32768x1), 
+
+			  ID(tdpram_1024x32), 
+			  ID(tdpram_2048x16), 
+			  ID(tdpram_4096x8), 
+			  ID(tdpram_8192x4), 
+			  ID(tdpram_16384x2), 
+			  ID(tdpram_32768x1))) {
+             nb++;
+             continue;
+        }
+
     }
 
     return nb;

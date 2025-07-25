@@ -48,16 +48,19 @@ struct SynthFpgaPass : public ScriptPass
   string abc_script_version;
   bool no_flatten, dff_enable, dff_async_set, dff_async_reset;
   bool obs_clean, wait, show_max_level, csv, insbuf, resynthesis, autoname;
-  bool bram, no_seq_opt, show_config;
+  bool no_seq_opt, show_config;
   string sc_syn_lut_size;
   string config_file = "";
   bool config_file_success = false;
   bool dsp;
+  bool bram;
   string dsp_tech;
+  string bram_tech;
 
   pool<string> opt_options  = {"default", "fast", "area", "delay"};
   pool<string> partnames  = {"Z1000", "Z1010"};
   pool<string> dsp_arch  = {"none", "xilinx", "microchip"};
+  pool<string> bram_arch  = {"none", "zeroasic", "microchip"};
 
   // ----------------------------
   // Key 'yosys-syn' parameters
@@ -521,19 +524,37 @@ struct SynthFpgaPass : public ScriptPass
       ys_dff_models["dffs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffs.v";
       ys_dff_models["dff"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dff.v";
 
+
       // BRAM setting
-      // Picked up from Micro chip
+      // 
+      ys_brams_memory_libmap = "";
+      ys_brams_techmap = "";
+
+      if (bram) {
+        bram_tech = "zeroasic";
+      }
+
+      if (bram_tech == "microchip") {
+         ys_brams_memory_libmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM.txt -lib +/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM.txt";
+         ys_brams_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM_map.v -map +/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM_map.v";
+
+      } else if (bram_tech == "zeroasic") {
+  
+        ys_brams_memory_libmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/memory_libmap.txt ";
+        ys_brams_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/techmap.v ";
+      }
+  
+
+      // DSP setting
       //
-      ys_brams_memory_libmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM.txt -lib +/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM.txt";
-      ys_brams_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM_map.v -map +/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM_map.v";
-  
-  
+      ys_dsps_techmap = "";
+      ys_dsps_parameter_int.clear();
+      ys_dsps_parameter_string.clear();
+
       if (dsp) {
         dsp_tech = "microchip";
       }
 
-      // DSP setting
-      //
       if (dsp_tech == "xilinx") {
 
         ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/mult18x18_DSP48.v ";
@@ -593,13 +614,22 @@ struct SynthFpgaPass : public ScriptPass
         log_error("Please select a correct partname.\n");
     }
 
-     if (dsp_arch.count(dsp_tech) == 0) {
+    if (dsp_arch.count(dsp_tech) == 0) {
         log("ERROR: -use_DSP_TECH '%s' is unknown.\n", dsp_tech.c_str());
         log("       Available DSP architectures are :\n");
         for (auto dsp : dsp_arch) {
-           log ("               - %s\n", dsp_tech.c_str());
+           log ("               - %s\n", dsp.c_str());
         }
         log_error("Please select a correct DSP architecture.\n");
+    }
+
+    if (bram_arch.count(bram_tech) == 0) {
+        log("ERROR: -use_BRAM_TECH '%s' is unknown.\n", bram_tech.c_str());
+        log("       Available BRAM architectures are :\n");
+        for (auto bram : bram_arch) {
+           log ("               - %s\n", bram.c_str());
+        }
+        log_error("Please select a correct BRAM architecture.\n");
     }
 
     if ((sc_syn_lut_size != "4") && (sc_syn_lut_size != "6")) {
@@ -1230,7 +1260,7 @@ struct SynthFpgaPass : public ScriptPass
   //
   void infer_BRAMs()
   {
-     if (1 && !bram) {
+     if (bram_tech == "none") {
        return;
      }
 
@@ -1251,6 +1281,8 @@ struct SynthFpgaPass : public ScriptPass
      string sc_syn_bram_memory_libmap = "memory_libmap -lib " + ys_brams_memory_libmap;
      string sc_syn_bram_techmap = "techmap -map " + ys_brams_techmap;
 
+     run("stat");
+
      //log("Call %s\n", sc_syn_bram_memory_libmap.c_str());
      //
      log("\nWARNING: Make sure you are using the right 'partname' for the BRAM inference in case of failure.\n");
@@ -1261,17 +1293,6 @@ struct SynthFpgaPass : public ScriptPass
      //
      log("\nWARNING: Make sure you are using the right 'partname' for the BRAM inference in case of failure.\n");
      run(sc_syn_bram_techmap);
-
-#if 0
-     // Current Zero Asic calls to BRAM inference
-     //
-     run("stat");
-
-     run("memory_libmap -lib +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/bram_memory_map.txt");
-
-     run("techmap -map +/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/tech_bram.v");
-
-#endif
 
      run("stat");
   }
@@ -1476,13 +1497,18 @@ struct SynthFpgaPass : public ScriptPass
         log("        Invoke BRAM inference. It is off by default.\n");
         log("\n");
 
+        log("    -use_BRAM_TECH ['none', 'zeroasic', 'microchip']\n");
+        log("        Invoke architecture specific DSP inference. It is off by default. -use_BRAM \n");
+        log("        overides -use_BRAM_TECH and will select 'zeroasic'.\n");
+        log("\n");
+
         log("    -use_DSP\n");
         log("        Invoke DSP microchip-like inference. It is off by default.\n");
         log("\n");
 
         log("    -use_DSP_TECH ['none', 'xilinx', 'microchip']\n");
         log("        Invoke architecture specific DSP inference. It is off by default. -use_DSP \n");
-        log("        overides -use_DSP_TECH.\n");
+        log("        overides -use_DSP_TECH and will use 'microchip'.\n");
         log("\n");
 
         log("    -resynthesis\n");
@@ -1562,6 +1588,7 @@ struct SynthFpgaPass : public ScriptPass
 	autoname = false;
 	dsp_tech = "none";
 	dsp = false;
+	bram_tech = "none";
 	bram = false;
 	resynthesis = false;
 	show_config = false;
@@ -1644,6 +1671,11 @@ struct SynthFpgaPass : public ScriptPass
 
           if (args[argidx] == "-use_BRAM") {
              bram = true;
+             continue;
+          }
+
+          if (args[argidx] == "-use_BRAM_TECH" && argidx+1 < args.size()) {
+             bram_tech = args[++argidx];
              continue;
           }
 
@@ -1995,8 +2027,9 @@ struct SynthFpgaPass : public ScriptPass
 
     float totalTime = 1 + elapsed.count() * 1e-9;
 
-    log("   PartName  : %s\n", part_name.c_str());
-    log("   DSP Style : %s\n", dsp_tech.c_str());
+    log("   PartName   : %s\n", part_name.c_str());
+    log("   DSP Style  : %s\n", dsp_tech.c_str());
+    log("   BRAM Style : %s\n", bram_tech.c_str());
     log("\n");
     log("   'Zero Asic' FPGA Synthesis Version : %s\n", SYNTH_FPGA_VERSION);
     log("\n");
