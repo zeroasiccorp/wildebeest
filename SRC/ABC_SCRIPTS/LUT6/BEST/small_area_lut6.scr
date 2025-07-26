@@ -7,6 +7,13 @@ read_blif in.blif
 
 &get -n -m
 
+strash; muxes -g; &get -n -m; &st; &if -K 6 -a; &save -a; &ps
+&put
+
+read_blif in.blif
+
+&get -n -m
+
 echo ""
 echo "&st; &if -sz -C 5 -K 11 -S 66 -a"
 &st; &if -sz -C 5 -K 11 -S 66 -a ; &save -a; &ps; time
@@ -18,7 +25,7 @@ read_blif in.blif
 
 &st; &if -K 6 -a; &ps
 
-&st; &if -K 6; &save; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &st; &if -K 6 -a; &mfs -W 2 -C 600 -D 25; &satlut -d -C 50; &save -a; &load; &ps
+&st; &if -K 6; &save -a; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &st; &if -K 6 -a; &mfs -W 2 -C 600 -D 25; &satlut -d -C 50; &save -a; &load; &ps
 
 &dch -s -C 300; &if -K 6 -a; &satlut; &ps
 
