@@ -2,26 +2,42 @@ time
 echo " "
 echo "** Starting ABC DELAY LUT6 optimization and mapping !!!"
 
+write_blif in.blif
+
 &get -n -m
 
 echo ""
-echo "&st; &if -sz -C 5 -K 11 -S 66 -a"
-&st; &if -sz -C 5 -K 11 -S 66 -a ; &save; &ps; time
+echo "&st; &if -sz -C 3 -K 11 -S 66 "
+&st; &if -sz -C 3 -K 11 -S 66 ; &save; &ps; time
 &put
 
 read_blif in.blif
 
 &get -n -m
 
-&st; &if -K 6 -a; &ps
+echo ""
+echo "&st; &if -K 6 -a;"
+&st; &if -K 6 -a; &ps; time
 
-&st; &if -K 6; &save; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &st; &if -K 6 -a; &mfs -W 2 -C 600 -D 25; &satlut -d -C 50; &save; &load; &ps
+echo ""
+echo "&st; &if -K 6; &save; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; "
+&st; &if -K 6; &save; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; time
 
-&dch -s -C 300; &if -K 6 -a; &satlut; &ps
+echo ""
+echo "&st; &if -K 6 -a; &mfs -W 2 -C 600 -D 25; &satlut -d -C 50; &save; &load; &ps"
+&st; &if -K 6 -a; &mfs -W 2 -C 600 -D 25; &satlut -d -C 50; &save; &load; &ps; time
 
-&shrink; &if -K 6 -a; &mfs -W 2 -C 600 -D 25; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &ps
+echo ""
+echo "&shrink; &dch -s -C 300; &if -K 6 -a; &satlut; &ps"
+&shrink; &dch -s -C 300; &if -K 6 -a; &satlut; &ps; time
 
-&dch -s -C 300; &if -K 6 -a; &satlut; &save; &ps; time
+echo ""
+echo "&shrink; &if -K 6 -a; &mfs -W 2 -C 600 -D 25; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &ps"
+&shrink; &if -K 6 -a; &mfs -W 2 -C 600 -D 25; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &ps; time
+
+echo ""
+echo "&shrink; &dch -s -C 300; &if -K 6 -a; &satlut;"
+&shrink; &dch -s -C 300; &if -K 6 -a; &satlut; &save; &ps; time
 
 read_blif in.blif
 
@@ -51,6 +67,10 @@ echo "&st; &lf -K 6 -e; &save; &ps; time"
 echo " "
 echo "&st; &if -K 6; &save;"
 &st; &if -K 6; &ps; &save; time
+
+&load;
+
+&st
 
 echo " "
 echo "&sopb -C 5;"
@@ -175,16 +195,6 @@ echo "&satlut -r; &save; &shrink; &dch -s -C 300; &if -sz -C 4 -K 11 -S 66 -a ; 
 echo " "
 echo "** ABC DELAY optimization done !!!"
 &put
-
-write_blif out.blif
-time
-
-echo ""
-echo ""
-echo "Skip Equivalence Checking ..."
-echo "Skip cec in.blif out.blif; time"
-echo ""
-echo ""
 
 time
 
