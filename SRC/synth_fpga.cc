@@ -34,7 +34,7 @@
 
 #define HUGE_NB_CELLS 5000000 // 5 Million cells
 #define BIG_NB_CELLS 500000   // 500K cells
-#define SMALL_NB_CELLS 300000 // 300K cells
+#define SMALL_NB_CELLS 250000 // 250K cells
 
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
@@ -1129,6 +1129,8 @@ struct SynthFpgaPass : public ScriptPass
 
       if (mode == "area") {
          mode  = "small_area";
+      } else if (mode == "delay") {
+         mode  = "small_delay";
       }
 
     } else if (nb_cells >= HUGE_NB_CELLS) { // example : 'zmcml' from Golden suite
@@ -1340,7 +1342,7 @@ struct SynthFpgaPass : public ScriptPass
 
        } else if (dsp_tech == "microchip") {
 
-         run("microchip_dsp -family polarfire");
+          run("microchip_dsp -family polarfire");
        }
      }
 
