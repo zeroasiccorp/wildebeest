@@ -1,7 +1,7 @@
 time
 
 echo " "
-echo "** Starting ABC SMALL AREA LUT4 optimization and mapping !!!"
+echo "** Starting ABC SMALL AREA LUT6 optimization and mapping !!!"
 
 write_blif in.blif
 
@@ -187,6 +187,12 @@ echo "&satlut -r; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 11 -S 66 -a
 time
 
 &load; &ps; 
+
+echo ""
+echo "&shrink; &if -K 6 -a; &mfs -W 2 -C 600 -D 25; &put; mfs2 -W 4 -M 1000 -C 7000; &satlut -C 32; &satlut -r -C 32;"
+&shrink; &if -K 6 -a; &mfs -W 2 -C 600 -D 25; &put; mfs2 -W 4 -M 1000 -C 7000; &satlut -C 32; &satlut -r -C 32; &save -a; &ps
+
+&load;
 
 &put
 

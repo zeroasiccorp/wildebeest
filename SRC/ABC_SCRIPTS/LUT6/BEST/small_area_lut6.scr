@@ -1,7 +1,7 @@
 time
 
 echo " "
-echo "** Starting ABC AREA LUT4 optimization and mapping !!!"
+echo "** Starting ABC SMALL AREA LUT6 optimization and mapping !!!"
 
 write_blif in.blif
 
@@ -27,7 +27,7 @@ read_blif in.blif
 
 &st; &if -K 6; &save -a; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &st; &if -K 6 -a; &mfs -W 2 -C 600 -D 25; &satlut -d -C 50; &save -a; &load; &ps
 
-&dch -s -C 300; &if -K 6 -a; &satlut; &ps
+&shrink; &dch -s -C 300; &if -K 6 -a; &satlut; &ps
 
 &shrink; &if -K 6 -a; &mfs -W 2 -C 600 -D 25; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &ps
 
@@ -157,5 +157,5 @@ time
 &put
 
 echo " "
-echo "** ABC AREA Optimization and Mapping done !!!"
+echo "** ABC SMALL AREA Optimization and Mapping done !!!"
 &put
