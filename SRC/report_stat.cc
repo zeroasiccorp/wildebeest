@@ -209,6 +209,11 @@ struct ReportStatPass : public ScriptPass
              continue;
         }
 
+        if (cell->type.in(ID(DSP48E1))) {
+             nb++;
+             continue;
+        }
+
 	// Ice40
 	//
         if (cell->type.in(ID(SB_MAC16))) {
