@@ -187,6 +187,24 @@ struct ReportStatPass : public ScriptPass
             nb++;
             continue;
         }
+
+	// rest of the world
+	//
+        if (cell->type.in(ID(dffer_pxp))) { 
+            nb++;
+            continue;
+        }
+
+	if ((cell->type).substr(0, 5) == "$_DFF") {
+            nb++;
+            continue;
+        }
+
+	if ((cell->type).substr(0, 6) == "$_SDFF") {
+            nb++;
+            continue;
+        }
+
     }
 
     return nb;
