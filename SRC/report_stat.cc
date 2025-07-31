@@ -65,6 +65,13 @@ struct ReportStatPass : public ScriptPass
 	     continue;
          }
 	 
+         // Xilinx 'xc7' Luts
+         //
+         if (cell->type.in(ID(LUT1), ID(LUT2), ID(LUT3), ID(LUT4), ID(LUT5), ID(LUT6), ID(INV))) {
+             nb++;
+	     continue;
+         }
+	 
          // Lattice 'Mach xo2' Luts
          //
          if (cell->type.in(ID(LUT1), ID(LUT2), ID(LUT3), ID(LUT4))) {
@@ -135,7 +142,7 @@ struct ReportStatPass : public ScriptPass
 	     continue;
         }
 
-        // Xilinx 'xc4v' DFFs
+        // Xilinx 'xc4v' DFFs, 'xc7'
         //
         if (cell->type.in(ID(FDCE), ID(FDPE), ID(FDRE), ID(FDRE_1),
                           ID(FDSE),
@@ -247,6 +254,13 @@ struct ReportStatPass : public ScriptPass
              nb++;
              continue;
         }
+	
+        // Xilinx xc7
+        //
+        if (cell->type.in(ID(RAM32M))) {
+             nb++;
+             continue;
+        }
 
         // Ice40
         //
@@ -303,6 +317,12 @@ struct ReportStatPass : public ScriptPass
              continue;
         }
 
+	// rest of the world
+	//
+        if (cell->type.in(ID(RAM64x12))) {
+             nb++;
+             continue;
+        }
     }
 
     return nb;
