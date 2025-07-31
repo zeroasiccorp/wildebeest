@@ -76,9 +76,11 @@ struct MaxLvlWorker
      ff_celltypes.setup_type(ID(IBUF), {}, {});
      ff_celltypes.setup_type(ID(OBUF), {}, {});
    }
-   void setup_internals_xilinx_bram_xc4v(CellTypes& ff_celltypes)
+   void setup_internals_xilinx_bram(CellTypes& ff_celltypes)
    {
      ff_celltypes.setup_type(ID(RAMB16), {}, {});
+     ff_celltypes.setup_type(ID(RAM32M), {}, {});
+     ff_celltypes.setup_type(ID(RAM64x12), {}, {});
      ff_celltypes.setup_type(ID(OBUF), {}, {});
    }
 
@@ -184,7 +186,7 @@ struct MaxLvlWorker
 	 // Xilinx
 	 //
          setup_internals_xilinx_ff_xc4v(ff_celltypes);
-         setup_internals_xilinx_bram_xc4v(ff_celltypes);
+         setup_internals_xilinx_bram(ff_celltypes);
          setup_internals_xilinx_io_xc4v(ff_celltypes);
 
 	 // Lattice
