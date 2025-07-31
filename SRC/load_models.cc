@@ -76,14 +76,14 @@ struct LoadModelsPass : public ScriptPass
   //
   void script() override
   {
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dff.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffe.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffr.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffs.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffrs.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffer.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffes.v");
-     run("read_verilog +/yosys-syn/SRC/FF_MODELS/dffers.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dff.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffe.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffrs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffer.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffes.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffers.v");
 
   } // end script()
 
