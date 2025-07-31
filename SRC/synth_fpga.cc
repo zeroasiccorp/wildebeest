@@ -54,6 +54,7 @@ struct SynthFpgaPass : public ScriptPass
   bool config_file_success = false;
   bool no_dsp;
   bool no_bram;
+  bool use_sdff;
   string dsp_tech;
   string bram_tech;
 
@@ -1172,6 +1173,13 @@ struct SynthFpgaPass : public ScriptPass
   void legalize_flops ()
   {
 
+    if (use_sdff) { // internal hidden mode to do QoR comparison with technology supporting
+	            // DFF with synchronous set/reset.
+
+      run("dfflegalize -cell $_DFFE_?P?P_ 01 -cell $_SDFFE_?P?P_ 01 -cell $_DLATCH_?P?_ 01", "(mimic xc7)");
+      return;
+    }
+
     // Consider all feature combinations 'enable" x "async_set' x 
     // 'async_reset' when features are supported or not : 2x2x2 = 8 
     // combinations to handle.
@@ -1588,6 +1596,7 @@ struct SynthFpgaPass : public ScriptPass
 
 	bram_tech = "microchip";
 	no_bram = false;
+	use_sdff = false;
 
 	resynthesis = false;
 	show_config = false;
@@ -1670,6 +1679,11 @@ struct SynthFpgaPass : public ScriptPass
 
           if (args[argidx] == "-no_bram") {
              no_bram = true;
+             continue;
+          }
+
+          if (args[argidx] == "-use_sdff") { // hidden option
+             use_sdff = true;
              continue;
           }
 
