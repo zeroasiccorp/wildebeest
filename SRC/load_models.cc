@@ -85,6 +85,8 @@ struct LoadModelsPass : public ScriptPass
      run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffes.v");
      run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffers.v");
 
+     run("read_verilog +/plugins/yosys-syn/RAM_MODELS/RAM64x12.v");
+
   } // end script()
 
 } LoadModelsPass;

@@ -189,8 +189,16 @@ time
 &load; &ps; 
 
 echo ""
-echo "&shrink; &if -K 6 -a; &mfs -W 2 -C 600 -D 25; &put; mfs2 -W 4 -M 1000 -C 7000; &satlut -C 32; &satlut -r -C 32;"
-&shrink; &if -K 6 -a; &mfs -W 2 -C 600 -D 25; &put; mfs2 -W 4 -M 1000 -C 7000; &satlut -C 32; &satlut -r -C 32; &save -a; &ps
+echo "&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &put; &satlut -C 32; &satlut -r -C 32;"
+&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &put; &satlut -C 32; &satlut -r -C 32; &ps; &save -a; time
+
+echo ""
+echo "&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &put; &satlut -C 32; &satlut -r -C 32;"
+&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &put; &satlut -C 32; &satlut -r -C 32; &ps; &save -a; time
+
+echo ""
+echo "&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &put; &satlut -C 32; &satlut -r -C 32;"
+&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &put; &satlut -C 32; &satlut -r -C 32; &ps; &save -a; time
 
 &load;
 
