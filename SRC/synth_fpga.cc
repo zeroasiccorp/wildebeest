@@ -1502,9 +1502,9 @@ struct SynthFpgaPass : public ScriptPass
         log("        Bypass DSP inference. It is off by default.\n");
         log("\n");
 
-        log("    -use_DSP_TECH ['xilinx', 'microchip']\n");
+        log("    -use_dsp_tech ['xilinx', 'microchip']\n");
         log("        Invoke architecture specific DSP inference. It is off by default. -no_DSP \n");
-        log("        overides -use_DSP_TECH.\n");
+        log("        overides -use_dsp_tech.\n");
         log("\n");
 
         log("    -resynthesis\n");
