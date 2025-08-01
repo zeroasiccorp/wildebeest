@@ -60,7 +60,7 @@ struct SynthFpgaPass : public ScriptPass
 
   pool<string> opt_options  = {"default", "fast", "area", "delay"};
   pool<string> partnames  = {"Z1000", "Z1010"};
-  pool<string> dsp_arch  = {"xilinx", "microchip", "config"};
+  pool<string> dsp_arch  = {"xilinx", "microchip", "bare_mult", "mae"};
   pool<string> bram_arch  = {"zeroasic", "microchip", "config"};
 
   // ----------------------------
@@ -577,6 +577,27 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
         ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
 
+      } else if (dsp_tech == "bare_mult") {
+
+        ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/bare_mult_tech_dsp.v ";
+        ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
+        ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
+        ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
+        ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
+        ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
+        ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
+        ys_dsps_parameter_string["DSP_NAME"] = "$__dsp_block";
+
+      } else if (dsp_tech == "mae") {
+
+        ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/mae_tech_dsp.v ";
+        ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
+        ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
+        ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
+        ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
+        ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
+        ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
+        ys_dsps_parameter_string["DSP_NAME"] = "$__dsp_block";
       }
     }
 
