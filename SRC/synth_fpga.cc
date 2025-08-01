@@ -1367,8 +1367,8 @@ struct SynthFpgaPass : public ScriptPass
     // their code and put in synchronous resets
 
     log_warning("No DFF features are suported !\n");
-    log_warning("Still Legalize list: $_DFF_P_ $_DFF_P??_\n");
-    run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_P??_ 01");
+    log_warning("Still Legalize list: $_DFF_P_\n");
+    run("dfflegalize -cell $_DFF_P_ 01");
 
   }
 
