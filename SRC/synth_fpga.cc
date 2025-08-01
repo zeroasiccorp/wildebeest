@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
+#include <unistd.h>
 
 #define SYNTH_FPGA_VERSION "1.0-" YOSYS_SYN_REVISION
 
@@ -60,8 +61,8 @@ struct SynthFpgaPass : public ScriptPass
 
   pool<string> opt_options  = {"default", "fast", "area", "delay"};
   pool<string> partnames  = {"Z1000", "Z1010"};
-  pool<string> dsp_arch  = {"xilinx", "microchip", "bare_mult", "mae"};
-  pool<string> bram_arch  = {"zeroasic", "microchip", "config"};
+  pool<string> dsp_arch  = {"config", "xilinx", "microchip", "bare_mult", "mae"};
+  pool<string> bram_arch  = {"config", "zeroasic", "microchip"};
 
   // ----------------------------
   // Key 'yosys-syn' parameters
@@ -84,6 +85,7 @@ struct SynthFpgaPass : public ScriptPass
   string                  ys_dsps_techmap = "";
   dict<string, int>       ys_dsps_parameter_int;
   dict<string, string>    ys_dsps_parameter_string;
+  string                  ys_dsps_pack_command = "";
 
   // Methods
   //
@@ -93,6 +95,9 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // Json reader
   // -------------------------
+  // Json node that stores section corresponding to 'config' file for 
+  // synthesis
+  //
   struct JsonNode
   {
 	char type; // S=String, N=Number, A=Array, D=Dict
@@ -328,7 +333,56 @@ struct SynthFpgaPass : public ScriptPass
 			delete it.second;
 	}
   };
+  
+  // -------------------------
+  // Example of config file 
+  // -------------------------
+#if 0
+  {
+  "version": 3,
+  "partname": "Z1010",
+  "lut_size": 4,
+  "root_path": "/home/thierry/YOSYS_DYN/yosys/yosys-syn",
+  "flipflops": {
+                "features": ["async_reset", "async_set", "flop_enable"]
+                "models": {
+                        "dffers": "SRC/FF_MODELS/dffers.v",
+                        "dffer": "SRC/FF_MODELS/dffer.v",
+                        "dffes": "SRC/FF_MODELS/dffes.v",
+                        "dffe": "SRC/FF_MODELS/dffe.v",
+                        "dffrs": "SRC/FF_MODELS/dffrs.v",
+                        "dffr": "SRC/FF_MODELS/dffr.v",
+                        "dffs": "SRC/FF_MODELS/dffs.v",
+                        "dff": "SRC/FF_MODELS/dff.v"
+                },
+                "techmap": "ARCHITECTURE/Z1010/techlib/tech_flops.v"
+        },
+  "brams": {
+            "memory_libmap": "ARCHITECTURE/Z1010/BRAM/memory_libmap.txt",
+            "techmap": "ARCHITECTURE/Z1010/BRAM/techmap.v"
+        },
+  "dsps": {
+          "family": "microchip",
+          "techmap": "../techlibs/microchip/polarfire_dsp_map.v",
+          "techmap_parameters": {
+                   "DSP_A_MAXWIDTH": 18,
+                   "DSP_B_MAXWIDTH": 18,
+                   "DSP_A_MAXWIDTH_PARTIAL": 18,
+                   "DSP_A_MINWIDTH": 2,
+                   "DSP_B_MINWIDTH": 2,
+                   "DSP_Y_MINWIDTH": 9,
+                   "DSP_SIGNEDONLY": 1,
+                   "DSP_NAME": "$__MUL18X18"
+          },
+          "pack_command": "microchip_dsp -family polarfire"
+       }
+}
+#endif
 
+
+  // ----------------------------------------------
+  // Structure to store all config file sections
+  // ----------------------------------------------
   typedef struct {
 	  string config_file;
 	  int    version;
@@ -354,6 +408,7 @@ struct SynthFpgaPass : public ScriptPass
 	  string               dsps_techmap;
 	  dict<string, int>    dsps_parameter_int;
 	  dict<string, string> dsps_parameter_string;
+	  string               dsps_pack_command;
 
   } config_type;
 
@@ -418,8 +473,12 @@ struct SynthFpgaPass : public ScriptPass
        log("                       - %s = %s\n", (it.first).c_str(), (it.second).c_str());
     }
     log("\n");
+    log("  DSP pack_command   : \n");
+    log("                       %s\n", (G_config.dsps_pack_command).c_str());
 
     log(" ==========================================================================\n");
+
+    usleep(5000000);
   }
 
   // -------------------------
@@ -474,13 +533,20 @@ struct SynthFpgaPass : public ScriptPass
        } else {
 
           ys_dsps_techmap = G_config.root_path + "/" + G_config.dsps_techmap;
+
           for (auto it : G_config.dsps_parameter_int) {
 	      ys_dsps_parameter_int[it.first] = it.second;
           }
           for (auto it : G_config.dsps_parameter_string) {
 	      ys_dsps_parameter_string[it.first] = it.second;
           }
+
+          ys_dsps_pack_command = G_config.dsps_pack_command;
        }
+
+
+       // We call the 'dsp_tech' through the config file mechanism as 'config' (why not ? ;-)
+       //
        dsp_tech = "config";
 
 
@@ -516,7 +582,7 @@ struct SynthFpgaPass : public ScriptPass
       ys_dff_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/techlib/tech_flops.v";
       ys_dff_features.insert("async_reset");
       ys_dff_features.insert("async_set");
-      ys_dff_features.insert("enable");
+      ys_dff_features.insert("flop_enable");
 
       ys_dff_models["dffers"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffers.v";
       ys_dff_models["dffer"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffer.v";
@@ -549,6 +615,7 @@ struct SynthFpgaPass : public ScriptPass
       ys_dsps_techmap = "";
       ys_dsps_parameter_int.clear();
       ys_dsps_parameter_string.clear();
+      ys_dsps_pack_command = "";
 
       if (dsp_tech == "xilinx") {
 
@@ -560,6 +627,11 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
         ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
         ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
+
+        ys_dsps_pack_command = "dsp -family DSP48";
+
+	// toto
+	return;
 
       } else if (dsp_tech == "microchip") {
 
@@ -577,6 +649,10 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
         ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
 
+        ys_dsps_pack_command = "microchip_dsp -family polarfire";
+
+	return;
+
       } else if (dsp_tech == "bare_mult") {
 
         ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/bare_mult_tech_dsp.v ";
@@ -587,6 +663,7 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
         ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
         ys_dsps_parameter_string["DSP_NAME"] = "$__dsp_block";
+	return;
 
       } else if (dsp_tech == "mae") {
 
@@ -598,7 +675,12 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
         ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
         ys_dsps_parameter_string["DSP_NAME"] = "$__dsp_block";
+	return;
       }
+
+      log_warning("Could not find any specific DSP tech settings with 'dsp_tech' = '%s'\n", 
+                  dsp_tech.c_str());
+
     }
 
   }
@@ -951,12 +1033,26 @@ struct SynthFpgaPass : public ScriptPass
 	  log_warning("Ignoring 'dsps' parameter '%s'\n", param_str.c_str());
        }
     }
+    
+    // DSP pack command.
+    //
+    if (!dsps || (dsps->data_dict.count("pack_command")) == 0) {
+        log_warning("'pack_command' from 'dsps' is missing in config file '%s'.\n", config_file.c_str());
+        log_warning("Assuming that this technology has no DSP packing support.\n");
 
-    log_header(G_design, "Reading config file '%s' done !\n", config_file.c_str());
+    } else {
+       JsonNode *dsps_pack_command = dsps->data_dict.at("pack_command");
+       if (dsps_pack_command->type != 'S') {
+           log_error("'pack_command' associated to 'dsps' must be a string.\n");
+       }
+       G_config.dsps_pack_command = dsps_pack_command->data_string;
+    }
 
-    show_config_file();
+    log_header(G_design, "Reading config file '%s' done with success !\n", config_file.c_str());
 
     config_file_success = true;
+
+    show_config_file();
   }
 
 
@@ -1348,6 +1444,8 @@ struct SynthFpgaPass : public ScriptPass
          sc_syn_dsps_techmap += "-D " + it.first + "=" + it.second + " ";
      }
 
+     string sc_syn_dsps_pack_command = ys_dsps_pack_command; 
+
 #if 0
      log("Call %s\n", sc_syn_dsps_techmap.c_str());
 #endif
@@ -1363,6 +1461,7 @@ struct SynthFpgaPass : public ScriptPass
      run("wreduce");
      run("select -clear");
 
+#if 0
      if (!config_file_success) {
 
        if (dsp_tech == "xilinx") {
@@ -1374,6 +1473,12 @@ struct SynthFpgaPass : public ScriptPass
           run("microchip_dsp -family polarfire");
        }
      }
+#endif
+
+     if (sc_syn_dsps_pack_command != "") {
+        run(sc_syn_dsps_pack_command);
+     }
+
 
      run("chtype -set $mul t:$__soft_mul");
 
@@ -1531,7 +1636,7 @@ struct SynthFpgaPass : public ScriptPass
         log("        Bypass DSP inference. It is off by default.\n");
         log("\n");
 
-        log("    -use_dsp_tech ['xilinx', 'microchip']\n");
+        log("    -use_dsp_tech ['xilinx', 'microchip', 'bare_mult', 'mae']\n");
         log("        Invoke architecture specific DSP inference. It is off by default. -no_DSP \n");
         log("        overides -use_dsp_tech.\n");
         log("\n");
