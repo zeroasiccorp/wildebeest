@@ -189,16 +189,16 @@ time
 &load; &ps; 
 
 echo ""
-echo "&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &put; &satlut -C 32; &satlut -r -C 32;"
-&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &put; &satlut -C 32; &satlut -r -C 32; &ps; &save -a; time
+echo "&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &satlut -C 32; &satlut -r -C 32;"
+&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &satlut -C 32; &satlut -r -C 32; &ps; &save -a; time
 
 echo ""
-echo "&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &put; &satlut -C 32; &satlut -r -C 32;"
-&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &put; &satlut -C 32; &satlut -r -C 32; &ps; &save -a; time
+echo "&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &satlut -C 32; &satlut -r -C 32;"
+&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &satlut -C 32; &satlut -r -C 32; &ps; &save -a; time
 
 echo ""
-echo "&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &put; &satlut -C 32; &satlut -r -C 32;"
-&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &put; &satlut -C 32; &satlut -r -C 32; &ps; &save -a; time
+echo "&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &satlut -C 32; &satlut -r -C 32;"
+&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &satlut -C 32; &satlut -r -C 32; &ps; &save -a; time
 
 &load;
 
@@ -207,5 +207,5 @@ echo "&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &put; &satlut -C 32; &
 write_blif out.blif
 
 echo " "
-echo "** ABC SMALL AREA Optimization and Mapping done !!!"
+echo "** ABC SMALL AREA LUT6 Optimization and Mapping done !!!"
 &put
