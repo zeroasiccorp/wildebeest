@@ -67,18 +67,19 @@ struct SynthFpgaPass : public ScriptPass
   // ----------------------------
   // Key 'yosys-syn' parameters
   //
-  string               ys_root_path = "";
+  string                  ys_root_path = "";
 
   // DFFs
   //
-  pool<string>         ys_dff_features;
-  dict<string, string> ys_dff_models;
-  string               ys_dff_techmap = ""; 
+  pool<string>            ys_dff_features;
+  dict<string, string>    ys_dff_models;
+  string                  ys_dff_techmap = ""; 
 
   // BRAMs
   //
-  string ys_brams_memory_libmap = ""; 
-  string ys_brams_techmap = ""; 
+  vector<string>          ys_brams_memory_libmap; 
+  vector<string>          ys_brams_memory_libmap_parameters; 
+  vector<string>          ys_brams_techmap; 
 
   // DSPs
   //
@@ -341,8 +342,8 @@ struct SynthFpgaPass : public ScriptPass
   {
   "version": 3,
   "partname": "Z1010",
-  "lut_size": 4,
-  "root_path": "/home/thierry/YOSYS_DYN/yosys/yosys-syn",
+  "lut_size": 6,
+  "root_path" : "/home/thierry/YOSYS_DYN/yosys/yosys-syn/",
   "flipflops": {
                 "features": ["async_reset", "async_set", "flop_enable"]
                 "models": {
@@ -358,8 +359,11 @@ struct SynthFpgaPass : public ScriptPass
                 "techmap": "ARCHITECTURE/Z1010/techlib/tech_flops.v"
         },
   "brams": {
-            "memory_libmap": "ARCHITECTURE/Z1010/BRAM/memory_libmap.txt",
-            "techmap": "ARCHITECTURE/Z1010/BRAM/techmap.v"
+            "memory_libmap": [ "ARCHITECTURE/Z1010/BRAM/LSRAM.txt",
+                               "ARCHITECTURE/Z1010/BRAM/uSRAM.txt"]
+            "memory_libmap_parameters": ["-logic-cost-rom 0.5"]
+            "techmap": ["ARCHITECTURE/Z1010/BRAM/LSRAM_map.v",
+                        "ARCHITECTURE/Z1010/BRAM/uSRAM_map.v"]
         },
   "dsps": {
           "family": "microchip",
@@ -377,8 +381,8 @@ struct SynthFpgaPass : public ScriptPass
           "pack_command": "microchip_dsp -family polarfire"
        }
 }
+~
 #endif
-
 
   // ----------------------------------------------
   // Structure to store all config file sections
@@ -398,8 +402,9 @@ struct SynthFpgaPass : public ScriptPass
 
           // BRAM related
 	  //
-	  string brams_memory_libmap;
-	  string brams_techmap;
+	  vector<string>       brams_memory_libmap;
+	  vector<string>       brams_memory_libmap_parameters;
+	  vector<string>       brams_techmap;
 	  
 	  //
           // DSP related
@@ -438,22 +443,31 @@ struct SynthFpgaPass : public ScriptPass
 
     log("  DFF Features       : \n");
     for (auto it : G_config.dff_features) {
-       log("                       - %s\n", it.c_str());
+       log("                       %s\n", it.c_str());
     }
 
     log("  DFF MODELS         : \n");
     for (auto it : G_config.dff_models) {
-       log("                       - %s %s\n", (it.first).c_str(), (it.second).c_str());
+       log("                       %s %s\n", (it.first).c_str(), (it.second).c_str());
     }
 
     log("  DFF techmap        : \n");
     log("                       %s\n", (G_config.dff_techmap).c_str());
 
     log("  BRAM memory_libmap : \n");
-    log("                       %s\n", (G_config.brams_memory_libmap).c_str());
+    for (auto it : G_config.brams_memory_libmap) {
+       log("                       %s\n", it.c_str());
+    }
+    log("\n");
+    log("  BRAM memory_libmap parameters : \n");
+    for (auto it : G_config.brams_memory_libmap_parameters) {
+       log("                       %s\n", it.c_str());
+    }
 
     log("  BRAM techmap       : \n");
-    log("                       %s\n", (G_config.brams_techmap).c_str());
+    for (auto it : G_config.brams_techmap) {
+       log("                       %s\n", it.c_str());
+    }
 
     log("  DSP family         : \n");
     log("                       %s\n", (G_config.dsps_family).c_str());
@@ -465,12 +479,12 @@ struct SynthFpgaPass : public ScriptPass
 
     log("      int param      : \n");
     for (auto it : G_config.dsps_parameter_int) {
-       log("                       - %s = %d\n", (it.first).c_str(), it.second);
+       log("                       %s = %d\n", (it.first).c_str(), it.second);
     }
 
     log("      string param   : \n");
     for (auto it : G_config.dsps_parameter_string) {
-       log("                       - %s = %s\n", (it.first).c_str(), (it.second).c_str());
+       log("                       %s = %s\n", (it.first).c_str(), (it.second).c_str());
     }
     log("\n");
     log("  DSP pack_command   : \n");
@@ -478,6 +492,8 @@ struct SynthFpgaPass : public ScriptPass
 
     log(" ==========================================================================\n");
 
+    // Wait a bit to see the config file data on the screen
+    //
     usleep(5000000);
   }
 
@@ -512,16 +528,34 @@ struct SynthFpgaPass : public ScriptPass
 
        // BRAMs parameters setting
        //
-       if (G_config.brams_memory_libmap == "") {
-         ys_brams_memory_libmap = ""; 
-       } else {
-         ys_brams_memory_libmap = G_config.root_path + "/" + G_config.brams_memory_libmap; 
+       ys_brams_memory_libmap.clear();
+
+       if (G_config.brams_memory_libmap.size() != 0) {
+
+         for (auto it : G_config.brams_memory_libmap) {
+             string path = G_config.root_path + "/" + it;
+	     ys_brams_memory_libmap.push_back(path);
+         }
        }
 
-       if (G_config.brams_techmap == "") {
-          ys_brams_techmap = ""; 
-       } else { 
-	  ys_brams_techmap = G_config.root_path + "/" + G_config.brams_techmap; 
+       ys_brams_memory_libmap_parameters.clear();
+
+       if (G_config.brams_memory_libmap_parameters.size() != 0) {
+
+         for (auto it : G_config.brams_memory_libmap_parameters) {
+             string param = it;
+	     ys_brams_memory_libmap_parameters.push_back(param);
+         }
+       }
+
+       ys_brams_techmap.clear(); 
+
+       if (G_config.brams_techmap.size() != 0) {
+
+          for (auto it : G_config.brams_techmap) {
+              string path = G_config.root_path + "/" + it;
+	      ys_brams_techmap.push_back(path);
+          }
        }
        bram_tech = "config";
 
@@ -529,7 +563,9 @@ struct SynthFpgaPass : public ScriptPass
        // DSPs parameters setting
        //
        if (G_config.dsps_techmap == "") {
+
           ys_dsps_techmap = "";
+
        } else {
 
           ys_dsps_techmap = G_config.root_path + "/" + G_config.dsps_techmap;
@@ -594,22 +630,46 @@ struct SynthFpgaPass : public ScriptPass
       ys_dff_models["dff"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dff.v";
 
 
+      // -------------------------
       // BRAM setting
       // 
-      ys_brams_memory_libmap = "";
-      ys_brams_techmap = "";
+      ys_brams_memory_libmap.clear();
+      ys_brams_memory_libmap_parameters.clear();
+      ys_brams_techmap.clear();
 
       if (bram_tech == "microchip") {
-         ys_brams_memory_libmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM.txt -lib +/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM.txt";
-         ys_brams_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM_map.v -map +/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM_map.v";
+
+         // bram memory_libmap settings
+	 //
+         string brams_memory_libmap1 = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM.txt";
+         string brams_memory_libmap2 = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM.txt";
+	 ys_brams_memory_libmap.push_back(brams_memory_libmap1);
+	 ys_brams_memory_libmap.push_back(brams_memory_libmap2);
+
+	 string brams_memory_libmap_param1 = "-logic-cost-rom 0.5";
+	 ys_brams_memory_libmap_parameters.push_back(brams_memory_libmap_param1);
+
+         // bram techmap settings
+	 //
+         string brams_techmap1 = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM_map.v";
+         string brams_techmap2 = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM_map.v";
+	 ys_brams_techmap.push_back(brams_techmap1);
+	 ys_brams_techmap.push_back(brams_techmap2);
 
       } else if (bram_tech == "zeroasic") {
   
-        ys_brams_memory_libmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/memory_libmap.txt ";
-        ys_brams_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/techmap.v ";
+         // bram memory_libmap settings
+	 //
+         string brams_memory_libmap1 = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/memory_libmap.txt";
+	 ys_brams_memory_libmap.push_back(brams_memory_libmap1);
+
+         // bram techmap settings
+	 //
+         string brams_techmap1 = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/techmap.v";
+	 ys_brams_techmap.push_back(brams_techmap1);
       }
   
-
+      // -------------------------
       // DSP setting
       //
       ys_dsps_techmap = "";
@@ -630,7 +690,6 @@ struct SynthFpgaPass : public ScriptPass
 
         ys_dsps_pack_command = "dsp -family DSP48";
 
-	// toto
 	return;
 
       } else if (dsp_tech == "microchip") {
@@ -663,6 +722,7 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
         ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
         ys_dsps_parameter_string["DSP_NAME"] = "$__dsp_block";
+
 	return;
 
       } else if (dsp_tech == "mae") {
@@ -675,6 +735,7 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
         ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
         ys_dsps_parameter_string["DSP_NAME"] = "$__dsp_block";
+
 	return;
       }
 
@@ -860,8 +921,11 @@ struct SynthFpgaPass : public ScriptPass
     G_config.version = version->data_number;
 
     if (!root_path) {
+
        G_config.root_path = "";
+
     } else {
+
        G_config.root_path = root_path->data_string;
     }
 
@@ -873,10 +937,11 @@ struct SynthFpgaPass : public ScriptPass
     // in the config file then pick up the config file location.
     //
     if (G_config.root_path == "") {
-      // Add extra "./" otherwise root path extraction code can fail.
-      //
+
       const std::filesystem::path config_path(std::filesystem::absolute(config_file));
+
       G_config.root_path = config_path.parent_path();
+
       log("NOTE: Pick up Config file location as root path : %s\n", (G_config.root_path).c_str());
     }
 
@@ -928,42 +993,80 @@ struct SynthFpgaPass : public ScriptPass
     }
     G_config.dff_techmap = techmap_dff->data_string;
 
-
     
+    // ------------------------------------------
     // Extract 'brams' associated parameters
     // 
     if (!brams || (brams->data_dict.count("memory_libmap") == 0)) {
         log_warning("'memory_libmap' from 'brams' is missing in config file '%s'.\n", config_file.c_str());
         log_warning("Assuming that this technology has no BRAM support.\n");
-        G_config.brams_memory_libmap = "";
+        G_config.brams_memory_libmap.clear();
 
     } else {
 
        JsonNode *memory_libmap = brams->data_dict.at("memory_libmap");
-       if (memory_libmap->type != 'S') {
-           log_error("'memory_libmap' associated to 'brams' must be a string.\n");
+       if (memory_libmap->type != 'A') {
+           log_error("'memory_libmap' associated to 'brams' must be an array.\n");
        }
-       G_config.brams_memory_libmap = memory_libmap->data_string;
+
+       for (auto it : memory_libmap->data_array) {
+          JsonNode *memory_libmap_path = it;
+          if (memory_libmap_path->type != 'S') {
+              log_error("Array associated to 'memory_libmap' must be contain only strings.\n");
+          }
+	  string memory_libmap_path_str = memory_libmap_path->data_string;
+
+	  (G_config.brams_memory_libmap).push_back(memory_libmap_path_str);
+       }
+    }
+
+    if (!brams || (brams->data_dict.count("memory_libmap_parameters") == 0)) {
+        G_config.brams_memory_libmap_parameters.clear();
+
+    } else {
+
+       JsonNode *memory_libmap_parameters = brams->data_dict.at("memory_libmap_parameters");
+       if (memory_libmap_parameters->type != 'A') {
+           log_error("'memory_libmap_parameters' associated to 'brams' must be an array.\n");
+       }
+
+       for (auto it : memory_libmap_parameters->data_array) {
+          JsonNode *memory_libmap_parameters_path = it;
+          if (memory_libmap_parameters_path->type != 'S') {
+              log_error("Array associated to 'memory_libmap_parameters' must be contain only strings.\n");
+          }
+          string memory_libmap_parameters_path_str = memory_libmap_parameters_path->data_string;
+
+          (G_config.brams_memory_libmap_parameters).push_back(memory_libmap_parameters_path_str);
+       }
     }
 
 
     if (!brams || (brams->data_dict.count("techmap") == 0)) {
         log_warning("'techmap' from 'brams' is missing in config file '%s'.\n", config_file.c_str());
         log_warning("Assuming that this technology has no BRAM support.\n");
-        G_config.brams_techmap = "";
+        G_config.brams_techmap.clear();
 
     } else {
 
        JsonNode *brams_techmap = brams->data_dict.at("techmap");
-       if (brams_techmap->type != 'S') {
-           log_error("'techmap' associated to 'brams' must be a string.\n");
+       if (brams_techmap->type != 'A') {
+           log_error("'techmap' associated to 'brams' must be an array.\n");
        }
-       G_config.brams_techmap = brams_techmap->data_string;
+
+       for (auto it : brams_techmap->data_array) {
+          JsonNode *bram_techmap_path = it;
+          if (bram_techmap_path->type != 'S') {
+              log_error("Array associated to 'techmap' must be contain only strings.\n");
+          }
+          string bram_techmap_path_str = bram_techmap_path->data_string;
+
+          (G_config.brams_techmap).push_back(bram_techmap_path_str);
+       }
     }
 
 
-
-
+    // ------------------------------------------
     // Extract 'dsps' associated information
     // 
     
@@ -1246,8 +1349,11 @@ struct SynthFpgaPass : public ScriptPass
     if (nb_cells <= SMALL_NB_CELLS) { 
 
       if (mode == "area") {
+
          mode  = "small_area";
+
       } else if (mode == "delay") {
+
          mode  = "small_delay";
       }
 
@@ -1362,9 +1468,6 @@ struct SynthFpgaPass : public ScriptPass
     //
     // case of all features are not supported
     //
-    // Choose to legalize to async resets even though they
-    // won't tech map.  Goal is to get the user to fix
-    // their code and put in synchronous resets
 
     log_warning("No DFF features are suported !\n");
     log_warning("Still Legalize list: $_DFF_P_\n");
@@ -1385,37 +1488,56 @@ struct SynthFpgaPass : public ScriptPass
        return;
      }
 
-     if (ys_brams_memory_libmap == "") {
-       if (ys_brams_techmap != "") {
+     if (ys_brams_memory_libmap.size() == 0) {
+       if (ys_brams_techmap.size() != 0) {
           log_warning("BRAM inference ignored because no memory libmap file has been provided !\n");
        }
        return;
      }
 
-     if (ys_brams_techmap == "") {
-       if (ys_brams_memory_libmap != "") {
+     if (ys_brams_techmap.size() == 0) {
+       if (ys_brams_memory_libmap.size() != 0) {
           log_warning("BRAM inference ignored because no memory techmap file has been provided !\n");
        }
        return;
      }
 
-     string sc_syn_bram_memory_libmap = "memory_libmap -lib " + ys_brams_memory_libmap;
-     string sc_syn_bram_techmap = "techmap -map " + ys_brams_techmap;
+     // Build bram 'memory_map' command + arguments
+     //
+     string sc_syn_bram_memory_libmap = "memory_libmap";
+
+     for (auto it : ys_brams_memory_libmap) {
+	sc_syn_bram_memory_libmap += " -lib " + it;
+     }
+     for (auto it : ys_brams_memory_libmap_parameters) {
+	sc_syn_bram_memory_libmap += " " + it;
+     }
+
+     // Build bram 'techmap' command + arguments
+     //
+     string sc_syn_bram_techmap = "techmap";
+     for (auto it : ys_brams_techmap) {
+	sc_syn_bram_techmap += " -map " + it;
+     }
 
      run("stat");
 
-     //log("Call %s\n", sc_syn_bram_memory_libmap.c_str());
-     //
+#if 0
+     log("Call %s\n", sc_syn_bram_memory_libmap.c_str());
+     log("Call %s\n", sc_syn_bram_techmap.c_str());
+     getchar();
+#endif
+
      log("\nWARNING: Make sure you are using the right 'partname' for the BRAM inference in case of failure.\n");
+     
      run(sc_syn_bram_memory_libmap);
 
-
-     //log("Call %s\n", sc_syn_bram_techmap.c_str());
-     //
      log("\nWARNING: Make sure you are using the right 'partname' for the BRAM inference in case of failure.\n");
+
      run(sc_syn_bram_techmap);
 
      run("stat");
+
   }
 
   // -------------------------
@@ -1448,9 +1570,11 @@ struct SynthFpgaPass : public ScriptPass
 
 #if 0
      log("Call %s\n", sc_syn_dsps_techmap.c_str());
+     getchar();
 #endif
 
      log("\nWARNING: Make sure you are using the right 'partname' for the DSP inference in case of failure.\n");
+
      run(sc_syn_dsps_techmap);
 
      run("stat");
@@ -1461,49 +1585,15 @@ struct SynthFpgaPass : public ScriptPass
      run("wreduce");
      run("select -clear");
 
-#if 0
-     if (!config_file_success) {
-
-       if (dsp_tech == "xilinx") {
-
-         run("dsp -family DSP48");
-
-       } else if (dsp_tech == "microchip") {
-
-          run("microchip_dsp -family polarfire");
-       }
-     }
-#endif
-
+     // Call the DSP packer command
+     //
      if (sc_syn_dsps_pack_command != "") {
         run(sc_syn_dsps_pack_command);
      }
 
-
      run("chtype -set $mul t:$__soft_mul");
 
      run("stat");
-     
-#if 0
-     run("memory_dff"); // microchip_dsp will merge registers, reserve memory port registers first
-                                run("techmap -map +/mul2dsp.v -map +/microchip/polarfire_dsp_map.v -D DSP_A_MAXWIDTH=18 -D DSP_B_MAXWIDTH=18 "
-                                    "-D DSP_A_MAXWIDTH_PARTIAL=18 " // Partial multipliers are intentionally
-                                                                    // limited to 18x18 in order to take
-                                                                    // advantage of the (PCOUT >> 17) -> PCIN
-                                                                    // dedicated cascade chain capability
-                                    "-D DSP_A_MINWIDTH=2 -D DSP_B_MINWIDTH=2 " // Blocks Nx1 multipliers
-                                    "-D DSP_Y_MINWIDTH=9 "
-                                    "-D DSP_SIGNEDONLY=1 -D DSP_NAME=$__MUL18X18");
-
-                                run("select a:mul2dsp");
-                                run("setattr -unset mul2dsp");
-                                run("opt_expr -fine");
-                                run("wreduce");
-                                run("select -clear");
-                                run("microchip_dsp -family polarfire");
-                                run("chtype -set $mul t:$__soft_mul");
-#endif
-
   }
 
   // -------------------------
