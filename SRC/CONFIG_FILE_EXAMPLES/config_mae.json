@@ -18,8 +18,8 @@
                 "techmap": "ARCHITECTURE/Z1010/techlib/tech_flops.v"
         },
   "brams": {
-            "memory_libmap": "ARCHITECTURE/Z1010/BRAM/memory_libmap.txt",
-            "techmap": "ARCHITECTURE/Z1010/BRAM/techmap.v"
+            "memory_libmap": ["ARCHITECTURE/Z1010/BRAM/memory_libmap.txt"]
+            "techmap": ["ARCHITECTURE/Z1010/BRAM/techmap.v"]
         },
   "dsps": {
           "family": "mae",

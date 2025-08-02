@@ -1,8 +1,8 @@
 {
   "version": 3,
   "partname": "Z1010",
-  "lut_size": 4,
-  "root_path": "/home/thierry/YOSYS_DYN/yosys/yosys-syn",
+  "lut_size": 6,
+  "root_path" : "/home/thierry/YOSYS_DYN/yosys/yosys-syn/",
   "flipflops": {
                 "features": ["async_reset", "async_set", "flop_enable"]
                 "models": {
@@ -18,8 +18,11 @@
                 "techmap": "ARCHITECTURE/Z1010/techlib/tech_flops.v"
         },
   "brams": {
-            "memory_libmap": "ARCHITECTURE/Z1010/BRAM/memory_libmap.txt",
-            "techmap": "ARCHITECTURE/Z1010/BRAM/techmap.v"
+            "memory_libmap": [ "ARCHITECTURE/Z1010/BRAM/LSRAM.txt",
+                               "ARCHITECTURE/Z1010/BRAM/uSRAM.txt"]
+            "memory_libmap_parameters": ["-logic-cost-rom 0.5"]
+            "techmap": ["ARCHITECTURE/Z1010/BRAM/LSRAM_map.v",
+                        "ARCHITECTURE/Z1010/BRAM/uSRAM_map.v"]
         },
   "dsps": {
           "family": "microchip",
