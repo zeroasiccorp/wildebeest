@@ -649,6 +649,9 @@ struct SynthFpgaPass : public ScriptPass
 	 string brams_memory_libmap_param1 = "-logic-cost-rom 0.5";
 	 ys_brams_memory_libmap_parameters.push_back(brams_memory_libmap_param1);
 
+	 string brams_memory_libmap_param2 = "-logic-cost-ram 1.0";
+	 ys_brams_memory_libmap_parameters.push_back(brams_memory_libmap_param2);
+
          // bram techmap settings
 	 //
          string brams_techmap1 = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM_map.v";
@@ -1675,6 +1678,7 @@ struct SynthFpgaPass : public ScriptPass
     run("techmap -map +/cmp2lut.v -D LUT_WIDTH=" + sc_syn_lut_size);
     run("opt_expr");
     run("opt_clean");
+
   }
 
   // -------------------------
