@@ -17,8 +17,8 @@
         "techmap": "/tech_flops.v"
     },
     "brams": {
-        "memory_libmap": "/bram_memory_map.txt",
-        "techmap": "/tech_bram.v"
+        "memory_libmap": ["/bram_memory_map.txt"]
+        "techmap": ["/tech_bram.v"]
     },
     "dsps": {
         "family": "DSP48",
