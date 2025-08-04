@@ -10,6 +10,11 @@ PRIVATE_NAMESPACE_BEGIN
 static bool noff = false;
 static bool summary = false;
 
+struct MaxLvlPass : public ScriptPass
+{
+
+  RTLIL::Design *G_design = NULL; 
+
 struct MaxLvlWorker
 {
    RTLIL::Design *design;
@@ -542,10 +547,20 @@ struct MaxLvlWorker
    }
 };
 
-struct MaxLvlPass : public Pass {
+   MaxLvlPass() : ScriptPass("max_level", "print max logic level") { }
 
-   MaxLvlPass() : Pass("max_level", "print max logic level") { }
+   // -------------------------
+   // load_LUT_models
+   // -------------------------
+   void load_LUT_models()
+   {
+     run("read_verilog +/plugins/yosys-syn/LUT_MODELS/LUTs.v");
 
+     run("hierarchy -auto-top");
+   }
+
+   // ------------------------------------
+   // setup_internals_zeroasic_ff_Z1000
    // ---------------------
    // help
    // ---------------------
@@ -583,10 +598,14 @@ struct MaxLvlPass : public Pass {
    // ---------------------
    void execute(std::vector<std::string> args, RTLIL::Design *design) override
    {
+     string run_from, run_to;
+
      log_header(design, "Executing 'max_level' command (find max logic level).\n");
      clear_flags();
 
      size_t argidx;
+
+     G_design = design;
 
      for (argidx = 1; argidx < args.size(); argidx++) {
 
@@ -603,7 +622,17 @@ struct MaxLvlPass : public Pass {
 
      extra_args(args, argidx, design);
 
-     for (Module *module : design->selected_modules())
+     run_script(design, run_from, run_to);
+   }
+
+   // ---------------------
+   // script
+   // ---------------------
+   void script() override
+   {
+     load_LUT_models();
+
+     for (Module *module : G_design->selected_modules())
      {
        if (module->has_processes_warn()) {
           continue;

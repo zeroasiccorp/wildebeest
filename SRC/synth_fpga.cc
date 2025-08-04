@@ -51,6 +51,7 @@ struct SynthFpgaPass : public ScriptPass
   bool obs_clean, wait, show_max_level, csv, insbuf, resynthesis, autoname;
   bool no_seq_opt, show_config;
   string sc_syn_lut_size;
+  string sc_syn_fsm_encoding;
   string config_file = "";
   bool config_file_success = false;
   bool no_dsp;
@@ -796,6 +797,10 @@ struct SynthFpgaPass : public ScriptPass
 
     if ((sc_syn_lut_size != "4") && (sc_syn_lut_size != "6")) {
         log_error("Lut sizes can be only 4 or 6.\n");
+    }
+
+    if ((sc_syn_fsm_encoding != "one-hot") && (sc_syn_fsm_encoding != "binary")) {
+        log_error("-fsm_encoding can be only 'one-hot' or 'binary'.\n");
     }
   }
 
@@ -1669,7 +1674,7 @@ struct SynthFpgaPass : public ScriptPass
     run("opt_clean");
     run("check");
     run("opt -nodffe -nosdff");
-    run("fsm");
+    run("fsm -encoding " + sc_syn_fsm_encoding);
     run("opt");
     run("wreduce");
     run("peepopt");
@@ -1721,7 +1726,7 @@ struct SynthFpgaPass : public ScriptPass
         log("        Bypass BRAM inference. It is off by default.\n");
         log("\n");
 
-        log("    -use_bram_tech ['zeroasic', 'microchip']\n");
+        log("    -use_bram_tech [zeroasic, microchip]\n");
         log("        Invoke architecture specific DSP inference. It is off by default. -no_BRAM \n");
         log("        overides -use_BRAM_TECH.\n");
         log("\n");
@@ -1730,9 +1735,13 @@ struct SynthFpgaPass : public ScriptPass
         log("        Bypass DSP inference. It is off by default.\n");
         log("\n");
 
-        log("    -use_dsp_tech ['xilinx', 'microchip', 'bare_mult', 'mae']\n");
+        log("    -use_dsp_tech [xilinx, microchip, bare_mult, mae]\n");
         log("        Invoke architecture specific DSP inference. It is off by default. -no_DSP \n");
         log("        overides -use_dsp_tech.\n");
+        log("\n");
+
+        log("    -fsm_encoding [one-hot, binary]\n");
+        log("        Specifies FSM encoding : by default a 'one-hot' encoding is performed.\n");
         log("\n");
 
         log("    -resynthesis\n");
@@ -1837,6 +1846,7 @@ struct SynthFpgaPass : public ScriptPass
 	abc_script_version = "BEST";
 
 	sc_syn_lut_size = "4";
+	sc_syn_fsm_encoding = "one-hot";
 	config_file = "";
 	config_file_success = false;
   }
@@ -1939,6 +1949,11 @@ struct SynthFpgaPass : public ScriptPass
 
 	  if (args[argidx] == "-lut_size" && argidx+1 < args.size()) {
              sc_syn_lut_size = args[++argidx];
+             continue;
+          }
+
+	  if (args[argidx] == "-fsm_encoding" && argidx+1 < args.size()) {
+             sc_syn_fsm_encoding = args[++argidx];
              continue;
           }
 
