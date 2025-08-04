@@ -13,7 +13,7 @@ echo "&st; &if -sz -C 3 -K 11 -S 66 "
 &st; &if -sz -C 3 -K 11 -S 66 ; &save; &ps; time
 &put
 
-read_blif in.blif
+read_blif small_delay_lut6.blif
 
 &get -n -m
 
@@ -27,7 +27,7 @@ read_blif in.blif
 
 &shrink; &dch -s -C 300; &if -K 6 -a; &satlut; &save; &ps; time
 
-read_blif in.blif
+read_blif small_delay_lut6.blif
 
 &get -n -m
 
@@ -36,7 +36,7 @@ echo "&st; &lf -K 6 -e;"
 &st; &lf -K 6 -e; &save; &ps; time
 &put
 
-read_blif in.blif
+read_blif small_delay_lut6.blif
 
 &get -n -m
 
@@ -44,7 +44,7 @@ echo ""
 &st; &lf -K 6 -e; &save; &ps; time
 &put
 
-read_blif in.blif
+read_blif small_delay_lut6.blif
 
 &get -n -m;
 
