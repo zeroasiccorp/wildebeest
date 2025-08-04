@@ -3,7 +3,11 @@ time
 echo " "
 echo "** Starting ABC HUGE LUT4 optimization and mapping !!!"
 
+write_blif huge_lut6.blif
+
 &get -n -m;
+
+&ps
 
 echo " "
 echo "&st; &lf -K 6 -e -C 32;"

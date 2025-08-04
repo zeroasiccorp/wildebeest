@@ -3,9 +3,11 @@ time
 echo " "
 echo "** Starting ABC SMALL AREA LUT6 optimization and mapping !!!"
 
-write_blif in.blif
+write_blif small_area_lut6.blif
 
 &get -n -m
+
+&ps
 
 echo ""
 echo "strash; muxes -g; &get -n -m; &st; &if -K 6 -a; "

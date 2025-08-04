@@ -2,9 +2,11 @@ time
 echo " "
 echo "** Starting ABC DELAY LUT6 optimization and mapping !!!"
 
-write_blif in.blif
+write_blif delay_lut6.blif
 
 &get -n -m
+
+&ps
 
 echo ""
 echo "&st; &if -sz -C 3 -K 11 -S 66 "
