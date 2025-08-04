@@ -19,7 +19,7 @@ echo "mfs2 -W 4 -M 500 -C 7000;"
 
 echo""
 echo "&synch2 -K 6 -C 500; &if -K 6 -a; &put; mfs2 -W 4 -M 500 -C 7000;"
-&synch2 -K 6 -C 500; &if -K 6 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m; &ps; time
+&synch2 -K 6 -C 500; &if -K 6 -a; &put; mfs2 -W 4 -M 500 -C 7000; &get -n -m; &save -a; &ps; time
 
 &save -a; &load; &ps;
 
@@ -39,7 +39,13 @@ echo ""
 echo "lutpack -S 1"
 &put; lutpack -S 1; time
 
-&get -n -m; &ps; 
+&get -n -m; &save -a; &ps; 
+
+echo ""
+echo "&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &satlut -C 32; &satlut -r -C 32;"
+&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &satlut -C 32; &satlut -r -C 32; &ps; &save -a; time
+
+&load; &ps
 
 echo "** End ABC AREA LUT6 optimization and mapping !!!"
 
