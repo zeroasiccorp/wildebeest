@@ -14,7 +14,7 @@ echo "strash; muxes -g; &get -n -m; &st; &if -K 6 -a; "
 strash; muxes -g; &get -n -m; &st; &if -K 6 -a; &save -a; &ps
 &put
 
-read_blif in.blif
+read_blif small_area_lut6.blif
 
 &get -n -m
 
@@ -23,7 +23,7 @@ echo "&st; &if -sz -C 5 -K 11 -S 66 -a"
 &st; &if -sz -C 5 -K 11 -S 66 -a ; &save -a; &ps; time
 &put
 
-read_blif in.blif
+read_blif small_area_lut6.blif
 
 &get -n -m
 
@@ -69,7 +69,7 @@ echo ""
 echo "&satlut;"
 &satlut; &save -a; &ps; time
 
-read_blif in.blif
+read_blif small_area_lut6.blif
 
 &get -n -m
 
@@ -78,7 +78,7 @@ echo "&st; &lf -K 6 -e;"
 &st; &lf -K 6 -e; &save -a; &ps; time
 &put
 
-read_blif in.blif
+read_blif small_area_lut6.blif
 
 &get -n -m
 
@@ -86,7 +86,7 @@ echo ""
 &st; &lf -K 6 -e; &save -a; &ps; time
 &put
 
-read_blif in.blif
+read_blif small_area_lut6.blif
 
 strash
 
@@ -112,7 +112,7 @@ if -K 6 -a
 &get -n -m; &save -a; &ps ; time
 &put
 
-read_blif in.blif
+read_blif small_area_lut6.blif
 
 strash
 
