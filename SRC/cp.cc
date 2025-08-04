@@ -53,7 +53,17 @@ struct MaxHeigthWorker
 
       for (auto cell : module->selected_cells()) {
 
-         if (cell->type != "$lut") {
+         if ((cell->type != "$lut") &&
+
+             // Handle also Xilinx lut cells
+	     //
+             (cell->type != "\\LUT1") &&
+             (cell->type != "\\LUT2") &&
+             (cell->type != "\\LUT3") &&
+             (cell->type != "\\LUT4") &&
+             (cell->type != "\\LUT5") &&
+             (cell->type != "\\LUT6")) { 
+
            continue;
 	 }
 
@@ -92,6 +102,7 @@ struct MaxHeigthWorker
       }
    }
    
+
    // ---------------------
    // get_cp_logic_rec
    // ---------------------
@@ -467,6 +478,16 @@ struct MaxHeigthPass : public ScriptPass {
 
    }
 
+   // -------------------------
+   // load_LUT_models
+   // -------------------------
+   void load_LUT_models()
+   {
+     run("read_verilog +/plugins/yosys-syn/LUT_MODELS/LUTs.v");
+
+     run("hierarchy -auto-top");
+   }
+
    void script() override
    {
      if (!G_design) {
@@ -483,6 +504,10 @@ struct MaxHeigthPass : public ScriptPass {
        run(stringf("write_verilog -noexpr -nohex -nodec -norename -simple-lhs dot_cells.vlg"));
        run(stringf("write_verilog -nohex -nodec -norename -simple-lhs dot_expr.vlg"));
      }
+
+     // Usefull to extract Xilinx levels
+     //
+     load_LUT_models();
 
      for (Module *module : G_design->selected_modules())
      {

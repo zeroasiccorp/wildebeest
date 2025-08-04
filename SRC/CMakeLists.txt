@@ -47,6 +47,7 @@ set_target_properties(yosys-syn PROPERTIES
 set(SHARE_DIRECTORIES
     FF_MODELS
     RAM_MODELS
+    LUT_MODELS
     ABC_SCRIPTS
     ../ARCHITECTURE
 )
