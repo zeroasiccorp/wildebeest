@@ -146,5 +146,5 @@ time
 &put
 
 echo " "
-echo "** ABC TINY AREA Optimization and Mapping done !!!"
+echo "** ABC TINY AREA LUT4 Optimization and Mapping done !!!"
 &put
