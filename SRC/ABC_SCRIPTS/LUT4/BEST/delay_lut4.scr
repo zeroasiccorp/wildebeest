@@ -2,7 +2,7 @@ time
 echo " "
 echo "** Starting ABC DELAY LUT4 optimization and mapping !!!"
 
-write_blif delay_lut4.blif
+write_blif in.blif
 
 &get -n -m;
 
@@ -139,7 +139,7 @@ echo " "
 &load; &ps; time
  
 echo " "
-echo "** ABC DELAY LUT4 optimization and mapping done !!!"
+echo "** ABC DELAY optimization and mapping done !!!"
 &put
 
 time
