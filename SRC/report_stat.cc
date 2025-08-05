@@ -443,6 +443,7 @@ struct ReportStatPass : public ScriptPass
 
     if (dot) {
       run("max_height -dot"); // -> store 'maxheight' in scratchpad with 'max_height.max_height'
+                              // NOTE: we can use 'xdot' to view the dot file
     } else {
       run("max_height"); // -> store 'maxheight' in scratchpad with 'max_height.max_height'
     }
