@@ -299,6 +299,10 @@ struct MaxHeigthWorker
 
      cells_dot << "}\n";
      cells_dot.close ();
+
+     log("\nDumped 'cp.dot' file. Use 'xdot' to view it\n");
+     system("xdot cp.dot");
+
    }
 
 
@@ -398,6 +402,7 @@ struct MaxHeigthWorker
      get_cp_logic(max_height);
 
      // Eventually dump the dot file fo the CP logic
+     // NOTE: we can use 'xdot' to view the dot file
      //
      if (dot) {
        dump_cp_dot();
