@@ -36,6 +36,7 @@
 #define HUGE_NB_CELLS 5000000 // 5 Million cells
 #define BIG_NB_CELLS 500000   // 500K cells
 #define SMALL_NB_CELLS 250000 // 250K cells
+#define TINY_NB_CELLS 1000    // 1K cells
 
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
@@ -688,7 +689,7 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
-        ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
+        ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 8;
         ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
         ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
 
@@ -708,7 +709,7 @@ struct SynthFpgaPass : public ScriptPass
 
         ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
-        ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
+        ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 8;
         ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
         ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
 
@@ -1354,7 +1355,18 @@ struct SynthFpgaPass : public ScriptPass
     //
     int nb_cells = getNumberOfCells();
 
-    if (nb_cells <= SMALL_NB_CELLS) { 
+    if (nb_cells <= TINY_NB_CELLS) { 
+
+      if (mode == "area") {
+
+         mode  = "tiny_area";
+
+      } else if (mode == "delay") {
+
+         mode  = "tiny_delay";
+      }
+
+    } else if (nb_cells <= SMALL_NB_CELLS) { 
 
       if (mode == "area") {
 
