@@ -1,8 +1,8 @@
 time
 echo " "
-echo "** Starting ABC SMALL DELAY LUT4 optimization and mapping !!!"
+echo "** Starting ABC TINY DELAY LUT4 optimization and mapping !!!"
 
-write_blif small_delay_lut4.blif
+write_blif tiny_delay_lut4.blif
 
 &get -n -m;
 
@@ -139,7 +139,7 @@ echo " "
 &load; &ps; time
  
 echo " "
-echo "** ABC SMALL DELAY LUT4 optimization and mapping done !!!"
+echo "** ABC TINY DELAY LUT4 optimization and mapping done !!!"
 &put
 
 time
