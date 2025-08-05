@@ -194,6 +194,10 @@ struct ReportStatPass : public ScriptPass
             nb++;
             continue;
         }
+        if (cell->type.in(ID(dffes_xpp))) { 
+            nb++;
+            continue;
+        }
 
 	if ((cell->type).substr(0, 5) == "$_DFF") {
             nb++;
