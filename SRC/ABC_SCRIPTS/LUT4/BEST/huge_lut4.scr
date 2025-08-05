@@ -3,8 +3,6 @@ time
 echo " "
 echo "** Starting ABC HUGE LUT4 optimization and mapping !!!"
 
-write_blif huge_lut4.blif
-
 &get -n -m;
 
 echo " "
@@ -34,4 +32,4 @@ echo "********************* "
 time
 
 echo " "
-echo "** Ending ABC HUGE LUT4 optimization !!!"
+echo "** Ending ABC HUGE optimization !!!"
