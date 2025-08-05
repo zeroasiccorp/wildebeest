@@ -3,7 +3,7 @@ time
 echo " "
 echo "** Starting ABC FAST LUT4 optimization and mapping !!!"
 
-write_blif in.blif 
+write_blif fast_lut4.blif 
 
 &get -n -m;
 
@@ -38,4 +38,4 @@ echo "********************* "
 time
 
 echo " "
-echo "** Ending ABC FAST optimization !!!"
+echo "** Ending ABC FAST LUT4 optimization !!!"
