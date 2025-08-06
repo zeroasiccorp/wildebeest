@@ -23,6 +23,7 @@
 #include "kernel/register.h"
 #include "kernel/celltypes.h"
 #include "kernel/rtlil.h"
+#include "kernel/sigtools.h"
 #include "kernel/log.h"
 #include "version.h"
 #include <chrono>
@@ -1169,6 +1170,74 @@ struct SynthFpgaPass : public ScriptPass
 
 
   // -------------------------
+  // analyze_undriven_nets
+  // -------------------------
+  void analyze_undriven_nets(Module* top_mod, bool connect_to_undef) 
+  {
+    pool<SigBit> undriven_bits;
+    SigMap assign_map;
+    CellTypes ct;
+
+    if (!G_design) {
+      return;
+    }
+
+    log_header(G_design, "Analyze undriven nets\n");
+
+#if 0
+    run(stringf("write_verilog -norename -noexpr -nohex -nodec %s", "before_undriven_cleanup.verilog"));
+#endif
+
+    ct.setup(G_design);
+
+    undriven_bits.clear();
+    assign_map.set(top_mod);
+
+    for (auto wire : top_mod->wires()) {
+        for (auto bit : assign_map(wire)) {
+             if (bit.wire) {
+               undriven_bits.insert(bit);
+	     }
+	}
+    }
+
+    for (auto wire : top_mod->wires()) {
+        if (wire->port_input) {
+              for (auto bit : assign_map(wire)) {
+                undriven_bits.erase(bit);
+	      }
+	}
+    }
+
+    for (auto cell : top_mod->cells()) {
+        for (auto &conn : cell->connections()) {
+
+           if (!ct.cell_known(cell->type) || ct.cell_output(cell->type, conn.first)) {
+                 for (auto bit : assign_map(conn.second)) {
+                    undriven_bits.erase(bit);
+		 }
+	   }
+	}
+    }
+
+
+    SigSpec undriven_sig(undriven_bits);
+    undriven_sig.sort_and_unify();
+
+    for (auto chunk : undriven_sig.chunks()) {
+
+       if (connect_to_undef) {
+
+          log_warning("Setting undriven nets to undef: %s\n", log_signal(chunk));
+          top_mod->connect(chunk, SigSpec(State::Sx, chunk.width));
+
+       } else {
+          log_warning("net %s is undriven\n", log_signal(chunk));
+       }
+    }
+  }
+
+  // -------------------------
   // getNumberOfLuts
   // -------------------------
   int getNumberOfLuts() {
@@ -1270,14 +1339,14 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void load_dff_bb_models()
   {
-     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dff.v");
-     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dffe.v");
-     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dffr.v");
-     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dffs.v");
-     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dffrs.v");
-     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dffer.v");
-     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dffes.v");
-     run("read_verilog +/plugins/yosys-syn/SRC/FF_MODELS/dffers.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dff.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffe.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffrs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffer.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffes.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffers.v");
 
      run("blackbox dff dffe dffr dffs dffrs dffer dffes dffers");
   }
@@ -1304,7 +1373,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void clean_design(int use_dff_bb_models)
   {
-     if (0 || obs_clean) {
+     if (obs_clean) {
 
         run("splitcells");
 
@@ -1318,9 +1387,11 @@ struct SynthFpgaPass : public ScriptPass
           load_dff_bb_models();
 	}
 
-        run("obs_clean");
+        //run("obs_clean");
 
         run("hierarchy");
+
+        run("stat");
 
      } else {
 
@@ -1338,11 +1409,17 @@ struct SynthFpgaPass : public ScriptPass
        return;
     }
 
+    run("stat");
+
     if (opt == "") {
        log_header(G_design, "Performing OFFICIAL PLATYPUS optimization\n");
        run("abc -lut " + sc_syn_lut_size);
        return;
     }
+
+#if 0
+    run("show -prefix before_abc");
+#endif
 
     string mode = opt;
 
@@ -1666,9 +1743,6 @@ struct SynthFpgaPass : public ScriptPass
       run("insbuf");
     }
 
-    clean_design(1);
-
-    run("stat");
     abc_synthesize();
 
     run("setundef -zero");
@@ -2242,18 +2316,19 @@ struct SynthFpgaPass : public ScriptPass
 
     dbg_wait();
 
-    clean_design(1);
+    // Optimize and map through ABC the combinational logic part of the design.
+    //
+    abc_synthesize();
 
     run("stat");
 
     dbg_wait();
 
-    // Optimize and map through ABC the combinational logic part of the design.
-    //
-    run("stat");
-    abc_synthesize();
+    run("splitcells");
 
-    run("stat");
+    run("splitnets");
+
+    clean_design(true);
 
     dbg_wait();
 
@@ -2262,6 +2337,8 @@ struct SynthFpgaPass : public ScriptPass
 
     run("setundef -zero");
     run("clean -purge");
+
+    analyze_undriven_nets(topModule, true /* connect undriven nets to undef */);
 
     // tries to give public names instead of using $abc generic names.
     // Right now this procedure blows up runtime for medium/big designs
