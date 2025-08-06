@@ -51,7 +51,7 @@ struct SynthFpgaPass : public ScriptPass
   string abc_script_version;
   bool no_flatten, dff_enable, dff_async_set, dff_async_reset;
   bool obs_clean, wait, show_max_level, csv, insbuf, resynthesis, autoname;
-  bool no_seq_opt, show_config;
+  bool no_seq_opt, show_config, stop_if_undriven_nets;
   string sc_syn_lut_size;
   string sc_syn_fsm_encoding;
   string config_file = "";
@@ -1228,12 +1228,20 @@ struct SynthFpgaPass : public ScriptPass
 
        if (connect_to_undef) {
 
-          log_warning("Setting undriven nets to undef: %s\n", log_signal(chunk));
+          log_warning("Setting to 'X' undriven net '%s'\n", log_signal(chunk));
           top_mod->connect(chunk, SigSpec(State::Sx, chunk.width));
 
        } else {
           log_warning("net %s is undriven\n", log_signal(chunk));
        }
+    }
+
+    if (stop_if_undriven_nets && undriven_sig.size()) {
+      run(stringf("write_verilog -norename -noexpr -nohex -nodec %s", "netlist_synth_fpga.verilog"));
+      log("\nDumping verilog file 'netlist_synth_fpga.verilog'\n");
+      log("\n");
+      log_error("Stop synthesis [-stop_if_undriven_nets is ON] : Final netlist has '%d' undriven nets !\n", 
+                undriven_sig.size());
     }
   }
 
@@ -1862,6 +1870,10 @@ struct SynthFpgaPass : public ScriptPass
         log("        Disable SAT-based sequential optimizations. This is off by default.\n");
         log("\n");
 
+        log("    -stop_if_undriven_nets\n");
+        log("        Stop Synthesis if the final netlist has undriven nets.\n");
+
+        log("\n");
         log("    -obs_clean\n");
         log("        specifies to use 'obs_clean' cleanup function instead of regular \n");
         log("        'opt_clean'.\n");
@@ -1926,6 +1938,8 @@ struct SynthFpgaPass : public ScriptPass
 	dff_async_reset = true;
 
 	obs_clean = false;
+
+	stop_if_undriven_nets = false;
 
 	verilog_file = "";
 
@@ -2045,6 +2059,11 @@ struct SynthFpgaPass : public ScriptPass
 
 	  if (args[argidx] == "-abc_script_version" && argidx+1 < args.size()) {
              abc_script_version = args[++argidx];
+             continue;
+          }
+
+	  if (args[argidx] == "-stop_if_undriven_nets") {
+             stop_if_undriven_nets = true;
              continue;
           }
 
@@ -2381,6 +2400,11 @@ struct SynthFpgaPass : public ScriptPass
     if (csv) {
        dump_csv_file("stat.csv", (int)totalTime);
     }
+
+    log("\n");
+    log("***********************************\n");
+    log("** Zero Asic FPGA Synthesis Done **\n");
+    log("***********************************\n");
 
   } // end script()
 
