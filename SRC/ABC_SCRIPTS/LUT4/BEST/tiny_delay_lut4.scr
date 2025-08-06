@@ -51,8 +51,8 @@ echo "&st; &lf -K 4 -e -C 32;"
 &st; &lf -K 4 -e -C 32; &ps; time
 
 echo " "
-echo "&dch -C 600; &lf -K 4 -e -C 32;"
-&dch -C 600; &lf -K 4 -e -C 32; &ps; time
+echo "&dch -C 600; &lf -K 4 -e;"
+&dch -C 600; &lf -K 4 -e; &ps; time
 
 echo " "
 echo "&mfs -W 2 -D 15 -M 600"
