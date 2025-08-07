@@ -133,9 +133,9 @@ time
 
 &load; &ps; 
 
-&satlut -r -C 500; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &ps; time
+&satlut -r -C 500; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &save -a; &ps; time
 
-&satlut -r -C 500; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &ps; time
+&satlut -r -C 500; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &save -a; &ps; time
 
 &satlut -r -C 500; &save -a; &shrink; &dch -s -C 300; &if -sz -C 4 -K 7 -S 44 -a ; &put; mfs2 -W 4 -M 1000 -C 7000; &get -n -m; &satlut; &satlut -r ; &save -a; &ps; time 
 
@@ -145,6 +145,7 @@ time
 
 &put
 
+write_blif out.blif
+
 echo " "
 echo "** ABC TINY AREA LUT4 Optimization and Mapping done !!!"
-&put

@@ -144,9 +144,12 @@ echo "Final stat: "
 echo " "
 &load; &ps; time
  
+&put
+
+write_blif out.blif
+
 echo " "
 echo "** ABC TINY DELAY LUT4 optimization and mapping done !!!"
-&put
 
 time
 
