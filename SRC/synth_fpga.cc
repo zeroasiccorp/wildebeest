@@ -1264,7 +1264,7 @@ static void show_sig(const RTLIL::SigSpec &sig)
   // -------------------------
   // getHeight
   // -------------------------
-  int getHeight(RTLIL::SigSpec y, dict<RTLIL::SigSpec, Cell*>& y2xor, xor_head* xh)
+  int getHeight(RTLIL::SigSpec& y, dict<RTLIL::SigSpec, Cell*>& y2xor, xor_head* xh)
   {
     // If 'y' is not a XOR Y output it is a XOR tree leaf
     //
@@ -1566,7 +1566,7 @@ static void show_sig(const RTLIL::SigSpec &sig)
   // -------------------------
   static bool cmpHeight (xor_head* a, xor_head* b)
   {
-    if (a->height >= b->height) {
+    if (a->height > b->height) {
       return true;
     }
 
@@ -1578,7 +1578,7 @@ static void show_sig(const RTLIL::SigSpec &sig)
   // -------------------------
   static bool cmpId (leaf_info* a, leaf_info* b)
   {
-    if (a->Id <= b->Id) {
+    if (a->Id < b->Id) {
       return true;
     }
 
@@ -1597,7 +1597,7 @@ static void show_sig(const RTLIL::SigSpec &sig)
   {
     dict<RTLIL::SigSpec, Cell*> y2xor;
 
-    log_header(G_design, "Analyze XOR trees");
+    log_header(G_design, "Analyze XOR trees\n");
 
     // Reset global objects
     //
@@ -1675,6 +1675,7 @@ static void show_sig(const RTLIL::SigSpec &sig)
 
        getLeavesIds(y, y2xor, xh);
     }
+
 
     // When binarizing the highest XOR tree, its depth after binarizing
     // will be log2(max #leaves). We cannot do better. So it is not 
