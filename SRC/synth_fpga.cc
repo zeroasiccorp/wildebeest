@@ -52,6 +52,7 @@ struct SynthFpgaPass : public ScriptPass
   bool no_flatten, dff_enable, dff_async_set, dff_async_reset;
   bool obs_clean, wait, show_max_level, csv, insbuf, resynthesis, autoname;
   bool no_seq_opt, show_config, stop_if_undriven_nets;
+  bool xor_trees_analysis;
   string sc_syn_lut_size;
   string sc_syn_fsm_encoding;
   string config_file = "";
@@ -1169,6 +1170,588 @@ struct SynthFpgaPass : public ScriptPass
   }
 
 
+
+static std::string id(RTLIL::IdString internal_id)
+{
+        const char *str = internal_id.c_str();
+        return std::string(str);
+}
+
+static void dump_sigchunk(const RTLIL::SigChunk &chunk, bool no_decimal = false)
+{
+    if (chunk.wire == NULL) {
+        log("CONST");
+        return;
+    }
+
+    if (chunk.width == chunk.wire->width && chunk.offset == 0) {
+
+        log("%s", id(chunk.wire->name).c_str());
+
+    } else if (chunk.width == 1) {
+
+        if (chunk.wire->upto)
+            log("%s[%d]", id(chunk.wire->name).c_str(),
+                (chunk.wire->width - chunk.offset - 1) + chunk.wire->start_offset);
+        else
+            log("%s[%d]", id(chunk.wire->name).c_str(), chunk.offset + chunk.wire->start_offset);
+
+    } else {
+
+        if (chunk.wire->upto)
+             log("%s[%d:%d]", id(chunk.wire->name).c_str(),
+                 (chunk.wire->width - (chunk.offset + chunk.width - 1) - 1) + chunk.wire->start_offset,
+                 (chunk.wire->width - chunk.offset - 1) + chunk.wire->start_offset);
+        else
+             log("%s[%d:%d]", id(chunk.wire->name).c_str(),
+                 (chunk.offset + chunk.width - 1) + chunk.wire->start_offset,
+                 chunk.offset + chunk.wire->start_offset);
+    }
+}
+
+static void show_sig(const RTLIL::SigSpec &sig)
+{
+        if (GetSize(sig) == 0) {
+           log("{0{1'b0}}");
+           return;
+        }
+
+        if (sig.is_chunk()) {
+
+            dump_sigchunk(sig.as_chunk());
+
+        } else {
+
+            log("{ ");
+
+            for (auto it = sig.chunks().rbegin(); it != sig.chunks().rend(); ++it) {
+
+                 if (it != sig.chunks().rbegin())
+                    log(", ");
+
+                 dump_sigchunk(*it, true);
+            }
+            log(" }");
+        }
+}
+ 
+  // ---------------------------------------
+  // General object for XOR trees analysis
+  // ---------------------------------------
+  int sigspec_id = 0;
+  dict<RTLIL::SigSpec, int> sigspec_ids;
+  dict<RTLIL::SigSpec, int> y2height;
+  dict<RTLIL::SigSpec, dict<RTLIL::SigSpec, Cell*>*> A2xors;
+
+  class leaf_info {
+
+    public : 
+        RTLIL::SigSpec leaf;
+        int Id;
+  };
+ 
+  class xor_head {
+
+    public :
+        RTLIL::SigSpec head;
+        int height;
+        pool<RTLIL::SigSpec> leaves;
+        vector<leaf_info*> sorted_leaves;
+        vector<RTLIL::SigSpec> sleaves;
+        int same_leaf = 0;
+  };
+
+  // -------------------------
+  // getHeight
+  // -------------------------
+  int getHeight(RTLIL::SigSpec y, dict<RTLIL::SigSpec, Cell*>& y2xor, xor_head* xh)
+  {
+    // If 'y' is not a XOR Y output it is a XOR tree leaf
+    //
+    if (y2xor.count(y) == 0) {
+       return 0;
+    }
+
+    Cell* cell = y2xor[y];
+
+    if (cell->type != RTLIL::escape_id("$_XOR_")) {
+       log_error("Expected to access a XOR cell !\n");
+       return 0;
+    }
+
+    RTLIL::SigSpec A = cell->getPort(ID::A);
+    RTLIL::SigSpec B = cell->getPort(ID::B);
+
+    int height = 0;
+    int heightA = 0;
+    int heightB = 0;
+
+    heightA = getHeight(A, y2xor, xh); 
+    heightB = getHeight(B, y2xor, xh); 
+
+    height = heightA;
+
+    if (heightB > heightA) {
+       height = heightB;
+    }
+
+    return height+1;
+
+  }
+
+  // -------------------------
+  // getLeavesIds
+  // -------------------------
+  void getLeavesIds(RTLIL::SigSpec y, dict<RTLIL::SigSpec, Cell*>& y2xor, xor_head* xh)
+  {
+    // If 'y' is not a XOR Y output it is a XOR tree leaf
+    //
+    if (y2xor.count(y) == 0) {
+
+       // If this 'y' leaf has been already visited then set this info.
+       //
+       if ((xh->leaves).find(y) != (xh->leaves).end()) {
+         log_warning("Found duplicated leaf during XOR tree analysis\n");
+         xh->same_leaf = 1;
+       }
+
+       // Insert 'y' in the leaves of 'xh' (the XOR head)
+       //
+       xh->leaves.insert(y);
+
+       // Associate an Id to this leaf if not visited yet.
+       //
+       if (sigspec_ids.find(y) == sigspec_ids.end()) {
+         sigspec_ids[y] = sigspec_id++; 
+       }
+
+       return;
+    }
+
+    Cell* cell = y2xor[y];
+
+    if (cell->type != RTLIL::escape_id("$_XOR_")) {
+       log_error("Expected to access a XOR cell !\n");
+       return;
+    }
+
+    RTLIL::SigSpec A = cell->getPort(ID::A);
+    RTLIL::SigSpec B = cell->getPort(ID::B);
+
+    // Perform recursive exploration with highest child first.
+    // If same heights, visit A before B.
+    //
+    
+    // If both A and B are terminal leaves
+    //
+    if ((y2height.find(A) == y2height.end()) &&
+        (y2height.find(B) == y2height.end())) {
+
+       getLeavesIds(A, y2xor, xh);
+       getLeavesIds(B, y2xor, xh);
+
+       return;
+    }
+
+    // If A is terminal leaf
+    //
+    if (y2height.find(A) == y2height.end()) {
+
+       getLeavesIds(B, y2xor, xh);
+       getLeavesIds(A, y2xor, xh);
+
+       return;
+    }
+
+    // If B is terminal leaf
+    //
+    if (y2height.find(B) == y2height.end()) {
+
+       getLeavesIds(A, y2xor, xh);
+       getLeavesIds(B, y2xor, xh);
+
+       return;
+    }
+
+    // If both A and B are not terminal leaves
+    //
+    int heightA = y2height[A];
+    int heightB = y2height[B];
+
+    // Visit highest child first
+    //
+    if (heightA >= heightB) {
+
+       getLeavesIds(A, y2xor, xh);
+       getLeavesIds(B, y2xor, xh);
+
+       return;
+    }
+
+    getLeavesIds(B, y2xor, xh);
+    getLeavesIds(A, y2xor, xh);
+  }
+
+
+  // -------------------------
+  // build_binary_xor_tree_rec
+  // -------------------------
+  void build_binary_xor_tree_rec (Module* top_mod, RTLIL::SigSpec& y, 
+		             dict<RTLIL::SigSpec, Cell*>& y2xor, 
+			     RTLIL::SigSpec& new_y, 
+			     vector<RTLIL::SigSpec>& leaves)
+  {
+
+    if (leaves.size() < 2) {
+      log_error("Xor tree binary build requires at leat 2 leaves : %ld\n",
+	        leaves.size());
+    }
+    vector<RTLIL::SigSpec> current_leaves(leaves);
+
+    //log("Process build_binary_xor_tree_rec with %ld leaves\n", leaves.size());
+
+    while (1) {
+
+       vector<RTLIL::SigSpec> next_leaves;
+
+       int i = 0;
+
+       RTLIL::SigSpec A;
+       RTLIL::SigSpec B;
+
+       //log("Nb leaves = %ld\n", current_leaves.size());
+
+       for (auto it : current_leaves) {
+         
+          if (i == 0) {
+
+              A = it;
+	      i++;
+	      continue;
+	  }
+
+          B = it;
+
+	  RTLIL::Cell *new_cell;
+
+	  // check if this XOR(A,B) already exists
+	  //
+	  if (1 && (A2xors.find(A) != A2xors.end()) && 
+              ((A2xors[A])->find(B) != (A2xors[A])->end())) {
+
+            //log("Found already built XOR !\n");
+
+            dict<RTLIL::SigSpec, Cell*>* B2xors = A2xors[A]; 
+
+	    new_cell = (*B2xors)[B];
+
+            new_y = new_cell->getPort(ID::Y);
+
+	    next_leaves.push_back(RTLIL::SigSpec(new_y));
+
+	  } else if (1 && (A2xors.find(B) != A2xors.end()) && 
+                    ((A2xors[B])->find(A) != (A2xors[B])->end())) {
+
+            //log("Found already built XOR case 2 !\n");
+
+            dict<RTLIL::SigSpec, Cell*>* B2xors = A2xors[B]; 
+
+	    new_cell = (*B2xors)[A];
+
+            new_y = new_cell->getPort(ID::Y);
+
+	    next_leaves.push_back(RTLIL::SigSpec(new_y));
+
+	  } else { // case of creating new XOR
+
+            Wire* new_wire = top_mod->addWire(NEW_ID);
+
+            new_y = new_wire;
+
+            RTLIL::Cell *new_cell = top_mod->addCell(NEW_ID, RTLIL::escape_id("$_XOR_"));
+
+            new_cell->setPort(ID::A, A);
+            new_cell->setPort(ID::B, B);
+
+            new_cell->setPort(ID::Y, RTLIL::SigSpec(new_y));
+
+	    next_leaves.push_back(RTLIL::SigSpec(new_y));
+
+	    // Add the new cell in the cache
+	    //
+	    if (A2xors.find(A) != A2xors.end()) {
+
+              dict<RTLIL::SigSpec, Cell*>* B2xors = A2xors[A]; 
+	      (*B2xors)[B] = new_cell;
+
+	    } else {
+
+              dict<RTLIL::SigSpec, Cell*>* B2xors = new dict<RTLIL::SigSpec, Cell*>; 
+	      (*B2xors)[B] = new_cell;
+	      A2xors[A] = B2xors;
+	    }
+	  }
+
+	  i = 0;
+       }
+
+       // Case of odd numbers in the 'current_leaves'
+       //
+       if (i == 1) {
+	  next_leaves.push_back(RTLIL::SigSpec(A));
+       }
+
+       current_leaves.clear();
+       for (auto l : next_leaves) {
+          current_leaves.push_back(l);
+       }
+       next_leaves.clear();
+
+       if (current_leaves.size() == 1) {
+         return;
+       }
+    }
+  }
+
+  // -------------------------
+  // build_binary_xor_tree
+  // -------------------------
+  void build_binary_xor_tree (Module* top_mod, RTLIL::SigSpec& y, 
+		             dict<RTLIL::SigSpec, Cell*>& y2xor, 
+			     vector<RTLIL::SigSpec>& leaves)
+  {
+    if (leaves.size() < 4) {
+      return;
+    }
+
+    Cell* cell = y2xor[y];
+
+    vector<RTLIL::SigSpec> first_half;
+    vector<RTLIL::SigSpec> second_half;
+
+    int i = 0;
+
+    for (auto it : leaves) {
+
+       if (i < leaves.size()/2) {
+
+         first_half.push_back(it);
+
+       } else {
+
+         second_half.push_back(it);
+       }
+       i++;
+    }
+
+    RTLIL::SigSpec A = cell->getPort(ID::A);
+
+    RTLIL::SigSpec new_A;
+
+    build_binary_xor_tree_rec(top_mod, A, y2xor, new_A, first_half);
+
+    RTLIL::SigSpec B = cell->getPort(ID::B);
+
+    RTLIL::SigSpec new_B;
+
+    build_binary_xor_tree_rec(top_mod, B, y2xor, new_B, second_half);
+
+    cell->setPort(ID::A, new_A);
+
+    cell->setPort(ID::B, new_B);
+  }
+
+  // -------------------------
+  // cmpHeight
+  // -------------------------
+  static bool cmpHeight (xor_head* a, xor_head* b)
+  {
+    if (a->height >= b->height) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // -------------------------
+  // cmpId
+  // -------------------------
+  static bool cmpId (leaf_info* a, leaf_info* b)
+  {
+    if (a->Id <= b->Id) {
+      return true;
+    }
+
+    return false;
+  }
+
+
+  // -------------------------
+  // analyze_xor_trees
+  // -------------------------
+  // Tries to reduce XOR trees depth by binarizing the XOR trees.
+  // A good test case is "graybin" that helps to reduce from 4 
+  // downoto 3 levels with Area increase.
+  //
+  void analyze_xor_trees(Module* top_mod)
+  {
+    dict<RTLIL::SigSpec, Cell*> y2xor;
+
+    log_header(G_design, "Analyze XOR trees");
+
+    // Reset global objects
+    //
+    sigspec_id = 0;
+    sigspec_ids.clear();
+    y2xor.clear();
+    y2height.clear();
+    A2xors.clear();
+
+    // Build "y2xor" to get direct XOR cell access from any  
+    // XOR cell 'y' output signal.
+    //
+    for (auto cell : top_mod->cells()) {
+
+       if (cell->type != RTLIL::escape_id("$_XOR_")) {
+         continue;
+       }
+
+       RTLIL::SigSpec Y = cell->getPort(ID::Y);
+
+       y2xor[Y] = cell;
+    }
+
+    log("Found %ld xors\n", y2xor.size());
+
+
+    // -----------------------------------
+    // Compute the heights for each XORs
+    // and get the 'heads" : a head corresponds to a XOR
+    // from where we start the search in its Transitive Fanin.
+    // So we have as many 'heads' as XORs.
+    // In a 'head' we store the 'y' XOR output, the max height till
+    // a leaf (a non XOR), the vector of its leaves (all the non XOR
+    // terminals).
+    //
+    int maxHeight = 0;
+    vector<xor_head*> heads;
+
+    for (auto it : y2xor) {
+
+       RTLIL::SigSpec y = it.first;
+
+       xor_head* xh = new xor_head;
+
+       xh->head = y;
+
+       int height = getHeight(y, y2xor, xh);
+
+       xh->height = height;
+
+       heads.push_back(xh);
+
+       y2height[y] = height;
+
+       if (height > maxHeight) {
+          maxHeight = height;
+       }
+    }
+
+    log("Max Xor tree height = %d\n", maxHeight);
+
+    // Sort XOR heads from highest to lowest
+    //
+    std::sort(heads.begin(), heads.end(), cmpHeight);
+
+    // ------------------------------------------------------------
+    // From Highest head to lowest : get leaves and set leaves Ids
+    // for each 'head'.
+    // Idea: gives first IDs to deepest leaves.
+    //
+    for (auto xh : heads) {
+
+       RTLIL::SigSpec y = xh->head;
+       int height = xh->height;
+
+       getLeavesIds(y, y2xor, xh);
+    }
+
+    // When binarizing the highest XOR tree, its depth after binarizing
+    // will be log2(max #leaves). We cannot do better. So it is not 
+    // necessary to try to reduce/binarize original XOR trees with 
+    // height <= log2(max #leaves).
+    //
+    double stuck_max_height = 0; // the height we cannot go below even by
+                                 // reducing height with binary tree.
+
+    // Binarize the xor logic underneath 'y'
+    //
+    for (auto it : heads) {
+
+       RTLIL::SigSpec y = it->head;
+       int height = it->height;
+       pool<RTLIL::SigSpec> leaves = it->leaves;
+
+#if 0
+       if (height <= stuck_max_height) {
+          log("Stop binarize XORs because stuck height is '%f' '%d'\n", 
+              stuck_max_height, height);
+
+	  continue;
+       }
+#endif
+
+#if 0
+       log("Process head : ");
+       show_sig(y);
+       log("\n");
+       log("Height = %d\n", height);
+       log("Leaves size = %ld\n", leaves.size());
+#endif
+
+       // Create the "sorted_leaves" for each XOR header.
+       // in order to sort them.
+       //
+       for (auto lv : leaves) {
+
+	 leaf_info* lf = new leaf_info;
+
+	 lf->leaf = lv;
+
+	 lf->Id = sigspec_ids[lv];
+
+         it->sorted_leaves.push_back(lf);
+       }
+
+       vector<leaf_info*> sorted_leaves = it->sorted_leaves;
+
+       // Sort the leaves according to their IDs
+       //
+       std::sort(sorted_leaves.begin(), sorted_leaves.end(), cmpId);
+
+       // Construct the 'sleaves' to use for building the XOR bin tree.
+       // "sleaves' is simply the image of "sorted_leaves" w/o the Ids.
+       //
+       for (auto lv : sorted_leaves) {
+          it->sleaves.push_back(lv->leaf);
+       }
+
+       // Build the binary tree under XOR with output 'y'
+       //
+       build_binary_xor_tree(top_mod, y, y2xor, it->sleaves);
+
+#if 0
+       if (stuck_max_height <= log2(it->leaves.size())) {
+
+         stuck_max_height = log2(it->leaves.size());
+
+         log("New Stuck max height = %f\n", stuck_max_height);
+       } 
+#endif
+    }
+
+  }
+
   // -------------------------
   // analyze_undriven_nets
   // -------------------------
@@ -1844,7 +2427,11 @@ struct SynthFpgaPass : public ScriptPass
         log("\n");
 
         log("    -insbuf\n");
-        log("        performs buffers insertion (off by default).\n");
+        log("        performs buffers insertion (Off by default).\n");
+        log("\n");
+
+        log("    -xor_trees_analysis\n");
+        log("        performs xor trees depth reduction for DELAY (Off by default).\n");
         log("\n");
 
         log("    -autoname\n");
@@ -1930,6 +2517,8 @@ struct SynthFpgaPass : public ScriptPass
 	show_max_level = false;
 	csv = false;
 	insbuf = false;
+
+	xor_trees_analysis = false;
 
 	wait = false;
 
@@ -2034,6 +2623,11 @@ struct SynthFpgaPass : public ScriptPass
 
           if (args[argidx] == "-insbuf") {
              insbuf = true;
+             continue;
+          }
+
+          if (args[argidx] == "-xor_trees_analysis") {
+             xor_trees_analysis = true;
              continue;
           }
 
@@ -2334,6 +2928,16 @@ struct SynthFpgaPass : public ScriptPass
     run("stat");
 
     dbg_wait();
+
+    if (xor_trees_analysis) {
+      analyze_xor_trees(topModule);
+    }
+
+    run("opt_clean");
+
+    run("stat");
+
+    //abort();
 
     // Optimize and map through ABC the combinational logic part of the design.
     //
