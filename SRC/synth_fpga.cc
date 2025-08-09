@@ -52,7 +52,7 @@ struct SynthFpgaPass : public ScriptPass
   bool no_flatten, dff_enable, dff_async_set, dff_async_reset;
   bool obs_clean, wait, show_max_level, csv, insbuf, resynthesis, autoname;
   bool no_seq_opt, show_config, stop_if_undriven_nets;
-  bool xor_trees_analysis;
+  bool no_xor_tree_process;
   string sc_syn_lut_size;
   string sc_syn_fsm_encoding;
   string config_file = "";
@@ -1169,72 +1169,6 @@ struct SynthFpgaPass : public ScriptPass
     show_config_file();
   }
 
-
-
-static std::string id(RTLIL::IdString internal_id)
-{
-        const char *str = internal_id.c_str();
-        return std::string(str);
-}
-
-static void dump_sigchunk(const RTLIL::SigChunk &chunk, bool no_decimal = false)
-{
-    if (chunk.wire == NULL) {
-        log("CONST");
-        return;
-    }
-
-    if (chunk.width == chunk.wire->width && chunk.offset == 0) {
-
-        log("%s", id(chunk.wire->name).c_str());
-
-    } else if (chunk.width == 1) {
-
-        if (chunk.wire->upto)
-            log("%s[%d]", id(chunk.wire->name).c_str(),
-                (chunk.wire->width - chunk.offset - 1) + chunk.wire->start_offset);
-        else
-            log("%s[%d]", id(chunk.wire->name).c_str(), chunk.offset + chunk.wire->start_offset);
-
-    } else {
-
-        if (chunk.wire->upto)
-             log("%s[%d:%d]", id(chunk.wire->name).c_str(),
-                 (chunk.wire->width - (chunk.offset + chunk.width - 1) - 1) + chunk.wire->start_offset,
-                 (chunk.wire->width - chunk.offset - 1) + chunk.wire->start_offset);
-        else
-             log("%s[%d:%d]", id(chunk.wire->name).c_str(),
-                 (chunk.offset + chunk.width - 1) + chunk.wire->start_offset,
-                 chunk.offset + chunk.wire->start_offset);
-    }
-}
-
-static void show_sig(const RTLIL::SigSpec &sig)
-{
-        if (GetSize(sig) == 0) {
-           log("{0{1'b0}}");
-           return;
-        }
-
-        if (sig.is_chunk()) {
-
-            dump_sigchunk(sig.as_chunk());
-
-        } else {
-
-            log("{ ");
-
-            for (auto it = sig.chunks().rbegin(); it != sig.chunks().rend(); ++it) {
-
-                 if (it != sig.chunks().rbegin())
-                    log(", ");
-
-                 dump_sigchunk(*it, true);
-            }
-            log(" }");
-        }
-}
- 
   // ---------------------------------------
   // General object for XOR trees analysis
   // ---------------------------------------
@@ -1264,7 +1198,10 @@ static void show_sig(const RTLIL::SigSpec &sig)
   // -------------------------
   // getHeight
   // -------------------------
-  int getHeight(RTLIL::SigSpec& y, dict<RTLIL::SigSpec, Cell*>& y2xor, xor_head* xh)
+  // get the height from the XOR output 'y', e.g number of XORs traversed till 
+  // reaching a non XOR cell.
+  //
+  int getHeight(RTLIL::SigSpec& y, dict<RTLIL::SigSpec, Cell*>& y2xor)
   {
     // If 'y' is not a XOR Y output it is a XOR tree leaf
     //
@@ -1286,8 +1223,8 @@ static void show_sig(const RTLIL::SigSpec &sig)
     int heightA = 0;
     int heightB = 0;
 
-    heightA = getHeight(A, y2xor, xh); 
-    heightB = getHeight(B, y2xor, xh); 
+    heightA = getHeight(A, y2xor); 
+    heightB = getHeight(B, y2xor); 
 
     height = heightA;
 
@@ -1296,7 +1233,6 @@ static void show_sig(const RTLIL::SigSpec &sig)
     }
 
     return height+1;
-
   }
 
   // -------------------------
@@ -1311,6 +1247,9 @@ static void show_sig(const RTLIL::SigSpec &sig)
        // If this 'y' leaf has been already visited then set this info.
        //
        if ((xh->leaves).find(y) != (xh->leaves).end()) {
+         // If we find a duplicated leaf then this means we have XOR A A which means
+	 // all the logic coming from the xor head can be replaced by logic 0.
+	 //
          log_warning("Found duplicated leaf during XOR tree analysis\n");
          xh->same_leaf = 1;
        }
@@ -1406,21 +1345,25 @@ static void show_sig(const RTLIL::SigSpec &sig)
       log_error("Xor tree binary build requires at leat 2 leaves : %ld\n",
 	        leaves.size());
     }
+
     vector<RTLIL::SigSpec> current_leaves(leaves);
 
-    //log("Process build_binary_xor_tree_rec with %ld leaves\n", leaves.size());
-
+    // Build a binary XOR tree and proceed level per level (breadth first approach)
+    // Cut 'current_leaves' into sets of size 2 to build a XOR2.
+    // Add the output of this new XOR2 into next 'next_leaves', list that will 
+    // correspond to next stage of leaves to cut into sets of 2.
+    //
     while (1) {
 
        vector<RTLIL::SigSpec> next_leaves;
 
-       int i = 0;
+       int i = 0; // 'i' will be either 0 or 1
 
        RTLIL::SigSpec A;
        RTLIL::SigSpec B;
 
-       //log("Nb leaves = %ld\n", current_leaves.size());
-
+       // Visit all the leaves and pack them by 2 to create a XOR2.
+       //
        for (auto it : current_leaves) {
          
           if (i == 0) {
@@ -1432,11 +1375,14 @@ static void show_sig(const RTLIL::SigSpec &sig)
 
           B = it;
 
+	  // Ok, we got the two next leaves A and B so now try to create the new 
+	  // cell XOR(A,B)
+	  //
 	  RTLIL::Cell *new_cell;
 
-	  // check if this XOR(A,B) already exists
+	  // check for already existing XOR(A,B) 
 	  //
-	  if (1 && (A2xors.find(A) != A2xors.end()) && 
+	  if ((A2xors.find(A) != A2xors.end()) && 
               ((A2xors[A])->find(B) != (A2xors[A])->end())) {
 
             //log("Found already built XOR !\n");
@@ -1449,8 +1395,15 @@ static void show_sig(const RTLIL::SigSpec &sig)
 
 	    next_leaves.push_back(RTLIL::SigSpec(new_y));
 
-	  } else if (1 && (A2xors.find(B) != A2xors.end()) && 
-                    ((A2xors[B])->find(A) != (A2xors[B])->end())) {
+	    i = 0;
+
+	    continue;
+	  } 
+	  
+	  // Check for already existing XOR(B,A)
+	  //
+	  if ((A2xors.find(B) != A2xors.end()) && 
+              ((A2xors[B])->find(A) != (A2xors[B])->end())) {
 
             //log("Found already built XOR case 2 !\n");
 
@@ -1462,51 +1415,64 @@ static void show_sig(const RTLIL::SigSpec &sig)
 
 	    next_leaves.push_back(RTLIL::SigSpec(new_y));
 
-	  } else { // case of creating new XOR
+	    i = 0;
 
-            Wire* new_wire = top_mod->addWire(NEW_ID);
+	    continue;
 
-            new_y = new_wire;
+	  } 
+	  
+	  // We need to create a new XOR
+	  //
+          Wire* new_wire = top_mod->addWire(NEW_ID);
 
-            RTLIL::Cell *new_cell = top_mod->addCell(NEW_ID, RTLIL::escape_id("$_XOR_"));
+          new_y = new_wire;
 
-            new_cell->setPort(ID::A, A);
-            new_cell->setPort(ID::B, B);
+          new_cell = top_mod->addCell(NEW_ID, RTLIL::escape_id("$_XOR_"));
 
-            new_cell->setPort(ID::Y, RTLIL::SigSpec(new_y));
+          new_cell->setPort(ID::A, A);
+          new_cell->setPort(ID::B, B);
 
-	    next_leaves.push_back(RTLIL::SigSpec(new_y));
+          new_cell->setPort(ID::Y, RTLIL::SigSpec(new_y));
 
-	    // Add the new cell in the cache
-	    //
-	    if (A2xors.find(A) != A2xors.end()) {
+	  next_leaves.push_back(RTLIL::SigSpec(new_y));
+
+	  // Add the new XOR in the cache to eventually reuse it.
+	  //
+	  if (A2xors.find(A) != A2xors.end()) {
 
               dict<RTLIL::SigSpec, Cell*>* B2xors = A2xors[A]; 
 	      (*B2xors)[B] = new_cell;
 
-	    } else {
+	  } else {
 
               dict<RTLIL::SigSpec, Cell*>* B2xors = new dict<RTLIL::SigSpec, Cell*>; 
 	      (*B2xors)[B] = new_cell;
 	      A2xors[A] = B2xors;
-	    }
 	  }
 
 	  i = 0;
-       }
 
-       // Case of odd numbers in the 'current_leaves'
+       } // end of 'for current_leaves' 
+
+       // All the leaves have been visited.
+       // If i == 1 this is the case of odd numbers in the 'current_leaves'.
+       // Add it to 'next_leaves' to reconsider it in next iteration.
        //
        if (i == 1) {
 	  next_leaves.push_back(RTLIL::SigSpec(A));
        }
 
+       // Move the 'next_leaves' objects to 'current_leaves' to restart a new iteration.
+       //
        current_leaves.clear();
        for (auto l : next_leaves) {
           current_leaves.push_back(l);
        }
        next_leaves.clear();
 
+       // Terminal case in the while loop : there is only 1 leaf, e.g the Y ouput of the
+       // root XOR : we are done.
+       //
        if (current_leaves.size() == 1) {
          return;
        }
@@ -1574,6 +1540,18 @@ static void show_sig(const RTLIL::SigSpec &sig)
   }
 
   // -------------------------
+  // cmpInvHeight
+  // -------------------------
+  static bool cmpInvHeight (xor_head* a, xor_head* b)
+  {
+    if (a->height < b->height) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // -------------------------
   // cmpId
   // -------------------------
   static bool cmpId (leaf_info* a, leaf_info* b)
@@ -1587,17 +1565,23 @@ static void show_sig(const RTLIL::SigSpec &sig)
 
 
   // -------------------------
-  // analyze_xor_trees
+  // binary_decomp_xor_trees
   // -------------------------
   // Tries to reduce XOR trees depth by binarizing the XOR trees.
-  // A good test case is "graybin" that helps to reduce from 4 
-  // downoto 3 levels with Area increase.
+  // Binarize long XOR tree chains in delay mode. Typical example is 'gray2bin'
+  // in 'logikbench/basic' suite having 64 levels that can be reduced to 6 levels.
   //
-  void analyze_xor_trees(Module* top_mod)
+  void binary_decomp_xor_trees(Module* top_mod)
   {
     dict<RTLIL::SigSpec, Cell*> y2xor;
 
     log_header(G_design, "Analyze XOR trees\n");
+
+    run("stat");
+
+#if 0
+    run(stringf("write_blif before_binary_decomp_xor_trees.blif"));
+#endif
 
     // Reset global objects
     //
@@ -1640,11 +1624,11 @@ static void show_sig(const RTLIL::SigSpec &sig)
 
        RTLIL::SigSpec y = it.first;
 
+       int height = getHeight(y, y2xor);
+
        xor_head* xh = new xor_head;
 
        xh->head = y;
-
-       int height = getHeight(y, y2xor, xh);
 
        xh->height = height;
 
@@ -1685,6 +1669,8 @@ static void show_sig(const RTLIL::SigSpec &sig)
     double stuck_max_height = 0; // the height we cannot go below even by
                                  // reducing height with binary tree.
 
+    //std::sort(heads.begin(), heads.end(), cmpInvHeight);
+
     // Binarize the xor logic underneath 'y'
     //
     for (auto it : heads) {
@@ -1700,14 +1686,6 @@ static void show_sig(const RTLIL::SigSpec &sig)
 
 	  continue;
        }
-#endif
-
-#if 0
-       log("Process head : ");
-       show_sig(y);
-       log("\n");
-       log("Height = %d\n", height);
-       log("Leaves size = %ld\n", leaves.size());
 #endif
 
        // Create the "sorted_leaves" for each XOR header.
@@ -1750,6 +1728,75 @@ static void show_sig(const RTLIL::SigSpec &sig)
        } 
 #endif
     }
+
+    // Dispose objects created by 'new'.
+    //
+    for (auto xh : heads) {
+        delete xh;
+    }
+    heads.clear();
+
+    for (auto ax : A2xors) {
+        delete ax.second;
+    }
+    A2xors.clear();
+
+    run("opt_merge"); // should merge the remaining duplicated XORs
+
+    run("opt_clean");
+
+    // Look for duplicate XORs
+    //
+
+    int nb_duplicate = 0;
+
+    for (auto cell : top_mod->cells()) {
+
+       if (cell->type != RTLIL::escape_id("$_XOR_")) {
+         continue;
+       }
+
+       RTLIL::SigSpec A = cell->getPort(ID::A);
+       RTLIL::SigSpec B = cell->getPort(ID::B);
+       RTLIL::SigSpec Y = cell->getPort(ID::Y);
+
+       if (A2xors.find(A) != A2xors.end()) { // look for XOR A B
+
+           dict<RTLIL::SigSpec, Cell*>* B2xors = A2xors[A];
+
+           if (B2xors->find(B) != B2xors->end()) {
+             log("Found duplicated XOR with same A and B\n");
+	     nb_duplicate++;
+	     continue;
+	   }
+           (*B2xors)[B] = cell;
+
+       } else if (A2xors.find(B) != A2xors.end()) { // look for XOR B A
+
+           dict<RTLIL::SigSpec, Cell*>* a2xors = A2xors[B];
+
+           if (a2xors->find(A) != a2xors->end()) {
+             log("Found duplicated XOR with same B and A\n");
+	     nb_duplicate++;
+	     continue;
+	   }
+           (*a2xors)[A] = cell;
+
+       } else {
+
+           dict<RTLIL::SigSpec, Cell*>* B2xors = new dict<RTLIL::SigSpec, Cell*>;
+           (*B2xors)[B] = cell;
+           A2xors[A] = B2xors;
+       }
+    }
+
+    log("Found '%d' duplicated XORs after binarization.\n", nb_duplicate);
+
+    run("stat");
+
+#if 0
+    run(stringf("write_blif after_binary_decomp_xor_trees.blif"));
+#endif
 
   }
 
@@ -2431,8 +2478,8 @@ static void show_sig(const RTLIL::SigSpec &sig)
         log("        performs buffers insertion (Off by default).\n");
         log("\n");
 
-        log("    -xor_trees_analysis\n");
-        log("        performs xor trees depth reduction for DELAY (Off by default).\n");
+        log("    -no_xor_tree_process\n");
+        log("        Disable xor trees depth reduction for DELAY (Off by default).\n");
         log("\n");
 
         log("    -autoname\n");
@@ -2519,7 +2566,7 @@ static void show_sig(const RTLIL::SigSpec &sig)
 	csv = false;
 	insbuf = false;
 
-	xor_trees_analysis = false;
+	no_xor_tree_process = false;
 
 	wait = false;
 
@@ -2627,8 +2674,8 @@ static void show_sig(const RTLIL::SigSpec &sig)
              continue;
           }
 
-          if (args[argidx] == "-xor_trees_analysis") {
-             xor_trees_analysis = true;
+          if (args[argidx] == "-no_xor_tree_process") {
+             no_xor_tree_process = true;
              continue;
           }
 
@@ -2930,15 +2977,15 @@ static void show_sig(const RTLIL::SigSpec &sig)
 
     dbg_wait();
 
-    if (xor_trees_analysis) {
-      analyze_xor_trees(topModule);
+    // Binarize long XOR tree chains in delay mode. Typical example is 'gray2bin'
+    // in 'logikbench/basic' suite having 64 levels that can be reduced to 6 levels.
+    //
+    if (!no_xor_tree_process && (opt == "delay")) {
+
+      binary_decomp_xor_trees(topModule);
     }
 
-    run("opt_clean");
-
     run("stat");
-
-    //abort();
 
     // Optimize and map through ABC the combinational logic part of the design.
     //
@@ -2965,7 +3012,7 @@ static void show_sig(const RTLIL::SigSpec &sig)
     analyze_undriven_nets(topModule, true /* connect undriven nets to undef */);
 
     // tries to give public names instead of using $abc generic names.
-    // Right now this procedure blows up runtime for medium/big designs
+    // Right now this procedure blows up runtime for medium/big designs.
     //
     if (autoname) {
       run("autoname");
