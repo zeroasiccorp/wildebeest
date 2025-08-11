@@ -1187,12 +1187,12 @@ struct SynthFpgaPass : public ScriptPass
   class xor_head {
 
     public :
+        Cell* xor_cell;
         RTLIL::SigSpec head;
         int height;
         pool<RTLIL::SigSpec> leaves;
         vector<leaf_info*> sorted_leaves;
         vector<RTLIL::SigSpec> sleaves;
-        int same_leaf = 0;
   };
 
   // -------------------------
@@ -1247,11 +1247,7 @@ struct SynthFpgaPass : public ScriptPass
        // If this 'y' leaf has been already visited then set this info.
        //
        if ((xh->leaves).find(y) != (xh->leaves).end()) {
-         // If we find a duplicated leaf then this means we have XOR A A which means
-	 // all the logic coming from the xor head can be replaced by logic 0.
-	 //
-         log_warning("Found duplicated leaf during XOR tree analysis\n");
-         xh->same_leaf = 1;
+         //log_warning("Found duplicated leaf during XOR tree analysis\n");
        }
 
        // Insert 'y' in the leaves of 'xh' (the XOR head)
@@ -1563,6 +1559,75 @@ struct SynthFpgaPass : public ScriptPass
     return false;
   }
 
+static std::string id(RTLIL::IdString internal_id)
+{
+        const char *str = internal_id.c_str();
+        return std::string(str);
+}
+
+static void dump_const(const RTLIL::Const &data, int width = -1, int offset = 0, bool no_decimal = false, bool escape_comment = false)
+{
+        log("CONSTANT");
+}
+
+static void dump_sigchunk(const RTLIL::SigChunk &chunk, bool no_decimal = false)
+{
+    if (chunk.wire == NULL) {
+        dump_const(chunk.data, chunk.width, chunk.offset, no_decimal);
+        return;
+    }
+
+    if (chunk.width == chunk.wire->width && chunk.offset == 0) {
+
+        log("%s", id(chunk.wire->name).c_str());
+
+    } else if (chunk.width == 1) {
+
+        if (chunk.wire->upto)
+            log("%s[%d]", id(chunk.wire->name).c_str(),
+                (chunk.wire->width - chunk.offset - 1) + chunk.wire->start_offset);
+        else
+            log("%s[%d]", id(chunk.wire->name).c_str(), chunk.offset + chunk.wire->start_offset);
+
+    } else {
+
+        if (chunk.wire->upto)
+             log("%s[%d:%d]", id(chunk.wire->name).c_str(),
+                 (chunk.wire->width - (chunk.offset + chunk.width - 1) - 1) + chunk.wire->start_offset,
+                 (chunk.wire->width - chunk.offset - 1) + chunk.wire->start_offset);
+        else
+             log("%s[%d:%d]", id(chunk.wire->name).c_str(),
+                 (chunk.offset + chunk.width - 1) + chunk.wire->start_offset,
+                 chunk.offset + chunk.wire->start_offset);
+    }
+}
+
+static void show_sig(const RTLIL::SigSpec &sig)
+{
+        if (GetSize(sig) == 0) {
+           log("{0{1'b0}}");
+           return;
+        }
+
+        if (sig.is_chunk()) {
+
+            dump_sigchunk(sig.as_chunk());
+
+        } else {
+
+            log("{ ");
+
+            for (auto it = sig.chunks().rbegin(); it != sig.chunks().rend(); ++it) {
+
+                 if (it != sig.chunks().rbegin())
+                    log(", ");
+
+                 dump_sigchunk(*it, true);
+            }
+            log(" }");
+        }
+}
+
 
   // -------------------------
   // binary_decomp_xor_trees
@@ -1578,6 +1643,8 @@ struct SynthFpgaPass : public ScriptPass
     log_header(G_design, "Analyze XOR trees\n");
 
     run("stat");
+
+    run(stringf("write_verilog -norename -noexpr -nohex -nodec before_binary_decomp_xor_trees.verilog"));
 
 #if 0
     run(stringf("write_blif before_binary_decomp_xor_trees.blif"));
@@ -1628,6 +1695,10 @@ struct SynthFpgaPass : public ScriptPass
 
        xor_head* xh = new xor_head;
 
+       Cell* xor_cell = y2xor[y]; // must exist based on previous loop
+
+       xh->xor_cell = xor_cell;
+
        xh->head = y;
 
        xh->height = height;
@@ -1659,7 +1730,6 @@ struct SynthFpgaPass : public ScriptPass
 
        getLeavesIds(y, y2xor, xh);
     }
-
 
     // When binarizing the highest XOR tree, its depth after binarizing
     // will be log2(max #leaves). We cannot do better. So it is not 
