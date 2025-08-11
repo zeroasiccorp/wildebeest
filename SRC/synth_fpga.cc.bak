@@ -37,7 +37,7 @@
 #define HUGE_NB_CELLS 5000000 // 5 Million cells
 #define BIG_NB_CELLS 500000   // 500K cells
 #define SMALL_NB_CELLS 250000 // 250K cells
-#define TINY_NB_CELLS 50000    // 50K cells
+#define TINY_NB_CELLS 1000    // 1K cells
 
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
@@ -52,7 +52,7 @@ struct SynthFpgaPass : public ScriptPass
   bool no_flatten, dff_enable, dff_async_set, dff_async_reset;
   bool obs_clean, wait, show_max_level, csv, insbuf, resynthesis, autoname;
   bool no_seq_opt, show_config, stop_if_undriven_nets;
-  bool no_xor_tree_process;
+  bool xor_trees_analysis;
   string sc_syn_lut_size;
   string sc_syn_fsm_encoding;
   string config_file = "";
@@ -1169,13 +1169,89 @@ struct SynthFpgaPass : public ScriptPass
     show_config_file();
   }
 
+
+
+static std::string id(RTLIL::IdString internal_id)
+{
+        const char *str = internal_id.c_str();
+        return std::string(str);
+}
+
+static void dump_sigchunk(const RTLIL::SigChunk &chunk, bool no_decimal = false)
+{
+    if (chunk.wire == NULL) {
+        log("CONST");
+        return;
+    }
+
+    if (chunk.width == chunk.wire->width && chunk.offset == 0) {
+
+        log("%s", id(chunk.wire->name).c_str());
+
+    } else if (chunk.width == 1) {
+
+        if (chunk.wire->upto)
+            log("%s[%d]", id(chunk.wire->name).c_str(),
+                (chunk.wire->width - chunk.offset - 1) + chunk.wire->start_offset);
+        else
+            log("%s[%d]", id(chunk.wire->name).c_str(), chunk.offset + chunk.wire->start_offset);
+
+    } else {
+
+        if (chunk.wire->upto)
+             log("%s[%d:%d]", id(chunk.wire->name).c_str(),
+                 (chunk.wire->width - (chunk.offset + chunk.width - 1) - 1) + chunk.wire->start_offset,
+                 (chunk.wire->width - chunk.offset - 1) + chunk.wire->start_offset);
+        else
+             log("%s[%d:%d]", id(chunk.wire->name).c_str(),
+                 (chunk.offset + chunk.width - 1) + chunk.wire->start_offset,
+                 chunk.offset + chunk.wire->start_offset);
+    }
+}
+
+static void show_sig(const RTLIL::SigSpec &sig)
+{
+        if (GetSize(sig) == 0) {
+           log("{0{1'b0}}");
+           return;
+        }
+
+        if (sig.is_chunk()) {
+
+            dump_sigchunk(sig.as_chunk());
+
+        } else {
+
+            log("{ ");
+
+            for (auto it = sig.chunks().rbegin(); it != sig.chunks().rend(); ++it) {
+
+                 if (it != sig.chunks().rbegin())
+                    log(", ");
+
+                 dump_sigchunk(*it, true);
+            }
+            log(" }");
+        }
+}
+ 
+  // ---------------------------------------
+  string sigName(RTLIL::SigSpec &sig)
+  {
+      RTLIL::SigChunk chunk = sig.as_chunk();
+
+      return (id(chunk.wire->name) + "[" + 
+              std::to_string((chunk.wire->width - chunk.offset - 1) + chunk.wire->start_offset) + "]");
+  }
+
   // ---------------------------------------
   // General object for XOR trees analysis
   // ---------------------------------------
-  int sigspec_id = 0;
+  int sigspec_id;
   dict<RTLIL::SigSpec, int> sigspec_ids;
   dict<RTLIL::SigSpec, int> y2height;
   dict<RTLIL::SigSpec, dict<RTLIL::SigSpec, Cell*>*> A2xors;
+  dict<string, Cell*> y2xor;
 
   class leaf_info {
 
@@ -1198,18 +1274,23 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // getHeight
   // -------------------------
-  // get the height from the XOR output 'y', e.g number of XORs traversed till 
-  // reaching a non XOR cell.
-  //
-  int getHeight(RTLIL::SigSpec& y, dict<RTLIL::SigSpec, Cell*>& y2xor)
+  int getHeight(RTLIL::SigSpec& y, xor_head* xh)
   {
     // If 'y' is not a XOR Y output it is a XOR tree leaf
     //
-    if (y2xor.count(y) == 0) {
+    if (y2xor.count(sigName(y)) == 0) {
+       log("cannot find ");
+       show_sig(y);
+       log("\n");
+
        return 0;
     }
 
-    Cell* cell = y2xor[y];
+    Cell* cell = y2xor[sigName(y)];
+
+       log("found ");
+       show_sig(y);
+       log("\n");
 
     if (cell->type != RTLIL::escape_id("$_XOR_")) {
        log_error("Expected to access a XOR cell !\n");
@@ -1223,8 +1304,8 @@ struct SynthFpgaPass : public ScriptPass
     int heightA = 0;
     int heightB = 0;
 
-    heightA = getHeight(A, y2xor); 
-    heightB = getHeight(B, y2xor); 
+    heightA = getHeight(A, xh); 
+    heightB = getHeight(B, xh); 
 
     height = heightA;
 
@@ -1233,23 +1314,21 @@ struct SynthFpgaPass : public ScriptPass
     }
 
     return height+1;
+
   }
 
   // -------------------------
   // getLeavesIds
   // -------------------------
-  void getLeavesIds(RTLIL::SigSpec y, dict<RTLIL::SigSpec, Cell*>& y2xor, xor_head* xh)
+  void getLeavesIds(RTLIL::SigSpec& y, xor_head* xh)
   {
     // If 'y' is not a XOR Y output it is a XOR tree leaf
     //
-    if (y2xor.count(y) == 0) {
+    if (y2xor.count(sigName(y)) == 0) {
 
        // If this 'y' leaf has been already visited then set this info.
        //
        if ((xh->leaves).find(y) != (xh->leaves).end()) {
-         // If we find a duplicated leaf then this means we have XOR A A which means
-	 // all the logic coming from the xor head can be replaced by logic 0.
-	 //
          log_warning("Found duplicated leaf during XOR tree analysis\n");
          xh->same_leaf = 1;
        }
@@ -1267,7 +1346,7 @@ struct SynthFpgaPass : public ScriptPass
        return;
     }
 
-    Cell* cell = y2xor[y];
+    Cell* cell = y2xor[sigName(y)];
 
     if (cell->type != RTLIL::escape_id("$_XOR_")) {
        log_error("Expected to access a XOR cell !\n");
@@ -1286,8 +1365,8 @@ struct SynthFpgaPass : public ScriptPass
     if ((y2height.find(A) == y2height.end()) &&
         (y2height.find(B) == y2height.end())) {
 
-       getLeavesIds(A, y2xor, xh);
-       getLeavesIds(B, y2xor, xh);
+       getLeavesIds(A, xh);
+       getLeavesIds(B, xh);
 
        return;
     }
@@ -1296,8 +1375,8 @@ struct SynthFpgaPass : public ScriptPass
     //
     if (y2height.find(A) == y2height.end()) {
 
-       getLeavesIds(B, y2xor, xh);
-       getLeavesIds(A, y2xor, xh);
+       getLeavesIds(B, xh);
+       getLeavesIds(A, xh);
 
        return;
     }
@@ -1306,8 +1385,8 @@ struct SynthFpgaPass : public ScriptPass
     //
     if (y2height.find(B) == y2height.end()) {
 
-       getLeavesIds(A, y2xor, xh);
-       getLeavesIds(B, y2xor, xh);
+       getLeavesIds(A, xh);
+       getLeavesIds(B, xh);
 
        return;
     }
@@ -1321,14 +1400,14 @@ struct SynthFpgaPass : public ScriptPass
     //
     if (heightA >= heightB) {
 
-       getLeavesIds(A, y2xor, xh);
-       getLeavesIds(B, y2xor, xh);
+       getLeavesIds(A, xh);
+       getLeavesIds(B, xh);
 
        return;
     }
 
-    getLeavesIds(B, y2xor, xh);
-    getLeavesIds(A, y2xor, xh);
+    getLeavesIds(B, xh);
+    getLeavesIds(A, xh);
   }
 
 
@@ -1336,7 +1415,6 @@ struct SynthFpgaPass : public ScriptPass
   // build_binary_xor_tree_rec
   // -------------------------
   void build_binary_xor_tree_rec (Module* top_mod, RTLIL::SigSpec& y, 
-		             dict<RTLIL::SigSpec, Cell*>& y2xor, 
 			     RTLIL::SigSpec& new_y, 
 			     vector<RTLIL::SigSpec>& leaves)
   {
@@ -1345,25 +1423,21 @@ struct SynthFpgaPass : public ScriptPass
       log_error("Xor tree binary build requires at leat 2 leaves : %ld\n",
 	        leaves.size());
     }
-
     vector<RTLIL::SigSpec> current_leaves(leaves);
 
-    // Build a binary XOR tree and proceed level per level (breadth first approach)
-    // Cut 'current_leaves' into sets of size 2 to build a XOR2.
-    // Add the output of this new XOR2 into next 'next_leaves', list that will 
-    // correspond to next stage of leaves to cut into sets of 2.
-    //
+    //log("Process build_binary_xor_tree_rec with %ld leaves\n", leaves.size());
+
     while (1) {
 
        vector<RTLIL::SigSpec> next_leaves;
 
-       int i = 0; // 'i' will be either 0 or 1
+       int i = 0;
 
        RTLIL::SigSpec A;
        RTLIL::SigSpec B;
 
-       // Visit all the leaves and pack them by 2 to create a XOR2.
-       //
+       //log("Nb leaves = %ld\n", current_leaves.size());
+
        for (auto it : current_leaves) {
          
           if (i == 0) {
@@ -1375,14 +1449,11 @@ struct SynthFpgaPass : public ScriptPass
 
           B = it;
 
-	  // Ok, we got the two next leaves A and B so now try to create the new 
-	  // cell XOR(A,B)
-	  //
 	  RTLIL::Cell *new_cell;
 
-	  // check for already existing XOR(A,B) 
+	  // check if this XOR(A,B) already exists
 	  //
-	  if ((A2xors.find(A) != A2xors.end()) && 
+	  if (1 && (A2xors.find(A) != A2xors.end()) && 
               ((A2xors[A])->find(B) != (A2xors[A])->end())) {
 
             //log("Found already built XOR !\n");
@@ -1395,15 +1466,8 @@ struct SynthFpgaPass : public ScriptPass
 
 	    next_leaves.push_back(RTLIL::SigSpec(new_y));
 
-	    i = 0;
-
-	    continue;
-	  } 
-	  
-	  // Check for already existing XOR(B,A)
-	  //
-	  if ((A2xors.find(B) != A2xors.end()) && 
-              ((A2xors[B])->find(A) != (A2xors[B])->end())) {
+	  } else if (1 && (A2xors.find(B) != A2xors.end()) && 
+                    ((A2xors[B])->find(A) != (A2xors[B])->end())) {
 
             //log("Found already built XOR case 2 !\n");
 
@@ -1415,64 +1479,51 @@ struct SynthFpgaPass : public ScriptPass
 
 	    next_leaves.push_back(RTLIL::SigSpec(new_y));
 
-	    i = 0;
+	  } else { // case of creating new XOR
 
-	    continue;
+            Wire* new_wire = top_mod->addWire(NEW_ID);
 
-	  } 
-	  
-	  // We need to create a new XOR
-	  //
-          Wire* new_wire = top_mod->addWire(NEW_ID);
+            new_y = new_wire;
 
-          new_y = new_wire;
+            RTLIL::Cell *new_cell = top_mod->addCell(NEW_ID, RTLIL::escape_id("$_XOR_"));
 
-          new_cell = top_mod->addCell(NEW_ID, RTLIL::escape_id("$_XOR_"));
+            new_cell->setPort(ID::A, A);
+            new_cell->setPort(ID::B, B);
 
-          new_cell->setPort(ID::A, A);
-          new_cell->setPort(ID::B, B);
+            new_cell->setPort(ID::Y, RTLIL::SigSpec(new_y));
 
-          new_cell->setPort(ID::Y, RTLIL::SigSpec(new_y));
+	    next_leaves.push_back(RTLIL::SigSpec(new_y));
 
-	  next_leaves.push_back(RTLIL::SigSpec(new_y));
-
-	  // Add the new XOR in the cache to eventually reuse it.
-	  //
-	  if (A2xors.find(A) != A2xors.end()) {
+	    // Add the new cell in the cache
+	    //
+	    if (A2xors.find(A) != A2xors.end()) {
 
               dict<RTLIL::SigSpec, Cell*>* B2xors = A2xors[A]; 
 	      (*B2xors)[B] = new_cell;
 
-	  } else {
+	    } else {
 
               dict<RTLIL::SigSpec, Cell*>* B2xors = new dict<RTLIL::SigSpec, Cell*>; 
 	      (*B2xors)[B] = new_cell;
 	      A2xors[A] = B2xors;
+	    }
 	  }
 
 	  i = 0;
+       }
 
-       } // end of 'for current_leaves' 
-
-       // All the leaves have been visited.
-       // If i == 1 this is the case of odd numbers in the 'current_leaves'.
-       // Add it to 'next_leaves' to reconsider it in next iteration.
+       // Case of odd numbers in the 'current_leaves'
        //
        if (i == 1) {
 	  next_leaves.push_back(RTLIL::SigSpec(A));
        }
 
-       // Move the 'next_leaves' objects to 'current_leaves' to restart a new iteration.
-       //
        current_leaves.clear();
        for (auto l : next_leaves) {
           current_leaves.push_back(l);
        }
        next_leaves.clear();
 
-       // Terminal case in the while loop : there is only 1 leaf, e.g the Y ouput of the
-       // root XOR : we are done.
-       //
        if (current_leaves.size() == 1) {
          return;
        }
@@ -1483,14 +1534,13 @@ struct SynthFpgaPass : public ScriptPass
   // build_binary_xor_tree
   // -------------------------
   void build_binary_xor_tree (Module* top_mod, RTLIL::SigSpec& y, 
-		             dict<RTLIL::SigSpec, Cell*>& y2xor, 
 			     vector<RTLIL::SigSpec>& leaves)
   {
     if (leaves.size() < 4) {
       return;
     }
 
-    Cell* cell = y2xor[y];
+    Cell* cell = y2xor[sigName(y)];
 
     vector<RTLIL::SigSpec> first_half;
     vector<RTLIL::SigSpec> second_half;
@@ -1514,13 +1564,13 @@ struct SynthFpgaPass : public ScriptPass
 
     RTLIL::SigSpec new_A;
 
-    build_binary_xor_tree_rec(top_mod, A, y2xor, new_A, first_half);
+    build_binary_xor_tree_rec(top_mod, A, new_A, first_half);
 
     RTLIL::SigSpec B = cell->getPort(ID::B);
 
     RTLIL::SigSpec new_B;
 
-    build_binary_xor_tree_rec(top_mod, B, y2xor, new_B, second_half);
+    build_binary_xor_tree_rec(top_mod, B, new_B, second_half);
 
     cell->setPort(ID::A, new_A);
 
@@ -1532,19 +1582,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   static bool cmpHeight (xor_head* a, xor_head* b)
   {
-    if (a->height > b->height) {
-      return true;
-    }
-
-    return false;
-  }
-
-  // -------------------------
-  // cmpInvHeight
-  // -------------------------
-  static bool cmpInvHeight (xor_head* a, xor_head* b)
-  {
-    if (a->height < b->height) {
+    if (a->height >= b->height) {
       return true;
     }
 
@@ -1556,7 +1594,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   static bool cmpId (leaf_info* a, leaf_info* b)
   {
-    if (a->Id < b->Id) {
+    if (a->Id <= b->Id) {
       return true;
     }
 
@@ -1565,23 +1603,15 @@ struct SynthFpgaPass : public ScriptPass
 
 
   // -------------------------
-  // binary_decomp_xor_trees
+  // analyze_xor_trees
   // -------------------------
   // Tries to reduce XOR trees depth by binarizing the XOR trees.
-  // Binarize long XOR tree chains in delay mode. Typical example is 'gray2bin'
-  // in 'logikbench/basic' suite having 64 levels that can be reduced to 6 levels.
+  // A good test case is "graybin" that helps to reduce from 4 
+  // downoto 3 levels with Area increase.
   //
-  void binary_decomp_xor_trees(Module* top_mod)
+  void analyze_xor_trees(Module* top_mod)
   {
-    dict<RTLIL::SigSpec, Cell*> y2xor;
-
-    log_header(G_design, "Analyze XOR trees\n");
-
-    run("stat");
-
-#if 0
-    run(stringf("write_blif before_binary_decomp_xor_trees.blif"));
-#endif
+    log_header(G_design, "Analyze XOR trees");
 
     // Reset global objects
     //
@@ -1600,12 +1630,16 @@ struct SynthFpgaPass : public ScriptPass
          continue;
        }
 
-       RTLIL::SigSpec Y = cell->getPort(ID::Y);
+       log("adding Y ");
+       show_sig(cell->getPort(ID::Y));
+       log("\n");
 
-       y2xor[Y] = cell;
+       RTLIL::SigSpec y = cell->getPort(ID::Y);
+
+       y2xor[sigName(y)] = cell;
     }
 
-    log("Found %ld xors\n", y2xor.size());
+    log("\nFound %ld xors\n", y2xor.size());
 
 
     // -----------------------------------
@@ -1620,21 +1654,29 @@ struct SynthFpgaPass : public ScriptPass
     int maxHeight = 0;
     vector<xor_head*> heads;
 
+    xor_head* xh;
+
     for (auto it : y2xor) {
+
+       xh = new xor_head;
 
        RTLIL::SigSpec y = it.first;
 
-       int height = getHeight(y, y2xor);
+       xh->head = y; // the 'y' ouput of the XOR
 
-       xor_head* xh = new xor_head;
+       log("Get height of ");
+       show_sig(y);
+       log("\n");
 
-       xh->head = y;
+       int height = getHeight(y, xh);
+
+       log("Height = %d\n", height);
 
        xh->height = height;
 
        heads.push_back(xh);
 
-       y2height[y] = height;
+       y2height[it.first] = height;
 
        if (height > maxHeight) {
           maxHeight = height;
@@ -1657,9 +1699,8 @@ struct SynthFpgaPass : public ScriptPass
        RTLIL::SigSpec y = xh->head;
        int height = xh->height;
 
-       getLeavesIds(y, y2xor, xh);
+       getLeavesIds(y, xh);
     }
-
 
     // When binarizing the highest XOR tree, its depth after binarizing
     // will be log2(max #leaves). We cannot do better. So it is not 
@@ -1668,8 +1709,6 @@ struct SynthFpgaPass : public ScriptPass
     //
     double stuck_max_height = 0; // the height we cannot go below even by
                                  // reducing height with binary tree.
-
-    //std::sort(heads.begin(), heads.end(), cmpInvHeight);
 
     // Binarize the xor logic underneath 'y'
     //
@@ -1686,6 +1725,14 @@ struct SynthFpgaPass : public ScriptPass
 
 	  continue;
        }
+#endif
+
+#if 0
+       log("Process head : ");
+       show_sig(y);
+       log("\n");
+       log("Height = %d\n", height);
+       log("Leaves size = %ld\n", leaves.size());
 #endif
 
        // Create the "sorted_leaves" for each XOR header.
@@ -1717,7 +1764,7 @@ struct SynthFpgaPass : public ScriptPass
 
        // Build the binary tree under XOR with output 'y'
        //
-       build_binary_xor_tree(top_mod, y, y2xor, it->sleaves);
+       build_binary_xor_tree(top_mod, y, it->sleaves);
 
 #if 0
        if (stuck_max_height <= log2(it->leaves.size())) {
@@ -1728,75 +1775,6 @@ struct SynthFpgaPass : public ScriptPass
        } 
 #endif
     }
-
-    // Dispose objects created by 'new'.
-    //
-    for (auto xh : heads) {
-        delete xh;
-    }
-    heads.clear();
-
-    for (auto ax : A2xors) {
-        delete ax.second;
-    }
-    A2xors.clear();
-
-    run("opt_merge"); // should merge the remaining duplicated XORs
-
-    run("opt_clean");
-
-    // Look for duplicate XORs
-    //
-
-    int nb_duplicate = 0;
-
-    for (auto cell : top_mod->cells()) {
-
-       if (cell->type != RTLIL::escape_id("$_XOR_")) {
-         continue;
-       }
-
-       RTLIL::SigSpec A = cell->getPort(ID::A);
-       RTLIL::SigSpec B = cell->getPort(ID::B);
-       RTLIL::SigSpec Y = cell->getPort(ID::Y);
-
-       if (A2xors.find(A) != A2xors.end()) { // look for XOR A B
-
-           dict<RTLIL::SigSpec, Cell*>* B2xors = A2xors[A];
-
-           if (B2xors->find(B) != B2xors->end()) {
-             log("Found duplicated XOR with same A and B\n");
-	     nb_duplicate++;
-	     continue;
-	   }
-           (*B2xors)[B] = cell;
-
-       } else if (A2xors.find(B) != A2xors.end()) { // look for XOR B A
-
-           dict<RTLIL::SigSpec, Cell*>* a2xors = A2xors[B];
-
-           if (a2xors->find(A) != a2xors->end()) {
-             log("Found duplicated XOR with same B and A\n");
-	     nb_duplicate++;
-	     continue;
-	   }
-           (*a2xors)[A] = cell;
-
-       } else {
-
-           dict<RTLIL::SigSpec, Cell*>* B2xors = new dict<RTLIL::SigSpec, Cell*>;
-           (*B2xors)[B] = cell;
-           A2xors[A] = B2xors;
-       }
-    }
-
-    log("Found '%d' duplicated XORs after binarization.\n", nb_duplicate);
-
-    run("stat");
-
-#if 0
-    run(stringf("write_blif after_binary_decomp_xor_trees.blif"));
-#endif
 
   }
 
@@ -2478,8 +2456,8 @@ struct SynthFpgaPass : public ScriptPass
         log("        performs buffers insertion (Off by default).\n");
         log("\n");
 
-        log("    -no_xor_tree_process\n");
-        log("        Disable xor trees depth reduction for DELAY (Off by default).\n");
+        log("    -xor_trees_analysis\n");
+        log("        performs xor trees depth reduction for DELAY (Off by default).\n");
         log("\n");
 
         log("    -autoname\n");
@@ -2566,7 +2544,7 @@ struct SynthFpgaPass : public ScriptPass
 	csv = false;
 	insbuf = false;
 
-	no_xor_tree_process = false;
+	xor_trees_analysis = false;
 
 	wait = false;
 
@@ -2674,8 +2652,8 @@ struct SynthFpgaPass : public ScriptPass
              continue;
           }
 
-          if (args[argidx] == "-no_xor_tree_process") {
-             no_xor_tree_process = true;
+          if (args[argidx] == "-xor_trees_analysis") {
+             xor_trees_analysis = true;
              continue;
           }
 
@@ -2977,15 +2955,15 @@ struct SynthFpgaPass : public ScriptPass
 
     dbg_wait();
 
-    // Binarize long XOR tree chains in delay mode. Typical example is 'gray2bin'
-    // in 'logikbench/basic' suite having 64 levels that can be reduced to 6 levels.
-    //
-    if (!no_xor_tree_process && (opt == "delay")) {
-
-      binary_decomp_xor_trees(topModule);
+    if (xor_trees_analysis) {
+      analyze_xor_trees(topModule);
     }
 
+    run("opt_clean");
+
     run("stat");
+
+    //abort();
 
     // Optimize and map through ABC the combinational logic part of the design.
     //
@@ -3012,7 +2990,7 @@ struct SynthFpgaPass : public ScriptPass
     analyze_undriven_nets(topModule, true /* connect undriven nets to undef */);
 
     // tries to give public names instead of using $abc generic names.
-    // Right now this procedure blows up runtime for medium/big designs.
+    // Right now this procedure blows up runtime for medium/big designs
     //
     if (autoname) {
       run("autoname");
