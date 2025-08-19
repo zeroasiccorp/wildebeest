@@ -2964,7 +2964,9 @@ static void show_sig(const RTLIL::SigSpec &sig)
     // But it may help for some designs (ex: medium_designs/xtea)
     //
     run("opt -full");
-    
+
+    run("pmux2shiftx");
+
     run("techmap -map +/techmap.v");
 
     // BRAM inference 
