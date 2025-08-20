@@ -51,8 +51,9 @@ struct SynthFpgaPass : public ScriptPass
   string abc_script_version;
   bool no_flatten, dff_enable, dff_async_set, dff_async_reset;
   bool obs_clean, wait, show_max_level, csv, insbuf, resynthesis, autoname;
-  bool no_seq_opt, show_config, stop_if_undriven_nets;
+  bool no_opt_sat_dff, show_config, stop_if_undriven_nets;
   bool no_xor_tree_process;
+  bool no_opt_const_dff;
   string sc_syn_lut_size;
   string sc_syn_fsm_encoding;
   string config_file = "";
@@ -2571,8 +2572,12 @@ static void show_sig(const RTLIL::SigSpec &sig)
         log("        specifies that DFF with asynchronous reset feature is not supported. By default,\n");
         log("        DFF with asynchronous reset is supported.\n");
         log("\n");
-        log("    -no_seq_opt\n");
-        log("        Disable SAT-based sequential optimizations. This is off by default.\n");
+        log("    -no_opt_sat_dff\n");
+        log("        Disable SAT-based DFF optimizations. This is off by default.\n");
+        log("\n");
+
+        log("    -no_opt_const_dff\n");
+        log("        Disable constant driven DFF optimization as it can create simulation differences (since it may ignore DFF init values in some cases). This is off by default.\n");
         log("\n");
 
         log("    -stop_if_undriven_nets\n");
@@ -2620,7 +2625,7 @@ static void show_sig(const RTLIL::SigSpec &sig)
 	part_name = "Z1000";
 
 	no_flatten = false;
-	no_seq_opt = false;
+	no_opt_sat_dff = false;
 	autoname = false;
 
 	dsp_tech = "microchip";
@@ -2637,6 +2642,7 @@ static void show_sig(const RTLIL::SigSpec &sig)
 	insbuf = false;
 
 	no_xor_tree_process = false;
+	no_opt_const_dff = false;
 
 	wait = false;
 
@@ -2709,8 +2715,8 @@ static void show_sig(const RTLIL::SigSpec &sig)
              continue;
           }
 
-          if (args[argidx] == "-no_seq_opt") {
-             no_seq_opt = true;
+          if (args[argidx] == "-no_opt_sat_dff") {
+             no_opt_sat_dff = true;
              continue;
           }
 
@@ -2746,6 +2752,11 @@ static void show_sig(const RTLIL::SigSpec &sig)
 
           if (args[argidx] == "-no_xor_tree_process") {
              no_xor_tree_process = true;
+             continue;
+          }
+
+          if (args[argidx] == "-no_opt_const_dff") {
+             no_opt_const_dff = true;
              continue;
           }
 
@@ -2984,9 +2995,25 @@ static void show_sig(const RTLIL::SigSpec &sig)
     // Call the zero asic version of 'opt_dff', e.g 'zopt_dff', especially 
     // taking care of the -sat option.
     //
-    if (!no_seq_opt) {
+    if (!no_opt_sat_dff) {
+
       run("stat");
+
+      if (!no_opt_const_dff) {
+        run("zopt_const_dff");
+      }
+
       run("zopt_dff -sat");
+
+      if (!no_opt_const_dff) {
+        run("zopt_const_dff");
+      }
+
+    } else {
+
+      if (!no_opt_const_dff) {
+        run("zopt_const_dff");
+      }
     }
 
     // Extra lines that help to win Area (ex: vga_lcd from 31K Lut4 downto 14.8K)

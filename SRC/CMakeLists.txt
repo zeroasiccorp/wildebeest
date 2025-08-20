@@ -15,6 +15,7 @@ add_library(yosys-syn SHARED
     obs_clean.cc
     synth_fpga.cc
     zopt_dff.cc
+    zopt_const_dff.cc
     zqcsat.cc
     zsimplemap.cc
     ${CMAKE_CURRENT_BINARY_DIR}/version.h
