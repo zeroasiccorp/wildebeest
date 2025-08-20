@@ -2144,7 +2144,7 @@ static void show_sig(const RTLIL::SigSpec &sig)
 
     if (nb_cells <= TINY_NB_CELLS) { 
 
-      if (mode == "area") {
+      if ((mode == "area") || (abc_script_version == "BASIC")) {
 
          mode  = "tiny_area";
 
@@ -2155,7 +2155,7 @@ static void show_sig(const RTLIL::SigSpec &sig)
 
     } else if (nb_cells <= SMALL_NB_CELLS) { 
 
-      if (mode == "area") {
+      if ((mode == "area") || (abc_script_version == "BASIC")) {
 
          mode  = "small_area";
 
