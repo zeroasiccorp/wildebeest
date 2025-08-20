@@ -22,7 +22,7 @@ How to build the 'yosys-syn' dynamic plugin:
 
 *Prerequisities:*
 
- * Yosys installed: supported versions are **0.47 0.48 0.49 0.50 0.51 0.52 0.53 0.54 0.55**
+ * Yosys installed: supported versions are **0.47 0.48 0.49 0.50 0.51 0.52 0.53 0.54 0.55 0.56**
 
  * C++ compiler: GCC 11 and clang 17 are minimum supported versions
 
