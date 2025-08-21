@@ -1560,29 +1560,41 @@ struct SynthFpgaPass : public ScriptPass
     return false;
   }
 
-static std::string id(RTLIL::IdString internal_id)
-{
+  // -------------------------
+  // id
+  // -------------------------
+  static std::string id(RTLIL::IdString internal_id)
+  {
         const char *str = internal_id.c_str();
         return std::string(str);
-}
+  }
 
-static void dump_const(const RTLIL::Const &data, int width = -1, int offset = 0, bool no_decimal = false, bool escape_comment = false)
-{
+  // -------------------------
+  // show_const
+  // -------------------------
+  // Simply dump "CONSTANT" word instead of the precise constant.
+  //
+  static void show_const(const RTLIL::Const &data, int width = -1, int offset = 0, 
+		         bool no_decimal = false, bool escape_comment = false)
+  {
         log("CONSTANT");
-}
+  }
 
-static void dump_sigchunk(const RTLIL::SigChunk &chunk, bool no_decimal = false)
-{
-    if (chunk.wire == NULL) {
-        dump_const(chunk.data, chunk.width, chunk.offset, no_decimal);
+  // -------------------------
+  // show_sigchunk
+  // -------------------------
+  static void show_sigchunk(const RTLIL::SigChunk &chunk, bool no_decimal = false)
+  {
+     if (chunk.wire == NULL) {
+        show_const(chunk.data, chunk.width, chunk.offset, no_decimal);
         return;
-    }
+     }
 
-    if (chunk.width == chunk.wire->width && chunk.offset == 0) {
+     if (chunk.width == chunk.wire->width && chunk.offset == 0) {
 
         log("%s", id(chunk.wire->name).c_str());
 
-    } else if (chunk.width == 1) {
+     } else if (chunk.width == 1) {
 
         if (chunk.wire->upto)
             log("%s[%d]", id(chunk.wire->name).c_str(),
@@ -1590,7 +1602,7 @@ static void dump_sigchunk(const RTLIL::SigChunk &chunk, bool no_decimal = false)
         else
             log("%s[%d]", id(chunk.wire->name).c_str(), chunk.offset + chunk.wire->start_offset);
 
-    } else {
+     } else {
 
         if (chunk.wire->upto)
              log("%s[%d:%d]", id(chunk.wire->name).c_str(),
@@ -1600,35 +1612,38 @@ static void dump_sigchunk(const RTLIL::SigChunk &chunk, bool no_decimal = false)
              log("%s[%d:%d]", id(chunk.wire->name).c_str(),
                  (chunk.offset + chunk.width - 1) + chunk.wire->start_offset,
                  chunk.offset + chunk.wire->start_offset);
-    }
-}
+     }
+  }
 
-static void show_sig(const RTLIL::SigSpec &sig)
-{
-        if (GetSize(sig) == 0) {
-           log("{0{1'b0}}");
-           return;
-        }
+  // -------------------------
+  // show_sig
+  // -------------------------
+  static void show_sig(const RTLIL::SigSpec &sig)
+  {
+     if (GetSize(sig) == 0) {
+        log("{0{1'b0}}");
+        return;
+     }
 
-        if (sig.is_chunk()) {
+     if (sig.is_chunk()) {
 
-            dump_sigchunk(sig.as_chunk());
+         show_sigchunk(sig.as_chunk());
 
-        } else {
+     } else {
 
-            log("{ ");
+         log("{ ");
 
-            for (auto it = sig.chunks().rbegin(); it != sig.chunks().rend(); ++it) {
+         for (auto it = sig.chunks().rbegin(); it != sig.chunks().rend(); ++it) {
 
-                 if (it != sig.chunks().rbegin())
-                    log(", ");
+              if (it != sig.chunks().rbegin())
+                  log(", ");
 
-                 dump_sigchunk(*it, true);
-            }
-            log(" }");
-        }
-}
+              show_sigchunk(*it, true);
+         }
 
+         log(" }");
+     }
+  }
 
   // -------------------------
   // binary_decomp_xor_trees
@@ -1945,6 +1960,33 @@ static void show_sig(const RTLIL::SigSpec &sig)
       log_error("Stop synthesis [-stop_if_undriven_nets is ON] : Final netlist has '%d' undriven nets !\n", 
                 undriven_sig.size());
     }
+  }
+
+  // -------------------------
+  // checkDLatch
+  // -------------------------
+  void checkDLatch() {
+
+     int foundLatch = 0;
+
+     if (!G_design) {
+       log_warning("Design seems empty !\n");
+       return;
+     }
+
+     for (auto cell : G_design->top_module()->cells()) {
+
+	   if ((cell->type).substr(0, 8) == "$_DLATCH") {
+
+             foundLatch = 1;
+
+             log("Found unsupported LATCH '%s' (%s)\n", log_id(cell), log_id(cell->type));
+           }
+     }
+
+     if (foundLatch) {
+       log_error("Cannot proceed further : LATCH synthesis is not supported.\n");
+     }
   }
 
   // -------------------------
@@ -2991,6 +3033,10 @@ static void show_sig(const RTLIL::SigSpec &sig)
 
     run("demuxmap");
     run("simplemap");
+
+    // Make sure we have no LATCH otherwise error out !
+    //
+    checkDLatch();
 
     // Call the zero asic version of 'opt_dff', e.g 'zopt_dff', especially 
     // taking care of the -sat option.
