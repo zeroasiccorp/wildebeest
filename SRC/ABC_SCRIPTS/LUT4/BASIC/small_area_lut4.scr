@@ -20,16 +20,15 @@ dc2
 
 strash
 echo ""
-echo "dch -f"
-dch -f
-
-echo ""
 echo "if -K 4 -a"
 if -K 4 -a
 &get -n -m; &save -a; &ps ; time
 &put
 
-lutpack -S 1;
+lutpack -S 1
+&get -n -m; &save -a; &ps ; time
+&load
+&put
 
 write_blif out.blif
 
