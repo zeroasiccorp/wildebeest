@@ -64,6 +64,10 @@ struct ReportStatPass : public ScriptPass
              nb++;
 	     continue;
          }
+         if (cell->type.in(ID(MUXF5), ID(MUXF6), ID(MUXF7))) {
+             nb++;
+	     continue;
+         }
 	 
          // Xilinx 'xc7' Luts
          //
