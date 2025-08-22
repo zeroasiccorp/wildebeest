@@ -25,6 +25,8 @@
 #include "kernel/rtlil.h"
 #include "kernel/sigtools.h"
 #include "kernel/log.h"
+#include "kernel/ffinit.h"
+#include "kernel/ff.h"
 #include "version.h"
 #include <chrono>
 #include <algorithm>
@@ -54,6 +56,8 @@ struct SynthFpgaPass : public ScriptPass
   bool no_opt_sat_dff, show_config, stop_if_undriven_nets;
   bool no_xor_tree_process;
   bool no_opt_const_dff;
+  bool show_dff_init_value;
+  bool set_dff_init_value_to_zero;
   string sc_syn_lut_size;
   string sc_syn_fsm_encoding;
   string config_file = "";
@@ -68,6 +72,8 @@ struct SynthFpgaPass : public ScriptPass
   pool<string> partnames  = {"Z1000", "Z1010"};
   pool<string> dsp_arch  = {"config", "xilinx", "microchip", "bare_mult", "mae"};
   pool<string> bram_arch  = {"config", "zeroasic", "microchip"};
+
+  typedef enum e_dff_init_value {S0, S1, SX, SK} dff_init_value;
 
   // ----------------------------
   // Key 'yosys-syn' parameters
@@ -1980,13 +1986,121 @@ struct SynthFpgaPass : public ScriptPass
 
              foundLatch = 1;
 
-             log("Found unsupported LATCH '%s' (%s)\n", log_id(cell), log_id(cell->type));
+             log("Found unsupported LATCH '%s' (%s)\n", log_id(cell), 
+                 log_id(cell->type));
            }
      }
 
      if (foundLatch) {
        log_error("Cannot proceed further : LATCH synthesis is not supported.\n");
      }
+  }
+
+  // -------------------------
+  // processDffInitValues
+  // -------------------------
+  // Show dff init values if requested and when 'zeroInit' is 1 then set init 
+  // values to 0 for both DFF with un-initialized Values and DFF with init value 1.
+  //
+  void processDffInitValues(int zeroInit) {
+
+     if (!G_design) {
+       log_warning("Design seems empty !\n");
+       return;
+     }
+
+     // Here we do :
+     //     - set unitiliazed DFF with init value 0
+     //     - insert pair of Inverters before and after DFF with initvalue 1 and
+     //     set DFF init value with 0. It takes care also of set/reset/...
+     //   
+     if (zeroInit) {
+       log("---------------------------------------\n");
+       run("zinit -all w:* t:$_DFF_?_ t:$_DFFE_??_ t:$_SDFF*");
+     }
+
+     log("\n");
+     log("Show DFFs Initial value:\n");
+     log("-----------------------------\n");
+
+     log("\n");
+     log("DFFs with Initial value '0' :\n");
+     log("-----------------------------\n");
+     for (auto module : G_design->selected_modules()) {
+
+        SigMap sigmap(module);
+        FfInitVals initvals(&sigmap, module);
+
+        for (auto cell : module->selected_cells())
+        {
+           if (!RTLIL::builtin_ff_cell_types().count(cell->type)) {
+             continue;
+	   }
+
+           FfData ff(&initvals, cell);
+
+           for (int i = 0; i < ff.width; i++) {
+             if (ff.val_init[i] == State::S0)
+               log("DFF init value for cell %s (%s): %s = %s\n", log_id(cell), 
+                   log_id(cell->type), log_signal(ff.sig_q[i]), log_signal(ff.val_init[i]));
+	   }
+	}
+     }
+     log("\n");
+     log("DFFs with Initial value '1' :\n");
+     log("-----------------------------\n");
+     for (auto module : G_design->selected_modules()) {
+
+        SigMap sigmap(module);
+        FfInitVals initvals(&sigmap, module);
+
+        for (auto cell : module->selected_cells())
+        {
+           if (!RTLIL::builtin_ff_cell_types().count(cell->type)) {
+             continue;
+           }
+
+           FfData ff(&initvals, cell);
+
+           for (int i = 0; i < ff.width; i++) {
+             if (ff.val_init[i] == State::S1)
+               log("DFF init value for cell %s (%s): %s = %s\n", log_id(cell),
+                   log_id(cell->type), log_signal(ff.sig_q[i]), log_signal(ff.val_init[i]));
+           }
+        }
+     }
+
+     log("\n");
+     log("DFFs with Un-initialized value\n");
+     log("------------------------------\n");
+     for (auto module : G_design->selected_modules()) {
+
+        SigMap sigmap(module);
+        FfInitVals initvals(&sigmap, module);
+
+        for (auto cell : module->selected_cells())
+        {
+           if (!RTLIL::builtin_ff_cell_types().count(cell->type)) {
+             continue;
+           }
+
+           FfData ff(&initvals, cell);
+
+           for (int i = 0; i < ff.width; i++) {
+             if ((ff.val_init[i] != State::S0) && (ff.val_init[i] != State::S1)) {
+                 log("DFF init value for cell %s (%s): %s = %s\n", log_id(cell),
+                     log_id(cell->type), log_signal(ff.sig_q[i]), log_signal(ff.val_init[i]));
+	     }
+           }
+        }
+     }
+
+#if 0
+     log("\n");
+     log("Please type <enter> to continue\n");
+
+     getchar();
+#endif
   }
 
   // -------------------------
@@ -2622,6 +2736,14 @@ struct SynthFpgaPass : public ScriptPass
         log("        Disable constant driven DFF optimization as it can create simulation differences (since it may ignore DFF init values in some cases). This is off by default.\n");
         log("\n");
 
+        log("    -set_dff_init_value_to_zero\n");
+        log("        Set un-initialized DFF to initial value 0. Insert double inverters for DFF with initial value 1 and switch its initial value to 0 and modify its clear/set/reset functionalities if any. This is off by default.\n");
+        log("\n");
+
+        log("    -show_dff_init_value\n");
+        log("        Show all DFF initial values coming from the original RTL. This is off by default.\n");
+        log("\n");
+
         log("    -stop_if_undriven_nets\n");
         log("        Stop Synthesis if the final netlist has undriven nets.\n");
 
@@ -2685,6 +2807,8 @@ struct SynthFpgaPass : public ScriptPass
 
 	no_xor_tree_process = false;
 	no_opt_const_dff = false;
+	show_dff_init_value = false;
+	set_dff_init_value_to_zero = false;
 
 	wait = false;
 
@@ -2799,6 +2923,16 @@ struct SynthFpgaPass : public ScriptPass
 
           if (args[argidx] == "-no_opt_const_dff") {
              no_opt_const_dff = true;
+             continue;
+          }
+
+          if (args[argidx] == "-show_dff_init_value") {
+             show_dff_init_value = true;
+             continue;
+          }
+
+          if (args[argidx] == "-set_dff_init_value_to_zero") {
+             set_dff_init_value_to_zero = true;
              continue;
           }
 
@@ -3033,6 +3167,13 @@ struct SynthFpgaPass : public ScriptPass
 
     run("demuxmap");
     run("simplemap");
+
+    // Show dff init values if requested and eventually set init values to 0
+    // for both DFF with un-initialized Values and DFF with init value 1.
+    //
+    if (set_dff_init_value_to_zero || show_dff_init_value) {
+      processDffInitValues(set_dff_init_value_to_zero);
+    }
 
     // Make sure we have no LATCH otherwise error out !
     //
