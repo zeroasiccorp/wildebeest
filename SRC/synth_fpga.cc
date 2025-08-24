@@ -48,7 +48,6 @@ struct SynthFpgaPass : public ScriptPass
 {
   // Global data
   //
-  RTLIL::Design *G_design = NULL; 
   string top_opt, verilog_file, part_name, opt;
   string abc_script_version;
   bool no_flatten, dff_enable, dff_async_set, dff_async_reset;
@@ -442,7 +441,7 @@ struct SynthFpgaPass : public ScriptPass
       return;
     }
 
-    log_header(G_design, "Show config file : \n");
+    log_header(yosys_get_design(), "Show config file : \n");
 
     log("\n");
     log(" ==========================================================================\n");
@@ -832,7 +831,7 @@ struct SynthFpgaPass : public ScriptPass
       return;
     }
 
-    log_header(G_design, "Reading config file '%s'\n", config_file.c_str());
+    log_header(yosys_get_design(), "Reading config file '%s'\n", config_file.c_str());
 
     if (!std::filesystem::exists(config_file.c_str())) {
       log_error("Cannot find file '%s'.\n", config_file.c_str());
@@ -1169,7 +1168,7 @@ struct SynthFpgaPass : public ScriptPass
        G_config.dsps_pack_command = dsps_pack_command->data_string;
     }
 
-    log_header(G_design, "Reading config file '%s' done with success !\n", config_file.c_str());
+    log_header(yosys_get_design(), "Reading config file '%s' done with success !\n", config_file.c_str());
 
     config_file_success = true;
 
@@ -1662,7 +1661,7 @@ struct SynthFpgaPass : public ScriptPass
   {
     dict<RTLIL::SigSpec, Cell*> y2xor;
 
-    log_header(G_design, "Analyze XOR trees\n");
+    log_header(yosys_get_design(), "Analyze XOR trees\n");
 
     run("stat");
 
@@ -1901,17 +1900,17 @@ struct SynthFpgaPass : public ScriptPass
     SigMap assign_map;
     CellTypes ct;
 
-    if (!G_design) {
+    if (!yosys_get_design()) {
       return;
     }
 
-    log_header(G_design, "Analyze undriven nets\n");
+    log_header(yosys_get_design(), "Analyze undriven nets\n");
 
 #if 0
     run(stringf("write_verilog -norename -noexpr -nohex -nodec %s", "before_undriven_cleanup.verilog"));
 #endif
 
-    ct.setup(G_design);
+    ct.setup(yosys_get_design());
 
     undriven_bits.clear();
     assign_map.set(top_mod);
@@ -1975,12 +1974,12 @@ struct SynthFpgaPass : public ScriptPass
 
      int foundLatch = 0;
 
-     if (!G_design) {
+     if (!yosys_get_design()) {
        log_warning("Design seems empty !\n");
        return;
      }
 
-     for (auto cell : G_design->top_module()->cells()) {
+     for (auto cell : yosys_get_design()->top_module()->cells()) {
 
 	   if ((cell->type).substr(0, 8) == "$_DLATCH") {
 
@@ -1997,6 +1996,36 @@ struct SynthFpgaPass : public ScriptPass
   }
 
   // -------------------------
+  // optimize_DFFs
+  // -------------------------
+  void optimize_DFFs() {
+
+    // Call the zero asic version of 'opt_dff', e.g 'zopt_dff', especially
+    // taking care of the -sat option.
+    //
+    if (!no_opt_sat_dff) {
+
+      run("stat");
+
+      if (!no_opt_const_dff) {
+        run("zopt_const_dff");
+      }
+
+      run("zopt_dff -sat");
+
+      if (!no_opt_const_dff) {
+        run("zopt_const_dff");
+      }
+
+    } else {
+
+      if (!no_opt_const_dff) {
+        run("zopt_const_dff");
+      }
+    }
+  }
+
+  // -------------------------
   // processDffInitValues
   // -------------------------
   // Show dff init values if requested and when 'zeroInit' is 1 then set init 
@@ -2004,7 +2033,7 @@ struct SynthFpgaPass : public ScriptPass
   //
   void processDffInitValues(int zeroInit) {
 
-     if (!G_design) {
+     if (!yosys_get_design()) {
        log_warning("Design seems empty !\n");
        return;
      }
@@ -2026,7 +2055,7 @@ struct SynthFpgaPass : public ScriptPass
      log("\n");
      log("DFFs with Initial value '0' :\n");
      log("-----------------------------\n");
-     for (auto module : G_design->selected_modules()) {
+     for (auto module : yosys_get_design()->selected_modules()) {
 
         SigMap sigmap(module);
         FfInitVals initvals(&sigmap, module);
@@ -2049,7 +2078,7 @@ struct SynthFpgaPass : public ScriptPass
      log("\n");
      log("DFFs with Initial value '1' :\n");
      log("-----------------------------\n");
-     for (auto module : G_design->selected_modules()) {
+     for (auto module : yosys_get_design()->selected_modules()) {
 
         SigMap sigmap(module);
         FfInitVals initvals(&sigmap, module);
@@ -2073,7 +2102,7 @@ struct SynthFpgaPass : public ScriptPass
      log("\n");
      log("DFFs with Un-initialized value\n");
      log("------------------------------\n");
-     for (auto module : G_design->selected_modules()) {
+     for (auto module : yosys_get_design()->selected_modules()) {
 
         SigMap sigmap(module);
         FfInitVals initvals(&sigmap, module);
@@ -2110,12 +2139,12 @@ struct SynthFpgaPass : public ScriptPass
 
      int nb = 0;
 
-     if (!G_design) {
+     if (!yosys_get_design()) {
        log_warning("Design seems empty !\n");
        return -1;
      }
 
-     for (auto cell : G_design->top_module()->cells()) {
+     for (auto cell : yosys_get_design()->top_module()->cells()) {
          if (cell->type.in(ID($lut))) {
            nb++;
          }
@@ -2131,12 +2160,12 @@ struct SynthFpgaPass : public ScriptPass
 
      int nb = 0;
 
-     if (!G_design) {
+     if (!yosys_get_design()) {
        log_warning("Design seems empty !\n");
        return -1;
      }
 
-     for (auto cell : G_design->top_module()->cells()) {
+     for (auto cell : yosys_get_design()->top_module()->cells()) {
          if (cell->type.in(ID(dff), ID(dffe), ID(dffr), ID(dffer),
                            ID(dffs), ID(dffrs), ID(dffes), ID(dffers))) {
            nb++;
@@ -2151,7 +2180,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void dump_csv_file(string fileName, int runTime)
   {
-     if (!G_design) {
+     if (!yosys_get_design()) {
        log_warning("Design seems empty !\n");
        return;
      }
@@ -2159,14 +2188,13 @@ struct SynthFpgaPass : public ScriptPass
      // -----
      // Get all the stats 
      //
-     Module* topModule = G_design->top_module();
 
-     if (!topModule) {
+     if (!yosys_get_design()->top_module()) {
        log_warning("Design seems empty !\n");
        return;
      }
 
-     string topName = log_id(topModule->name);
+     string topName = log_id(yosys_get_design()->top_module()->name);
 
      int nbLuts = getNumberOfLuts();
 
@@ -2180,7 +2208,7 @@ struct SynthFpgaPass : public ScriptPass
          run("max_level -summary"); // -> store 'maxlvl' in scratchpad 
 	                            // with 'max_level.max_levels'
 
-	 maxlvl = G_design->scratchpad_get_int("max_level.max_levels", 0);
+	 maxlvl = yosys_get_design()->scratchpad_get_int("max_level.max_levels", 0);
      }
 
      // -----
@@ -2231,7 +2259,7 @@ struct SynthFpgaPass : public ScriptPass
   // getNumberOfCells
   // -------------------------
   int getNumberOfCells() {
-     return ((G_design->top_module()->cells()).size());
+     return ((yosys_get_design()->top_module()->cells()).size());
   }
 
   // -------------------------
@@ -2270,7 +2298,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void abc_synthesize()
   {
-    if (!G_design) {
+    if (!yosys_get_design()) {
        log_warning("Design seems empty !\n");
        return;
     }
@@ -2278,7 +2306,7 @@ struct SynthFpgaPass : public ScriptPass
     run("stat");
 
     if (opt == "") {
-       log_header(G_design, "Performing OFFICIAL PLATYPUS optimization\n");
+       log_header(yosys_get_design(), "Performing OFFICIAL PLATYPUS optimization\n");
        run("abc -lut " + sc_syn_lut_size);
        return;
     }
@@ -2341,7 +2369,7 @@ struct SynthFpgaPass : public ScriptPass
 	                "/" + abc_script_version + "/" + mode + "_lut" + 
 			sc_syn_lut_size + ".scr";
 
-    log_header(G_design, "Calling ABC script in '%s' mode\n", mode.c_str());
+    log_header(yosys_get_design(), "Calling ABC script in '%s' mode\n", mode.c_str());
 
     run("abc -script " + abc_script);
   }
@@ -2679,7 +2707,7 @@ struct SynthFpgaPass : public ScriptPass
         log("\n");
 
         log("    -use_bram_tech [zeroasic, microchip]\n");
-        log("        Invoke architecture specific DSP inference. It is off by default. -no_BRAM \n");
+        log("        Invoke architecture specific DSP inference. It is off by default. -no_bram \n");
         log("        overides -use_BRAM_TECH.\n");
         log("\n");
 
@@ -2688,7 +2716,7 @@ struct SynthFpgaPass : public ScriptPass
         log("\n");
 
         log("    -use_dsp_tech [xilinx, microchip, bare_mult, mae]\n");
-        log("        Invoke architecture specific DSP inference. It is off by default. -no_DSP \n");
+        log("        Invoke architecture specific DSP inference. It is off by default. -no_dsp \n");
         log("        overides -use_dsp_tech.\n");
         log("\n");
 
@@ -2706,12 +2734,12 @@ struct SynthFpgaPass : public ScriptPass
         log("\n");
 
         log("    -no_xor_tree_process\n");
-        log("        Disable xor trees depth reduction for DELAY (Off by default).\n");
+        log("        Disable xor trees depth reduction for DELAY mode (Off by default).\n");
         log("\n");
 
         log("    -autoname\n");
         log("        Generate, if possible, better wire and cells names close to RTL names rather than\n");
-        log("        $abc generic names.\n");
+        log("        $abc generic names. This is off by default. Be careful because it may blow up runtime.\n");
         log("\n");
 
 	// DFF related options
@@ -2745,12 +2773,12 @@ struct SynthFpgaPass : public ScriptPass
         log("\n");
 
         log("    -stop_if_undriven_nets\n");
-        log("        Stop Synthesis if the final netlist has undriven nets.\n");
+        log("        Stop Synthesis if the final netlist has undriven nets. This is off by default.\n");
 
         log("\n");
         log("    -obs_clean\n");
         log("        specifies to use 'obs_clean' cleanup function instead of regular \n");
-        log("        'opt_clean'.\n");
+        log("        'opt_clean'. This is off by default.\n");
         log("\n");
 
         log("    -lut_size\n");
@@ -2763,11 +2791,11 @@ struct SynthFpgaPass : public ScriptPass
 	log("\n");
 
         log("    -show_max_level\n");
-        log("        Show longest paths.\n");
+        log("        Show longest paths. This is off by default.\n");
         log("\n");
 
         log("    -csv\n");
-        log("        Dump a 'stat.csv' file.\n");
+        log("        Dump a 'stat.csv' file. This is off by default.\n");
         log("\n");
 
         log("    -wait\n");
@@ -2840,8 +2868,6 @@ struct SynthFpgaPass : public ScriptPass
 	clear_flags();
 
         log_header(design, "Executing 'synth_fpga'\n\n");
-
-	G_design = design;
 
 	size_t argidx;
 
@@ -3045,7 +3071,7 @@ struct SynthFpgaPass : public ScriptPass
   void script() override
   {
 
-    if (!G_design) {
+    if (!yosys_get_design()) {
        log_warning("Design seems empty !\n");
        return;
     }
@@ -3077,9 +3103,7 @@ struct SynthFpgaPass : public ScriptPass
     //
     run(stringf("hierarchy -check %s", help_mode ? "-top <top>" : top_opt.c_str()));
 
-    Module* topModule = G_design->top_module();
-
-    if (!topModule) {
+    if (!yosys_get_design()->top_module()) {
        log_warning("Design seems empty !\n");
        return;
     }
@@ -3143,8 +3167,6 @@ struct SynthFpgaPass : public ScriptPass
     run("opt");
     run("memory -nomap");
 
-    run("design -save copy");
-
     // First strategy : we deeply optimize logic but we may break its
     // nice structure than can map in nice DFF enable 
     // (ex: big_designs/VexRiscv).
@@ -3179,42 +3201,11 @@ struct SynthFpgaPass : public ScriptPass
     //
     checkDLatch();
 
-    // Call the zero asic version of 'opt_dff', e.g 'zopt_dff', especially 
-    // taking care of the -sat option.
-    //
-    if (!no_opt_sat_dff) {
-
-      run("stat");
-
-      if (!no_opt_const_dff) {
-        run("zopt_const_dff");
-      }
-
-      run("zopt_dff -sat");
-
-      if (!no_opt_const_dff) {
-        run("zopt_const_dff");
-      }
-
-    } else {
-
-      if (!no_opt_const_dff) {
-        run("zopt_const_dff");
-      }
-    }
+    optimize_DFFs();
 
     // Extra lines that help to win Area (ex: vga_lcd from 31K Lut4 downto 14.8K)
     //
-    // IMPROVE-2
-    //
     run("techmap");
-
-#if 0
-    run("opt -fast");
-
-    run("opt_clean");
-    // END IMPROVE-2
-#endif
 
     // Performs 'opt' pass with lightweight version for HUGE designs.
     //
@@ -3225,12 +3216,8 @@ struct SynthFpgaPass : public ScriptPass
        run("opt_clean");
     }
 
-    // original TCL call : legalize_flops $sc_syn_feature_set
-    //
-    legalize_flops (); // C++ version of TCL call
+    legalize_flops (); 
 
-    // C++ Version
-    //
     // Map on the DFF of the architecture (partname)
     //
     string sc_syn_flop_library = ys_dff_techmap;
@@ -3238,7 +3225,6 @@ struct SynthFpgaPass : public ScriptPass
 
     // 'post_techmap' without arguments gives the following 
     // according to '.../siliconcompiler/tools/yosys/procs.tcl'
-    // IMPROVE-1
     //
     run("techmap");
 
@@ -3250,7 +3236,6 @@ struct SynthFpgaPass : public ScriptPass
        run("opt_expr");
        run("opt_clean");
     }
-    // END IMPROVE-1
 
     // Perform preliminary buffer insertion before passing to ABC to help reduce
     // the overhead of final buffer insertion downstream
@@ -3268,7 +3253,7 @@ struct SynthFpgaPass : public ScriptPass
     //
     if (!no_xor_tree_process && (opt == "delay")) {
 
-      binary_decomp_xor_trees(topModule);
+      binary_decomp_xor_trees(yosys_get_design()->top_module());
     }
 
     run("stat");
@@ -3295,7 +3280,8 @@ struct SynthFpgaPass : public ScriptPass
     run("setundef -zero");
     run("clean -purge");
 
-    analyze_undriven_nets(topModule, true /* connect undriven nets to undef */);
+    analyze_undriven_nets(yosys_get_design()->top_module(), 
+		          true /* connect undriven nets to undef */);
 
     // tries to give public names instead of using $abc generic names.
     // Right now this procedure blows up runtime for medium/big designs.
