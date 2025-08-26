@@ -57,12 +57,17 @@ struct MaxHeigthWorker
 
              // Handle also Xilinx lut cells
 	     //
+             (cell->type != "\\MUXF5") &&
+             (cell->type != "\\MUXF6") &&
+             (cell->type != "\\MUXF7") &&
+             (cell->type != "\\MUXF8") &&
              (cell->type != "\\LUT1") &&
              (cell->type != "\\LUT2") &&
              (cell->type != "\\LUT3") &&
              (cell->type != "\\LUT4") &&
              (cell->type != "\\LUT5") &&
-             (cell->type != "\\LUT6")) { 
+             (cell->type != "\\LUT6")
+	     ) { 
 
            continue;
 	 }
