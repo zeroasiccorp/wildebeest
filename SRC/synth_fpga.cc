@@ -3117,6 +3117,13 @@ struct SynthFpgaPass : public ScriptPass
        return;
     }
 
+    Module* topModule = yosys_get_design()->top_module();
+
+    if (!topModule) {
+       log_warning("Design seems empty !\n");
+       return;
+    }
+
     auto startTime = std::chrono::high_resolution_clock::now();
 
     log("\nPLATYPUS flow using 'synth_fpga' Yosys plugin command\n");
