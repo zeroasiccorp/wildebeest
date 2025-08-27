@@ -443,7 +443,7 @@ struct ReportStatPass : public ScriptPass
 
     // call 'max_level' command if not called yet
     //
-    run("max_level -noff"); // -> store 'maxlvl' in scratchpad with 'max_level.max_levels'
+    run("max_level -clk2clk"); // -> store 'maxlvl' in scratchpad with 'max_level.max_levels'
 
     if (dot) {
       run("max_height -dot"); // -> store 'maxheight' in scratchpad with 'max_height.max_height'
@@ -486,7 +486,7 @@ struct ReportStatPass : public ScriptPass
     csv_file << std::to_string(nbDffs) + ",";
     csv_file << std::to_string(nbDSPs) + ",";
     csv_file << std::to_string(nbBRAMs) + ",";
-    csv_file << std::to_string(maxlvl) + ",";
+    csv_file << std::to_string(maxheight) + ",";
     csv_file << std::to_string(duration);
     csv_file << std::endl;
 
