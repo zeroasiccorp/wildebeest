@@ -7,7 +7,7 @@
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
 
-static bool noff = false;
+static bool clk2clk = false;
 static bool summary = false;
 
 struct MaxLvlPass : public ScriptPass
@@ -179,12 +179,12 @@ struct MaxLvlWorker
    {
      CellTypes ff_celltypes;
 
-     if (noff) {
+     if (clk2clk) { // define cells that are cutpoints during the traversal.
 
          ff_celltypes.setup_internals_mem();
          ff_celltypes.setup_stdcells_mem();
 
-         // Specify technology related DFF cutpoints for -noff option
+         // Specify technology related DFF cutpoints for -clk2clk option
          //
          setup_internals_zeroasic_ff_Z1000(ff_celltypes);
 
@@ -259,7 +259,7 @@ struct MaxLvlWorker
 	 // src bit to dst bits in the 'bit2bits' forward 
 	 // traversal table.
 	 //
-         if (noff && ff_celltypes.cell_known(cell->type)) {
+         if (clk2clk && ff_celltypes.cell_known(cell->type)) {
 
             for (auto s : src_bits) {
 
@@ -574,9 +574,10 @@ struct MaxLvlWorker
       log("paths within a single module, so the design must be flattened to get the)\n");
       log("overall longest path in the design.\n");
       log("\n");
-      log("    -noff\n");
-      log("        FF cell types in the longest math extraction. They are \n");
-      log("        considered as cut points.\n");
+      log("    -clk2clk\n");
+      log("        Consider longest paths from clocked cell to clocked cell. They are \n");
+      log("        considered as cut points. This is off by default. All cells are \n");
+      log("        traversable by default even DFFs, RAMs, ....\n");
       log("\n");
       
       log("    -summary\n");
@@ -589,7 +590,7 @@ struct MaxLvlWorker
    // ---------------------
    void clear_flags() override
    {
-     noff = false;
+     clk2clk = false;
      summary = false;
    }
 
@@ -609,8 +610,8 @@ struct MaxLvlWorker
 
      for (argidx = 1; argidx < args.size(); argidx++) {
 
-        if (args[argidx] == "-noff") {
-             noff = true;
+        if (args[argidx] == "-clk2clk") {
+             clk2clk = true;
              continue;
         }
         if (args[argidx] == "-summary") {

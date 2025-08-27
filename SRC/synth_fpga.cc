@@ -56,6 +56,7 @@ struct SynthFpgaPass : public ScriptPass
   bool no_xor_tree_process;
   bool no_opt_const_dff;
   bool show_dff_init_value;
+  bool continue_if_latch;
   bool set_dff_init_value_to_zero;
   string sc_syn_lut_size;
   string sc_syn_fsm_encoding;
@@ -1970,6 +1971,9 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // checkDLatch
   // -------------------------
+  // Check presence of Latch and either error out or continue with 
+  // warning.
+  //
   void checkDLatch() {
 
      int foundLatch = 0;
@@ -1990,14 +1994,21 @@ struct SynthFpgaPass : public ScriptPass
            }
      }
 
-     if (foundLatch) {
+     if (!continue_if_latch && foundLatch) {
        log_error("Cannot proceed further : LATCH synthesis is not supported.\n");
+     }
+
+     if (continue_if_latch && foundLatch) {
+       log_warning("CRITICAL: Continue synthesis even if LATCH is not supported.\n");
      }
   }
 
   // -------------------------
   // optimize_DFFs
   // -------------------------
+  // Try to detect stuck-at DFF either through SAT solver or constant 
+  // detection at DFF inputs.
+  //
   void optimize_DFFs() {
 
     // Call the zero asic version of 'opt_dff', e.g 'zopt_dff', especially
@@ -2229,9 +2240,9 @@ struct SynthFpgaPass : public ScriptPass
   }
 
   // -------------------------
-  // load_dff_bb_models 
+  // load_cells_models 
   // -------------------------
-  void load_dff_bb_models()
+  void load_cells_models()
   {
      run("read_verilog +/plugins/yosys-syn/FF_MODELS/dff.v");
      run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffe.v");
@@ -2242,7 +2253,26 @@ struct SynthFpgaPass : public ScriptPass
      run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffes.v");
      run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffers.v");
 
-     run("blackbox dff dffe dffr dffs dffrs dffer dffes dffers");
+     run("read_verilog +/microchip/cells_sim.v");
+  }
+
+  // -------------------------
+  // load_bb_cells_models 
+  // -------------------------
+  void load_bb_cells_models()
+  {
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dff.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffe.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffrs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffer.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffes.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffers.v");
+
+     run("read_verilog +/microchip/cells_sim.v");
+
+     run("blackbox dff dffe dffr dffs dffrs dffer dffes dffers MACC_PA RAM1K20");
   }
 
   // -------------------------
@@ -2265,7 +2295,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // clean_design 
   // -------------------------
-  void clean_design(int use_dff_bb_models)
+  void clean_design()
   {
      if (obs_clean) {
 
@@ -2273,15 +2303,12 @@ struct SynthFpgaPass : public ScriptPass
 
         run("splitnets");
 
-	if (use_dff_bb_models) {
+	// This is usefull to get non-LUT cells IOs directions to allow
+	// the 'obs_clean' traversal to correctly operate.
+	//
+        load_bb_cells_models();
 
-	  // Load black box models to get IOs directions for 
-	  // 'obs_clean'
-	  //
-          load_dff_bb_models();
-	}
-
-        //run("obs_clean");
+        run("obs_clean");
 
         run("hierarchy");
 
@@ -2605,10 +2632,9 @@ struct SynthFpgaPass : public ScriptPass
 
     run("techmap");
 
-    run("opt -fast");
     run("opt_clean");
 
-    // Call light 'opt' if design is huge (ex: 'zmcml')
+    // Performs 'opt' pass with lightweight version for HUGE designs.
     //
     if (getNumberOfCells() <= HUGE_NB_CELLS) {
        run("opt -full");
@@ -2624,7 +2650,7 @@ struct SynthFpgaPass : public ScriptPass
 
     run("techmap");
     
-    // Call light 'opt' if design is huge (ex: 'zmcml')
+    // Performs 'opt' pass with lightweight version for HUGE designs.
     //
     if (getNumberOfCells() <= HUGE_NB_CELLS) {
        run("opt -purge");
@@ -2641,6 +2667,9 @@ struct SynthFpgaPass : public ScriptPass
 
     run("setundef -zero");
     run("clean -purge");
+
+    analyze_undriven_nets(yosys_get_design()->top_module(), 
+		          true /* connect undriven nets to undef */);
 
     run("stat");
   }
@@ -2772,6 +2801,10 @@ struct SynthFpgaPass : public ScriptPass
         log("        Show all DFF initial values coming from the original RTL. This is off by default.\n");
         log("\n");
 
+        log("    -continue_if_latch\n");
+        log("        Keep running Synthesis even if some Latch inference is involved. The final netlist will not be valid but it can be usefull to get the final netlist stats. This is off by default.\n");
+        log("\n");
+
         log("    -stop_if_undriven_nets\n");
         log("        Stop Synthesis if the final netlist has undriven nets. This is off by default.\n");
 
@@ -2791,7 +2824,7 @@ struct SynthFpgaPass : public ScriptPass
 	log("\n");
 
         log("    -show_max_level\n");
-        log("        Show longest paths. This is off by default.\n");
+        log("        Show longest paths. This is off by default except if we are in delay mode.\n");
         log("\n");
 
         log("    -csv\n");
@@ -2837,6 +2870,7 @@ struct SynthFpgaPass : public ScriptPass
 	no_opt_const_dff = false;
 	show_dff_init_value = false;
 	set_dff_init_value_to_zero = false;
+	continue_if_latch = false;
 
 	wait = false;
 
@@ -2957,6 +2991,11 @@ struct SynthFpgaPass : public ScriptPass
              continue;
           }
 
+          if (args[argidx] == "-continue_if_latch") {
+             continue_if_latch = true;
+             continue;
+          }
+
           if (args[argidx] == "-set_dff_init_value_to_zero") {
              set_dff_init_value_to_zero = true;
              continue;
@@ -3071,6 +3110,8 @@ struct SynthFpgaPass : public ScriptPass
   void script() override
   {
 
+    // Make sure we have a design to synthesize !!!
+    //
     if (!yosys_get_design()) {
        log_warning("Design seems empty !\n");
        return;
@@ -3099,24 +3140,29 @@ struct SynthFpgaPass : public ScriptPass
     //
     check_options();
 
-    // Check hierarch and find the TOP
+    // This is usefull to load non-lut cells models in case we are doing a 
+    // resynthesis, e.g when the input design is a previous synthesized
+    // netlist which has been synthesized with 'synth_fpga'.
+    //
+    load_cells_models();
+
+    // Check hierarchy and find the TOP
     //
     run(stringf("hierarchy -check %s", help_mode ? "-top <top>" : top_opt.c_str()));
 
-    if (!yosys_get_design()->top_module()) {
-       log_warning("Design seems empty !\n");
-       return;
-    }
-
-    // In case user invokes resynthsis at the command line level, 
-    // performs a light weight synthesis for the second time.
+    // In case user invokes the '-resynthesis' option at the command line level, 
+    // we perform a light weight synthesis for the second time.
     //
     if (resynthesis) {
 
        resynthesize();
+
        return;
     }
 
+    // --------------------------------------------------------
+    // Otherwise we start the Main Synthesis flow right here.
+    //
     run("proc");
 
     dbg_wait();
@@ -3174,6 +3220,11 @@ struct SynthFpgaPass : public ScriptPass
     //
     run("opt -full");
 
+    // Move parallel muxes into shifters. This needs to be re-investigated
+    // because it looks that we may not be optimal here (see 'reg2file'
+    // testcase where we are behind competition) and this is probably due
+    // to not handling efficiently parallel case.
+    //
     run("pmux2shiftx");
 
     run("techmap -map +/techmap.v");
@@ -3197,10 +3248,14 @@ struct SynthFpgaPass : public ScriptPass
       processDffInitValues(set_dff_init_value_to_zero);
     }
 
-    // Make sure we have no LATCH otherwise error out !
+    // Make sure we have no LATCH otherwise eventually error out depending on
+    // the command line option '-fail_on_latch'.
     //
     checkDLatch();
 
+    // Try to detect stuck-at DFF either through SAT solver or constant 
+    // detection at DFF inputs.
+    //
     optimize_DFFs();
 
     // Extra lines that help to win Area (ex: vga_lcd from 31K Lut4 downto 14.8K)
@@ -3210,8 +3265,11 @@ struct SynthFpgaPass : public ScriptPass
     // Performs 'opt' pass with lightweight version for HUGE designs.
     //
     if (getNumberOfCells() <= HUGE_NB_CELLS) {
+
        run("opt -full");
+
     } else {
+
        run("opt_expr");
        run("opt_clean");
     }
@@ -3231,8 +3289,11 @@ struct SynthFpgaPass : public ScriptPass
     // Performs 'opt' pass with lightweight version for HUGE designs.
     //
     if (getNumberOfCells() <= HUGE_NB_CELLS) {
+
        run("opt -purge");
+
     } else {
+
        run("opt_expr");
        run("opt_clean");
     }
@@ -3250,6 +3311,7 @@ struct SynthFpgaPass : public ScriptPass
 
     // Binarize long XOR tree chains in delay mode. Typical example is 'gray2bin'
     // in 'logikbench/basic' suite having 64 levels that can be reduced to 6 levels.
+    // We still lose in area a little bit versus competition (166 vs 134).
     //
     if (!no_xor_tree_process && (opt == "delay")) {
 
@@ -3270,7 +3332,9 @@ struct SynthFpgaPass : public ScriptPass
 
     run("splitnets");
 
-    clean_design(true);
+    // remove dangling logic. Eventually call 'obs_clean' if option is activated.
+    //
+    clean_design();
 
     dbg_wait();
 
@@ -3280,11 +3344,15 @@ struct SynthFpgaPass : public ScriptPass
     run("setundef -zero");
     run("clean -purge");
 
+    // Look for undriven nets and eventually error out if it happens to 
+    // avoid to error out way later in the P&R steps.
+    //
     analyze_undriven_nets(yosys_get_design()->top_module(), 
 		          true /* connect undriven nets to undef */);
 
     // tries to give public names instead of using $abc generic names.
     // Right now this procedure blows up runtime for medium/big designs.
+    // This 'autoname' procedure needs to be re-written to be efficient.
     //
     if (autoname) {
       run("autoname");
@@ -3300,8 +3368,9 @@ struct SynthFpgaPass : public ScriptPass
        run(stringf("write_verilog -noexpr -nohex -nodec %s", "netlist_synth_fpga.verilog"));
     }
 
-    run("stat");
-
+    // ==========================
+    // Show final report
+    //
     auto endTime = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
 
@@ -3317,9 +3386,20 @@ struct SynthFpgaPass : public ScriptPass
 
     // Show longest path in 'delay' mode
     //
-    if (show_max_level) {
-      run("max_level"); // -> store 'maxlvl' in scratchpad with 'max_level.max_levels'
+    if ((opt == "delay") || show_max_level) {
+
+      // show max logic level between clock edge triggered cells end points.
+      //
+      run("max_level -clk2clk"); // -> store 'maxlvl' in scratchpad with 'max_level.max_levels'
+
+      // Show LUTs logic max height (that we get also in ABC synthesis)
+      //
+      run("max_height"); // -> store 'maxheight' in scratchpad with 'max_height.max_height'
     }
+
+    run("stat");
+    
+    // ==========================
 
     if (csv) {
        dump_csv_file("stat.csv", (int)totalTime);
