@@ -118,6 +118,8 @@ module tech_dffrs
       
 endmodule // tech_dffrs
 
+// clkEdge posedge, EnLvl = 1
+//
 (* techmap_celltype = "$_DFFE_PP_" *)
 module tech_dffe 
   (
@@ -297,6 +299,8 @@ module tech_dffnrs
       
 endmodule // tech_dffnrs
 
+// clkEdge negedge, EnLvl = 1
+//
 (* techmap_celltype = "$_DFFE_NP_" *)
 module tech_dffen 
   (
@@ -428,6 +432,8 @@ endmodule // tech_dffenrs
 //First, cover the positive edge versions of flops with just a set OR a
 //reset (one new version edge)
 
+// clkEdge posedge, rstLvl = 1, rstVal = 0
+//
 (* techmap_celltype = "$_DFF_PP0_" *)
 module tech_dffr_pxx
   (
@@ -442,11 +448,15 @@ module tech_dffr_pxx
    input D;
    output Q;
 
-   dffr_pxx _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .Q(Q) );
+   //dffr_pxx _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .Q(Q) );
+   dffr _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .R(!R), .Q(Q) );
 
 endmodule // tech_dffr_pxx
       
+// clkEdge posedge, rstLvl = 1, rstVal = 1
+//
 (* techmap_celltype = "$_DFF_PP1_" *)
 module tech_dffs_xpx
   (
@@ -461,14 +471,18 @@ module tech_dffs_xpx
    input D;
    output Q;
 
-   dffs_xpx _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .S(R), .Q(Q) );
+   //dffs_xpx _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .S(R), .Q(Q) );
+   dffs _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .S(!R), .Q(Q) );
       
 endmodule // tech_dffs_xpx
 
 //Next, cover the positive edge versions of flops with a set AND a
 //reset (three versions)
 
+// clkEdge posedge, SetLvl = 1, rstLvl = 0
+//
 (* techmap_celltype = "$_DFFSR_PPN_" *)
 module tech_dffrs_pnx
   (
@@ -485,11 +499,15 @@ module tech_dffrs_pnx
    input D;
    output Q;
 
-   dffrs_pnx _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffrs_pnx _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffrs _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .R(R), .S(!S), .Q(Q) );
       
 endmodule // tech_dffrs_pnx
 
+// clkEdge posedge, SetLvl = 0, rstLvl = 1
+//
 (* techmap_celltype = "$_DFFSR_PNP_" *)
 module tech_dffrs_npx
   (
@@ -506,11 +524,15 @@ module tech_dffrs_npx
    input D;
    output Q;
 
-   dffrs_npx _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffrs_npx _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffrs _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .R(!R), .S(S), .Q(Q) );
       
 endmodule // tech_dffrs_npx
 
+// clkEdge posedge, SetLvl = 1, rstLvl = 1
+//
 (* techmap_celltype = "$_DFFSR_PPP_" *)
 module tech_dffrs_ppx
   (
@@ -527,13 +549,17 @@ module tech_dffrs_ppx
    input D;
    output Q;
 
-   dffrs_ppx _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffrs_ppx _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(!R), .S(S), .Q(Q) );
+   dffrs _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .R(!R), .S(!S), .Q(Q) );
       
 endmodule // tech_dffrs_ppx
 
 //Do this all over again for flops with active high enables
 
+// clkEdge posedge, RstLvl = 1, RstVal = 0, EnLvl = 1
+//
 (* techmap_celltype = "$_DFFE_PP0P_" *)
 module tech_dffer_pxp
   (
@@ -550,11 +576,15 @@ module tech_dffer_pxp
    input E;
    output Q;
 
-   dffer_pxp _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   //dffer_pxp _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   dffer _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .R(!R), .Q(Q) );
 
 endmodule // tech_dffer_pxp
       
+// clkEdge posedge, RstLvl = 1, RstVal = 1, EnLvl = 1
+//
 (* techmap_celltype = "$_DFFE_PP1P_" *)
 module tech_dffes_xpp
   (
@@ -571,11 +601,15 @@ module tech_dffes_xpp
    input E;
    output Q;
 
-   dffes_xpp _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   //dffes_xpp _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   dffes _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .S(!R), .Q(Q) );
       
 endmodule // tech_dffes_xpp
 
+// clkEdge posedge, SetLvl = 1, RstLvl = 0, EnLvl = 1
+//
 (* techmap_celltype = "$_DFFSRE_PPNP_" *)
 module tech_dffers_pnp
   (
@@ -594,11 +628,15 @@ module tech_dffers_pnp
    input E;
    output Q;
 
-   dffers_pnp _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffers_pnp _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffers _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .R(R), .S(!S), .Q(Q) );
       
 endmodule // tech_dffers_pnp
 
+// clkEdge posedge, SetLvl = 0, RstLvl = 1, EnLvl = 1
+//
 (* techmap_celltype = "$_DFFSRE_PNPP_" *)
 module tech_dffers_npp
   (
@@ -617,11 +655,15 @@ module tech_dffers_npp
    input E;
    output Q;
 
-   dffers_npp _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffers_npp _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffers _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .R(!R), .S(S), .Q(Q) );
       
 endmodule // tech_dffers_npp
 
+// clkEdge posedge, SetLvl = 1, RstLvl = 1, EnLvl = 1
+//
 (* techmap_celltype = "$_DFFSRE_PPPP_" *)
 module tech_dffers_ppp
   (
@@ -640,13 +682,17 @@ module tech_dffers_ppp
    input E;
    output Q;
 
-   dffers_ppp _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffers_ppp _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffers _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .R(!R), .S(!S), .Q(Q) );
       
 endmodule // tech_dffers_ppp
 
 //Make versions of Core 8 flops with active low enables
 
+// clkEdge posedge, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFE_PN_" *)
 module tech_dffe_xxn
   (
@@ -661,11 +707,15 @@ module tech_dffe_xxn
    input E;
    output Q;
 
-   dffe_xxn _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .Q(Q) );
+   //dffe_xxn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .Q(Q) );
+   dffe _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .Q(Q) );
       
 endmodule // tech_dffe
 			
+// clkEdge posedge, RstLvl = 0, RstVal = 0, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFE_PN0N_" *)
 module tech_dffer_nxn
   (
@@ -682,11 +732,15 @@ module tech_dffer_nxn
    input E;
    output Q;
 
-   dffer_nxn _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   //dffer_nxn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   dffer _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(R), .Q(Q) );
 
 endmodule // tech_dffer
 
+// clkEdge posedge, RstLvl = 0, RstVal = 1, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFE_PN1N_" *)
 module tech_dffes_xnn
   (
@@ -703,11 +757,15 @@ module tech_dffes_xnn
    input E;
    output Q;
 
-   dffes_xnn _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   //dffes_xnn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   dffes _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .S(R), .Q(Q) );
       
 endmodule // tech_dffes
 
+// clkEdge posedge, SetLvl = 0, RstLvl = 0, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFSRE_PNNN_" *)
 module tech_dffers_nnn
   (
@@ -726,13 +784,17 @@ module tech_dffers_nnn
    input E;
    output Q;
 
-   dffers_nnn _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffers_nnn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .R(R), .S(S), .Q(Q) );
+   dffers _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(R), .S(S), .Q(Q) );
       
 endmodule // tech_dffers
 
 //Now do all the non-core flops with active low enables
 
+// clkEdge posedge, RstLvl = 1, rstVal = 0, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFE_PP0N_" *)
 module tech_dffer_pxn
   (
@@ -749,11 +811,15 @@ module tech_dffer_pxn
    input E;
    output Q;
 
-   dffer_pxn _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   //dffer_pxn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   dffer _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(!R), .Q(Q) );
 
 endmodule // tech_dffer_pxn
       
+// clkEdge posedge, RstLvl = 1, rstVal = 1, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFE_PP1N_" *)
 module tech_dffes_xpn
   (
@@ -770,11 +836,15 @@ module tech_dffes_xpn
    input E;
    output Q;
 
-   dffes_xpn _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   //dffes_xpn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   dffes _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .S(!R), .Q(Q) );
       
 endmodule // tech_dffes_xpn
 
+// clkEdge posedge, SetLvl = 1, RstLvl = 0, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFSRE_PPNN_" *)
 module tech_dffers_pnn
   (
@@ -793,11 +863,15 @@ module tech_dffers_pnn
    input E;
    output Q;
 
-   dffers_pnn _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffers_pnn _TECHMAP_REPLACE_ 
+    // ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffers _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(R), .S(!S), .Q(Q) );
       
 endmodule // tech_dffers_pnn
 
+// clkEdge posedge, SetLvl = 0, RstLvl = 1, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFSRE_PNPN_" *)
 module tech_dffers_npn
   (
@@ -816,11 +890,15 @@ module tech_dffers_npn
    input E;
    output Q;
 
-   dffers_npn _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffers_npn _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffers _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(!R), .S(S), .Q(Q) );
       
 endmodule // tech_dffers_npn
 
+// clkEdge posedge, SetLvl = 1, RstLvl = 1, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFSRE_PPPN_" *)
 module tech_dffers_ppn
   (
@@ -839,8 +917,10 @@ module tech_dffers_ppn
    input E;
    output Q;
 
-   dffers_ppn _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffers_ppn _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffers _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(!R), .S(!S), .Q(Q) );
       
 endmodule // tech_dffers_ppn
 
@@ -850,6 +930,8 @@ endmodule // tech_dffers_ppn
 //First, cover the positive edge versions of flops with just a set OR a
 //reset (one new version edge)
 
+// clkEdge negedge, rstLvl = 1, rstVal = 0
+//
 (* techmap_celltype = "$_DFF_NP0_" *)
 module tech_dffnr_pxx
   (
@@ -864,11 +946,15 @@ module tech_dffnr_pxx
    input D;
    output Q;
 
-   dffnr_pxx _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .Q(Q) );
+   //dffnr_pxx _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .Q(Q) );
+   dffnr _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .R(!R), .Q(Q) );
 
 endmodule // tech_dffnr_pxx
       
+// clkEdge negedge, rstLvl = 1, rstVal = 1
+//
 (* techmap_celltype = "$_DFF_NP1_" *)
 module tech_dffns_xpx
   (
@@ -883,14 +969,18 @@ module tech_dffns_xpx
    input D;
    output Q;
 
-   dffns_xpx _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .S(R), .Q(Q) );
+   //dffns_xpx _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .S(R), .Q(Q) );
+   dffns _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .S(!R), .Q(Q) );
       
 endmodule // tech_dffns_xpx
 
 //Next, cover the positive edge versions of flops with a set AND a
 //reset (three versions)
 
+// clkEdge negedge, SetLvl = 1, rstLvl = 0
+//
 (* techmap_celltype = "$_DFFSR_NPN_" *)
 module tech_dffnrs_pnx
   (
@@ -907,11 +997,15 @@ module tech_dffnrs_pnx
    input D;
    output Q;
 
-   dffnrs_pnx _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffnrs_pnx _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffnrs _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .R(R), .S(!S), .Q(Q) );
       
 endmodule // tech_dffnrs_pnx
 
+// clkEdge negedge, SetLvl = 0, rstLvl = 1
+//
 (* techmap_celltype = "$_DFFSR_NNP_" *)
 module tech_dffnrs_npx
   (
@@ -928,11 +1022,15 @@ module tech_dffnrs_npx
    input D;
    output Q;
 
-   dffnrs_npx _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffnrs_npx _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffnrs _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .R(!R), .S(S), .Q(Q) );
       
 endmodule // tech_dffnrs_npx
 
+// clkEdge negedge, SetLvl = 1, rstLvl = 1
+//
 (* techmap_celltype = "$_DFFSR_NPP_" *)
 module tech_dffnrs_ppx
   (
@@ -949,13 +1047,17 @@ module tech_dffnrs_ppx
    input D;
    output Q;
 
-   dffnrs_ppx _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffnrs_ppx _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffnrs _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .R(!R), .S(!S), .Q(Q) );
       
 endmodule // tech_dffnrs_ppx
 
 //Do this all over again for flops with active high enables
 
+// clkEdge negedge, RstLvl = 1, RstVal = 0, EnLvl = 1
+//
 (* techmap_celltype = "$_DFFE_NP0P_" *)
 module tech_dffenr_pxp
   (
@@ -972,11 +1074,15 @@ module tech_dffenr_pxp
    input E;
    output Q;
 
-   dffenr_pxp _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   //dffenr_pxp _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   dffenr _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .R(!R), .Q(Q) );
 
 endmodule // tech_dffenr_pxp
       
+// clkEdge negedge, RstLvl = 1, RstVal = 1, EnLvl = 1
+//
 (* techmap_celltype = "$_DFFE_NP1P_" *)
 module tech_dffens_xpp
   (
@@ -993,11 +1099,15 @@ module tech_dffens_xpp
    input E;
    output Q;
 
-   dffens_xpp _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   //dffens_xpp _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   dffens _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .S(!R), .Q(Q) );
       
 endmodule // tech_dffens_xpp
 
+// clkEdge negedge, SetLvl = 1, RstLvl = 0, EnLvl = 1
+//
 (* techmap_celltype = "$_DFFSRE_NPNP_" *)
 module tech_dffenrs_pnp
   (
@@ -1016,11 +1126,15 @@ module tech_dffenrs_pnp
    input E;
    output Q;
 
-   dffenrs_pnp _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffenrs_pnp _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffenrs _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .R(R), .S(!S), .Q(Q) );
       
 endmodule // tech_dffenrs_pnp
 
+// clkEdge negedge, SetLvl = 0, RstLvl = 1, EnLvl = 1
+//
 (* techmap_celltype = "$_DFFSRE_NNPP_" *)
 module tech_dffenrs_npp
   (
@@ -1039,11 +1153,15 @@ module tech_dffenrs_npp
    input E;
    output Q;
 
-   dffenrs_npp _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffenrs_npp _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffenrs _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .R(!R), .S(S), .Q(Q) );
       
 endmodule // tech_dffenrs_npp
 
+// clkEdge negedge, SetLvl = 1, RstLvl = 1, EnLvl = 1
+//
 (* techmap_celltype = "$_DFFSRE_NPPP_" *)
 module tech_dffenrs_ppp
   (
@@ -1062,13 +1180,17 @@ module tech_dffenrs_ppp
    input E;
    output Q;
 
-   dffenrs_ppp _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffenrs_ppp _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffenrs _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .R(!R), .S(!S), .Q(Q) );
       
 endmodule // tech_dffenrs_ppp
 
 //Make versions of Core 8 flops with active low enables
 
+// clkEdge negedge, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFE_NN_" *)
 module tech_dffen_xxn
   (
@@ -1083,11 +1205,15 @@ module tech_dffen_xxn
    input E;
    output Q;
 
-   dffen_xxn _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .Q(Q) );
+   //dffen_xxn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .Q(Q) );
+   dffen _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .Q(Q) );
       
 endmodule // tech_dffen
 			
+// clkEdge negedge, RstLvl = 0, RstVal = 0, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFE_NN0N_" *)
 module tech_dffenr_nxn
   (
@@ -1104,11 +1230,15 @@ module tech_dffenr_nxn
    input E;
    output Q;
 
-   dffenr_nxn _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   //dffenr_nxn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   dffenr _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(R), .Q(Q) );
 
 endmodule // tech_dffenr
 
+// clkEdge negedge, RstLvl = 0, RstVal = 1, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFE_NN1N_" *)
 module tech_dffens_xnn
   (
@@ -1125,11 +1255,15 @@ module tech_dffens_xnn
    input E;
    output Q;
 
-   dffens_xnn _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   //dffens_xnn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   dffens _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .S(R), .Q(Q) );
       
 endmodule // tech_dffens
 
+// clkEdge negedge, SetLvl = 0, RstLvl = 0, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFSRE_NNNN_" *)
 module tech_dffenrs_nnn
   (
@@ -1148,13 +1282,17 @@ module tech_dffenrs_nnn
    input E;
    output Q;
 
-   dffenrs_nnn _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffenrs_nnn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .R(R), .S(S), .Q(Q) );
+   dffenrs _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(R), .S(S), .Q(Q) );
       
 endmodule // tech_dffenrs
 
 //Now do all the non-core flops with active low enables
 
+// clkEdge negedge, RstLvl = 1, RstVal = 0, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFE_NP0N_" *)
 module tech_dffenr_pxn
   (
@@ -1171,11 +1309,15 @@ module tech_dffenr_pxn
    input E;
    output Q;
 
-   dffenr_pxn _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   //dffenr_pxn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   dffenr _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(!R), .Q(Q) );
 
 endmodule // tech_dffenr_pxn
       
+// clkEdge negedge, RstLvl = 1, RstVal = 1, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFE_NP1N_" *)
 module tech_dffens_xpn
   (
@@ -1192,11 +1334,15 @@ module tech_dffens_xpn
    input E;
    output Q;
 
-   dffens_xpn _TECHMAP_REPLACE_ 
-     ( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   //dffens_xpn _TECHMAP_REPLACE_ 
+    // ( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   dffens _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .S(!R), .Q(Q) );
       
 endmodule // tech_dffens_xpn
 
+// clkEdge negedge, SetLvl = 1, RstLvl = 0, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFSRE_NPNN_" *)
 module tech_dffenrs_pnn
   (
@@ -1215,11 +1361,15 @@ module tech_dffenrs_pnn
    input E;
    output Q;
 
-   dffenrs_pnn _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffenrs_pnn _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffenrs _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(R), .S(!S), .Q(Q) );
       
 endmodule // tech_dffenrs_pnn
 
+// clkEdge negedge, SetLvl = 0, RstLvl = 1, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFSRE_NNPN_" *)
 module tech_dffenrs_npn
   (
@@ -1238,11 +1388,15 @@ module tech_dffenrs_npn
    input E;
    output Q;
 
-   dffenrs_npn _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffenrs_npn _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffenrs _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(!R), .S(S), .Q(Q) );
       
 endmodule // tech_dffenrs_npn
 
+// clkEdge negedge, SetLvl = 1, RstLvl = 1, EnLvl = 0
+//
 (* techmap_celltype = "$_DFFSRE_NPPN_" *)
 module tech_dffenrs_ppn
   (
@@ -1261,7 +1415,695 @@ module tech_dffenrs_ppn
    input E;
    output Q;
 
-   dffenrs_ppn _TECHMAP_REPLACE_ 
-     ( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   //dffenrs_ppn _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .S(S), .Q(Q) );
+   dffenrs _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(!R), .S(!S), .Q(Q) );
       
 endmodule // tech_dffenrs_ppn
+
+// Sdff versions, e.g DFF with synchronous set/reset
+// 
+//tech_flops.v
+//Peter Grossmann
+//19 May 2022
+//$Id$
+//$Log$
+
+//This file provides a generic tech mapping option suitable for many
+//(not all) FPGA architectures that define their flop flop primitives
+//with names that match the naming conventions used here (i.e.
+//architectures generated with the FPGA Architect standard library).
+
+//Part of the trick to making this library work for you is matching it
+//to your synthesis flow.  The library contains every flip flop type
+//that yosys defines, so if your architecture doesn't support all of them
+//you need to constrain your synthesis flow to only map the design to
+//the subset of flop types that your architecture supports.  This can be
+//done with the sdfflegalize command, which is integrated into FPGA
+//Architect's reference synthesis flow.
+
+//Where appropriate, a few hooks are provided in the library to help
+//lessen the effort on downstream development in adopting this setup.
+//Read available code comments and documentation carefully to make sure
+//your setup works with this library in the way you wish.  If it does not
+//meet your needs, creating a custom flop tech library for your architecture
+//may be required.
+
+//Excluding latches and scan flops, Yosys supports a total of 54 different 
+//flop permutations It is useful to group them into categories to help organize
+//common cases for what subsets an architecture might choose to support.
+
+//There are eight flops that are fundamental to FPGA Architect generator
+//options.  If you only support these eight flops, you can synthesize
+//a very wide range of designs without adding additional configuration bits
+//and flip flop modes.  Early versions of FPGA Architect supported only
+//these eight flops.  They are presented here as a group.  The remaining
+//46 flop variants supported by Yosys are all variants of these eight
+//flops.
+
+//*****************************************
+//
+// Begin "Core 8" Flop types
+//
+//*****************************************
+
+(* techmap_celltype = "$_SDFF_PN0_" *)
+module tech_sdffr 
+  (
+   C,
+   D,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   output Q;
+
+   sdffr _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .R(R), .Q(Q) );
+
+endmodule // tech_sdffr
+
+(* techmap_celltype = "$_SDFF_PN1_" *)
+module tech_sdffs 
+  (
+   C,
+   D,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   output Q;
+
+   sdffs _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .S(R), .Q(Q) );
+      
+endmodule // tech_sdffs
+			
+(* techmap_celltype = "$_SDFFE_PN0P_" *)
+module tech_sdffer 
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   sdffer _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+
+endmodule // tech_sdffer
+
+(* techmap_celltype = "$_SDFFE_PN1P_" *)
+module tech_sdffes 
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   sdffes _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+      
+endmodule // tech_sdffes
+
+//*****************************************
+//
+// End "Core 8" Flop types
+//
+//*****************************************
+
+//A next logical expansion to build additional architecture support on top
+//of these "Core 8" flops would be to offer variants of them that trigger
+//on the falling edge of the clock.  This is relatively inexpensive to 
+//implement, as you need only a single configuration bit and an inverter
+//to mux in a clock inversion to support this type.  The negative edge
+//clock versions of the Core 8 are provided here next:
+			
+//*****************************************
+//
+// Begin "Negative Core 8" Flop types
+//
+//*****************************************
+
+(* techmap_celltype = "$_SDFF_NN0_" *)
+module tech_sdffnr
+  (
+   C,
+   D,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   output Q;
+
+   sdffnr _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .R(R), .Q(Q) );
+
+endmodule // tech_sdffnr
+
+(* techmap_celltype = "$_SDFF_NN1_" *)
+module tech_sdffns 
+  (
+   C,
+   D,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   output Q;
+
+   sdffns _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .S(R), .Q(Q) );
+      
+endmodule // tech_sdffns
+			
+(* techmap_celltype = "$_SDFFE_NN0P_" *)
+module tech_sdffenr 
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   sdffenr _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+
+endmodule // tech_sdffenr
+
+(* techmap_celltype = "$_SDFFE_NN1P_" *)
+module tech_sdffens 
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   sdffens _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+      
+endmodule // tech_sdffens
+	
+//*****************************************
+//
+// End "Negative Core 8" Flop types
+//
+//*****************************************
+
+//An similar additional type of support is to allow either
+//edge of the set/reset/enable signals to be active.  Support
+//of these types is where the number of flop permutations really
+//explodes, and where having a naming convention that is easy
+//to parse is critical.  Above, we have sacrificed a bit of
+//clarity in exchange for brevity of flop names, so that when
+//they are the only types used the flop types are compact while
+//still easy to understand.  When permuting the set/reset/enable
+//polarities, this breaks down.  We'll deal with this by simply
+//mimicing Yosys's convention as a suffix stacked on top of our
+//Core 8/Negative Core 8 naming conventions.  Do this as follows:
+
+//Define a three-letter suffix in which the meaning of the suffix
+//is <reset polarity><set polarity><enable polarity>
+//and each polarity is denoted as follows:
+//
+// p - positive edge / active high polarity
+// n - negative edge / active low polarity
+// x - signal not present
+//
+//In this convention, our Core 8 would have the following
+//expanded names:
+//
+// sdffr   | sdffr_nxx
+// sdffs   | sdffs_xnx
+// sdffer  | sdffer_nxp
+// sdffes  | sdffes_xnp
+
+//As you can see, this convention introduces a bit of field redundancy,
+//in exchange for the preservation of the original Core 8 names
+
+//Like the core 8, the negative edge clock versions simply insert an 'n'
+//in the apprpropriate location prior to the underscore.
+
+//First, cover the positive edge versions of flops with just a set OR a
+//reset (one new version edge)
+
+// clkEdge posedge, rstLvl = 1, rstVal = 0
+//
+(* techmap_celltype = "$_SDFF_PP0_" *)
+module tech_sdffr_pxx
+  (
+   C,
+   D,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   output Q;
+
+   //sdffr_pxx _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .Q(Q) );
+   sdffr _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .R(!R), .Q(Q) );
+
+endmodule // tech_sdffr_pxx
+      
+// clkEdge posedge, rstLvl = 1, rstVal = 1
+//
+(* techmap_celltype = "$_SDFF_PP1_" *)
+module tech_sdffs_xpx
+  (
+   C,
+   D,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   output Q;
+
+   //sdffs_xpx _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .S(R), .Q(Q) );
+   sdffs _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .S(!R), .Q(Q) );
+      
+endmodule // tech_sdffs_xpx
+
+//Next, cover the positive edge versions of flops with a set AND a
+//reset (three versions)
+
+//Do this all over again for flops with active high enables
+
+// clkEdge posedge, RstLvl = 1, RstVal = 0, EnLvl = 1
+//
+(* techmap_celltype = "$_SDFFE_PP0P_" *)
+module tech_sdffer_pxp
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   //sdffer_pxp _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   sdffer _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .R(!R), .Q(Q) );
+
+endmodule // tech_sdffer_pxp
+      
+// clkEdge posedge, RstLvl = 1, RstVal = 1, EnLvl = 1
+//
+(* techmap_celltype = "$_SDFFE_PP1P_" *)
+module tech_sdffes_xpp
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   //sdffes_xpp _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   sdffes _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .S(!R), .Q(Q) );
+      
+endmodule // tech_sdffes_xpp
+
+
+//Make versions of Core 8 flops with active low enables
+
+// clkEdge posedge, RstLvl = 0, RstVal = 0, EnLvl = 0
+//
+(* techmap_celltype = "$_SDFFE_PN0N_" *)
+module tech_sdffer_nxn
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   //sdffer_nxn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   sdffer _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(R), .Q(Q) );
+
+endmodule // tech_sdffer
+
+// clkEdge posedge, RstLvl = 0, RstVal = 1, EnLvl = 0
+//
+(* techmap_celltype = "$_SDFFE_PN1N_" *)
+module tech_sdffes_xnn
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   //sdffes_xnn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   sdffes _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .S(R), .Q(Q) );
+      
+endmodule // tech_sdffes
+
+//Now do all the non-core flops with active low enables
+
+// clkEdge posedge, RstLvl = 1, rstVal = 0, EnLvl = 0
+//
+(* techmap_celltype = "$_SDFFE_PP0N_" *)
+module tech_sdffer_pxn
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   //sdffer_pxn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   sdffer _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(!R), .Q(Q) );
+
+endmodule // tech_sdffer_pxn
+      
+// clkEdge posedge, RstLvl = 1, rstVal = 1, EnLvl = 0
+//
+(* techmap_celltype = "$_SDFFE_PP1N_" *)
+module tech_sdffes_xpn
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   //sdffes_xpn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   sdffes _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .S(!R), .Q(Q) );
+      
+endmodule // tech_sdffes_xpn
+
+//Now repeat ALL the non-core flops we just made with negative-edge
+//triggered clocks
+
+//First, cover the positive edge versions of flops with just a set OR a
+//reset (one new version edge)
+
+// clkEdge negedge, rstLvl = 1, rstVal = 0
+//
+(* techmap_celltype = "$_SDFF_NP0_" *)
+module tech_sdffnr_pxx
+  (
+   C,
+   D,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   output Q;
+
+   //sdffnr_pxx _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .R(R), .Q(Q) );
+   sdffnr _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .R(!R), .Q(Q) );
+
+endmodule // tech_sdffnr_pxx
+      
+// clkEdge negedge, rstLvl = 1, rstVal = 1
+//
+(* techmap_celltype = "$_SDFF_NP1_" *)
+module tech_sdffns_xpx
+  (
+   C,
+   D,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   output Q;
+
+   //sdffns_xpx _TECHMAP_REPLACE_ 
+     //( .clk(C), .D(D), .S(R), .Q(Q) );
+   sdffns _TECHMAP_REPLACE_ 
+     ( .clk(C), .D(D), .S(!R), .Q(Q) );
+      
+endmodule // tech_sdffns_xpx
+
+//Next, cover the positive edge versions of flops with a set AND a
+//reset (three versions)
+
+//Do this all over again for flops with active high enables
+
+// clkEdge negedge, RstLvl = 1, RstVal = 0, EnLvl = 1
+//
+(* techmap_celltype = "$_SDFFE_NP0P_" *)
+module tech_sdffenr_pxp
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   //sdffenr_pxp _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   sdffenr _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .R(!R), .Q(Q) );
+
+endmodule // tech_sdffenr_pxp
+      
+// clkEdge negedge, RstLvl = 1, RstVal = 1, EnLvl = 1
+//
+(* techmap_celltype = "$_SDFFE_NP1P_" *)
+module tech_sdffens_xpp
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   //sdffens_xpp _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   sdffens _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(E), .D(D), .S(!R), .Q(Q) );
+      
+endmodule // tech_sdffens_xpp
+
+
+//Make versions of Core 8 flops with active low enables
+
+// clkEdge negedge, RstLvl = 0, RstVal = 0, EnLvl = 0
+//
+(* techmap_celltype = "$_SDFFE_NN0N_" *)
+module tech_sdffenr_nxn
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   //sdffenr_nxn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   sdffenr _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(R), .Q(Q) );
+
+endmodule // tech_sdffenr
+
+// clkEdge negedge, RstLvl = 0, RstVal = 1, EnLvl = 0
+//
+(* techmap_celltype = "$_SDFFE_NN1N_" *)
+module tech_sdffens_xnn
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   //sdffens_xnn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   sdffens _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .S(R), .Q(Q) );
+      
+endmodule // tech_sdffens
+
+//Now do all the non-core flops with active low enables
+
+// clkEdge negedge, RstLvl = 1, RstVal = 0, EnLvl = 0
+//
+(* techmap_celltype = "$_SDFFE_NP0N_" *)
+module tech_sdffenr_pxn
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   //sdffenr_pxn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .R(R), .Q(Q) );
+   sdffenr _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .R(!R), .Q(Q) );
+
+endmodule // tech_sdffenr_pxn
+      
+// clkEdge negedge, RstLvl = 1, RstVal = 1, EnLvl = 0
+//
+(* techmap_celltype = "$_SDFFE_NP1N_" *)
+module tech_sdffens_xpn
+  (
+   C,
+   D,
+   E,
+   R,
+   Q
+   );
+
+   input C;
+   input R;
+   input D;
+   input E;
+   output Q;
+
+   //sdffens_xpn _TECHMAP_REPLACE_ 
+     //( .clk(C), .E(E), .D(D), .S(R), .Q(Q) );
+   sdffens _TECHMAP_REPLACE_ 
+     ( .clk(C), .E(!E), .D(D), .S(!R), .Q(Q) );
+      
+endmodule // tech_sdffens_xpn
