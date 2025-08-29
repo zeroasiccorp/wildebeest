@@ -19,6 +19,9 @@
  *  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  */
+//
+// Author : Thierry Besson , Zero Asic Corp.
+//
 
 #include "kernel/register.h"
 #include "kernel/celltypes.h"
@@ -36,10 +39,10 @@
 
 #define SYNTH_FPGA_VERSION "1.0-" YOSYS_SYN_REVISION
 
-#define HUGE_NB_CELLS 5000000 // 5 Million cells
-#define BIG_NB_CELLS 500000   // 500K cells
-#define SMALL_NB_CELLS 250000 // 250K cells
-#define TINY_NB_CELLS 50000    // 50K cells
+#define HUGE_NB_CELLS 5000000   // 5 Million cells
+#define BIG_NB_CELLS   500000   // 500K cells
+#define SMALL_NB_CELLS 250000   // 250K cells
+#define TINY_NB_CELLS   50000   // 50K cells
 
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
@@ -3315,11 +3318,12 @@ struct SynthFpgaPass : public ScriptPass
     // for both DFF with un-initialized Values and DFF with init value 1.
     //
     if (set_dff_init_value_to_zero || show_dff_init_value) {
+
       processDffInitValues(set_dff_init_value_to_zero);
     }
 
     // Make sure we have no LATCH otherwise eventually error out depending on
-    // the command line option '-fail_on_latch'.
+    // the command line option '-continue_if_latch'.
     //
     checkDLatch();
 
@@ -3332,7 +3336,7 @@ struct SynthFpgaPass : public ScriptPass
     //
     run("techmap");
 
-    // Performs 'opt' pass with lightweight version for HUGE designs.
+    // Performs 'opt' pass with light weight version for HUGE designs.
     //
     if (getNumberOfCells() <= HUGE_NB_CELLS) {
 
