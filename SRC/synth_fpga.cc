@@ -631,14 +631,31 @@ struct SynthFpgaPass : public ScriptPass
       ys_dff_features.insert("async_set");
       ys_dff_features.insert("flop_enable");
 
+      ys_dff_models["dffenrs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffenrs.v";
+      ys_dff_models["dffenr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffenr.v";
+      ys_dff_models["dffens"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffens.v";
+      ys_dff_models["dffen"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffen.v";
       ys_dff_models["dffers"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffers.v";
       ys_dff_models["dffer"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffer.v";
       ys_dff_models["dffes"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffes.v";
       ys_dff_models["dffe"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffe.v";
+      ys_dff_models["dffnrs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffnrs.v";
+      ys_dff_models["dffnr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffnr.v";
+      ys_dff_models["dffns"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffns.v";
+      ys_dff_models["dffn"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffn.v";
       ys_dff_models["dffrs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffrs.v";
       ys_dff_models["dffr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffr.v";
       ys_dff_models["dffs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffs.v";
       ys_dff_models["dff"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dff.v";
+
+      ys_dff_models["sdffenr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffenr.v";
+      ys_dff_models["sdffens"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffens.v";
+      ys_dff_models["sdffer"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffer.v";
+      ys_dff_models["sdffes"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffes.v";
+      ys_dff_models["sdffnr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffnr.v";
+      ys_dff_models["sdffns"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffns.v";
+      ys_dff_models["sdffr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffr.v";
+      ys_dff_models["sdffs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffs.v";
 
 
       // -------------------------
@@ -2177,8 +2194,14 @@ struct SynthFpgaPass : public ScriptPass
      }
 
      for (auto cell : yosys_get_design()->top_module()->cells()) {
-         if (cell->type.in(ID(dff), ID(dffe), ID(dffr), ID(dffer),
-                           ID(dffs), ID(dffrs), ID(dffes), ID(dffers))) {
+         if (cell->type.in(ID(dffenrs), ID(dffenr), ID(dffens), ID(dffen),
+                           ID(dffers), ID(dffer), ID(dffes), ID(dffe),
+			   ID(dffnrs), ID(dffnr), ID(dffns), ID(dffn),
+			   ID(dffrs), ID(dffr), ID(dffs), ID(dff))) {
+           nb++;
+         }
+         if (cell->type.in(ID(sdffenr), ID(sdffens), ID(sdffer), ID(sdffes),
+                           ID(sdffnr), ID(sdffns), ID(sdffr), ID(sdffs))) {
            nb++;
          }
      }
@@ -2244,15 +2267,34 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void load_cells_models()
   {
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dff.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffe.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffr.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffs.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffrs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffenrs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffenr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffens.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffen.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffers.v");
      run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffer.v");
      run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffes.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffers.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffe.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffnrs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffnr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffns.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffn.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffrs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dff.v");
 
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffenr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffens.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffer.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffes.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffnr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffns.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffs.v");
+
+     // At some point should use our own cells
+     //
      run("read_verilog +/microchip/cells_sim.v");
   }
 
@@ -2261,18 +2303,39 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void load_bb_cells_models()
   {
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dff.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffe.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffr.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffs.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffrs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffenrs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffenr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffens.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffen.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffers.v");
      run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffer.v");
      run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffes.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffers.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffe.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffnrs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffnr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffns.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffn.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffrs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffs.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dff.v");
 
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffenr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffens.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffer.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffes.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffnr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffns.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffr.v");
+     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffs.v");
+
+     // At some point should use our own cells
+     //
      run("read_verilog +/microchip/cells_sim.v");
 
-     run("blackbox dff dffe dffr dffs dffrs dffer dffes dffers MACC_PA RAM1K20");
+     // Black box them all
+     //
+     run("blackbox dffenrs dffenr dffens dffen dffers dffer dffes dffe dffnrs dffnr dffns dffn dffrs dffr dffs dff sdffenr sdffens sdffer sdffes sdffnr sdffns sdffr sdffs MACC_PA RAM1K20 RAM64x12");
   }
 
   // -------------------------
@@ -2413,12 +2476,11 @@ struct SynthFpgaPass : public ScriptPass
   //
   void legalize_flops ()
   {
+    string sdff_cells = ""; 
 
-    if (use_sdff) { // internal hidden mode to do QoR comparison with technology supporting
-	            // DFF with synchronous set/reset.
+    if (use_sdff) { // handle DFF with synchronous set/reset.
 
-      run("dfflegalize -cell $_DFFE_?P?P_ 01 -cell $_SDFFE_?P?P_ 01 -cell $_DLATCH_?P?_ 01", "(mimic xc7)");
-      return;
+      sdff_cells += " -cell $_SDFF_P??_ 01 -cell $_SDFFE_P???_ 01";
     }
 
     // Consider all feature combinations 'enable" x "async_set' x 
@@ -2429,56 +2491,57 @@ struct SynthFpgaPass : public ScriptPass
     // 1.
     //
     if (dff_enable && dff_async_set && dff_async_reset) {
-      log("Legalize list: $_DFF_P_ $_DFF_PN?_ $_DFFE_PP_ $_DFFE_PN?P_ $_DFFSR_PNN_ $_DFFSRE_PNNP_\n");
-      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN?_ 01 -cell $_DFFE_PP_ 01 -cell $_DFFE_PN?P_ 01 -cell $_DFFSR_PNN_ 01 -cell $_DFFSRE_PNNP_ 01");
+
+      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN?_ 01 -cell $_DFFE_PP_ 01 -cell $_DFFE_PN?P_ 01 -cell $_DFFSR_PNN_ 01 -cell $_DFFSRE_PNNP_ 01" + sdff_cells);
+
       return;
     }
 
     // 2.
     //
     if (dff_enable && dff_async_set) {
-      log("Legalize list: $_DFF_P_ $_DFF_PN1_ $_DFFE_PP_ $_DFFE_PN1P_\n");
-      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN1_ 01 -cell $_DFFE_PP_ 01 -cell $_DFFE_PN1P_ 01");
+      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN1_ 01 -cell $_DFFE_PP_ 01 -cell $_DFFE_PN1P_ 01" + sdff_cells);
+
       return;
     }
 
     // 3.
     //
     if (dff_enable && dff_async_reset) {
-      log("Legalize list: $_DFF_P_ $_DFF_PN0_ $_DFFE_PP_ $_DFFE_PN0P_\n");
-      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN0_ 01 -cell $_DFFE_PP_ 01 -cell $_DFFE_PN0P_ 01");
+      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN0_ 01 -cell $_DFFE_PP_ 01 -cell $_DFFE_PN0P_ 01" + sdff_cells);
+
       return;
     }
 
     // 4.
     //
     if (dff_enable) {
-      log("Legalize list: $_DFF_P_ $_DFF_P??_ $_DFFE_PP_ $_DFFE_P??P_\n");
-      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_P??_ 01 -cell $_DFFE_PP_ 01 -cell $_DFFE_P??P_ 01");
+      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_P??_ 01 -cell $_DFFE_PP_ 01 -cell $_DFFE_P??P_ 01" + sdff_cells);
+
       return;
     }
 
     // 5.
     //
     if (dff_async_set && dff_async_reset) {
-      log("Legalize list: $_DFF_P_ $_DFF_PN?_ $_DFFSR_PNN_\n");
-      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN?_ 01 -cell $_DFFSR_PNN_ 01");
+      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN?_ 01 -cell $_DFFSR_PNN_ 01" + sdff_cells);
+
       return;
     }
 
     // 6.
     //
     if (dff_async_set) {
-      log("Legalize list: $_DFF_P_ $_DFF_PN1_\n");
-      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN1_ 01");
+      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN1_ 01" + sdff_cells);
+
       return;
     }
 
     // 7.
     //
     if (dff_async_reset) {
-      log("Legalize list: $_DFF_P_ $_DFF_PN0_\n");
-      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN0_ 01");
+      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN0_ 01" + sdff_cells);
+
       return;
     }
 
@@ -2489,7 +2552,7 @@ struct SynthFpgaPass : public ScriptPass
 
     log_warning("No DFF features are suported !\n");
     log_warning("Still Legalize list: $_DFF_P_\n");
-    run("dfflegalize -cell $_DFF_P_ 01");
+    run("dfflegalize -cell $_DFF_P_ 01" + sdff_cells);
 
   }
 
