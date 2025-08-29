@@ -73,7 +73,7 @@ struct SynthFpgaPass : public ScriptPass
 
   pool<string> opt_options  = {"default", "fast", "area", "delay"};
   pool<string> partnames  = {"Z1000", "Z1010"};
-  pool<string> dsp_arch  = {"config", "xilinx", "microchip", "bare_mult", "mae"};
+  pool<string> dsp_arch  = {"config", "zeroasic", "bare_mult", "mae"};
   pool<string> bram_arch  = {"config", "zeroasic", "microchip"};
 
   typedef enum e_dff_init_value {S0, S1, SX, SK} dff_init_value;
@@ -711,24 +711,9 @@ struct SynthFpgaPass : public ScriptPass
       ys_dsps_parameter_string.clear();
       ys_dsps_pack_command = "";
 
-      if (dsp_tech == "xilinx") {
+      if (dsp_tech == "zeroasic") {
 
-        ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/mult18x18_DSP48.v ";
-        ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
-        ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
-        ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
-        ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
-        ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 8;
-        ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
-        ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
-
-        ys_dsps_pack_command = "dsp -family DSP48";
-
-	return;
-
-      } else if (dsp_tech == "microchip") {
-
-        ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/polarfire_dsp_map.v ";
+        ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/zeroasic_dsp_map.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_A_MAXWIDTH_PARTIAL"] = 18;  // Partial multipliers are intentionally
@@ -742,7 +727,7 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
         ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
 
-        ys_dsps_pack_command = "microchip_dsp -family polarfire";
+        ys_dsps_pack_command = "zeroasic_dsp";
 
 	return;
 
@@ -2810,7 +2795,7 @@ struct SynthFpgaPass : public ScriptPass
         log("        Bypass DSP inference. It is off by default.\n");
         log("\n");
 
-        log("    -use_dsp_tech [xilinx, microchip, bare_mult, mae]\n");
+        log("    -use_dsp_tech [zeroasic, bare_mult, mae]\n");
         log("        Invoke architecture specific DSP inference. It is off by default. -no_dsp \n");
         log("        overides -use_dsp_tech.\n");
         log("\n");
@@ -2919,7 +2904,7 @@ struct SynthFpgaPass : public ScriptPass
 	no_opt_sat_dff = false;
 	autoname = false;
 
-	dsp_tech = "microchip";
+	dsp_tech = "zeroasic";
 	no_dsp = false;
 
 	bram_tech = "microchip";

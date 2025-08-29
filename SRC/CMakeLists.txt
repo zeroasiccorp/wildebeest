@@ -10,7 +10,7 @@ add_library(yosys-syn SHARED
     load_models.cc
     time_chrono.cc
     report_stat.cc
-    dsp.cc
+    zeroasic_dsp.cc
     cp.cc
     obs_clean.cc
     synth_fpga.cc
@@ -27,8 +27,7 @@ target_include_directories(yosys-syn
 target_link_libraries(yosys-syn
     PRIVATE
         yosys::yosys
-        z1010_dsp_cascade
-        z1010_dsp_CREG
+        zeroasic_dsp
 )
 target_compile_definitions(yosys-syn
     PRIVATE
