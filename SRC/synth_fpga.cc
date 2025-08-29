@@ -3198,15 +3198,15 @@ struct SynthFpgaPass : public ScriptPass
     //
     check_options();
 
+    // Check hierarchy and find the TOP
+    //
+    run(stringf("hierarchy -check %s", help_mode ? "-top <top>" : top_opt.c_str()));
+
     // This is usefull to load non-lut cells models in case we are doing a 
     // resynthesis, e.g when the input design is a previous synthesized
     // netlist which has been synthesized with 'synth_fpga'.
     //
     load_cells_models();
-
-    // Check hierarchy and find the TOP
-    //
-    run(stringf("hierarchy -check %s", help_mode ? "-top <top>" : top_opt.c_str()));
 
     // In case user invokes the '-resynthesis' option at the command line level, 
     // we perform a light weight synthesis for the second time.
