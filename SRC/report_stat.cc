@@ -138,10 +138,25 @@ struct ReportStatPass : public ScriptPass
 
     for (auto cell : G_design->top_module()->cells()) {
 
-        // Zero Asic Z1000 DFFs
+        // Zero Asic Z1000/Z1010 DFFs
         //
         if (cell->type.in(ID(dff), ID(dffe), ID(dffr), ID(dffer),
                           ID(dffs), ID(dffrs), ID(dffes), ID(dffers))) {
+             nb++;
+	     continue;
+        }
+        if (cell->type.in(ID(sdffr), ID(sdffer),
+                          ID(sdffs), ID(sdffes))) {
+             nb++;
+	     continue;
+        }
+        if (cell->type.in(ID(dffn), ID(dffen), ID(dffnr), ID(dffenr),
+                          ID(dffns), ID(dffnrs), ID(dffens), ID(dffenrs))) {
+             nb++;
+	     continue;
+        }
+        if (cell->type.in(ID(sdffnr), ID(sdffenr),
+                          ID(sdffns), ID(sdffens))) {
              nb++;
 	     continue;
         }

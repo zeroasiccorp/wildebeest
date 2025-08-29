@@ -60,6 +60,25 @@ struct MaxLvlWorker
      ff_celltypes.setup_type(ID(dffrs), {}, {});
      ff_celltypes.setup_type(ID(dffes), {}, {});
      ff_celltypes.setup_type(ID(dffers), {}, {});
+
+     ff_celltypes.setup_type(ID(dffn), {}, {});
+     ff_celltypes.setup_type(ID(dffen), {}, {});
+     ff_celltypes.setup_type(ID(dffnr), {}, {});
+     ff_celltypes.setup_type(ID(dffenr), {}, {});
+     ff_celltypes.setup_type(ID(dffns), {}, {});
+     ff_celltypes.setup_type(ID(dffnrs), {}, {});
+     ff_celltypes.setup_type(ID(dffens), {}, {});
+     ff_celltypes.setup_type(ID(dffenrs), {}, {});
+
+     ff_celltypes.setup_type(ID(sdffr), {}, {});
+     ff_celltypes.setup_type(ID(sdffer), {}, {});
+     ff_celltypes.setup_type(ID(sdffs), {}, {});
+     ff_celltypes.setup_type(ID(sdffes), {}, {});
+
+     ff_celltypes.setup_type(ID(sdffnr), {}, {});
+     ff_celltypes.setup_type(ID(sdffenr), {}, {});
+     ff_celltypes.setup_type(ID(sdffns), {}, {});
+     ff_celltypes.setup_type(ID(sdffens), {}, {});
    }
 
    // ------------------------------------
