@@ -432,14 +432,14 @@ struct ReportStatPass : public ScriptPass
   void script() override
   {
     if (!G_design) {
-       log_warning("Design seems empty !\n");
+       log_warning("Design seems empty ! (did you define the -top or use 'hierarchy -auto-top' before)\n");
        return;
     }
 
     Module* topModule = G_design->top_module();
 
     if (!topModule) {
-       log_warning("Design seems empty !\n");
+       log_warning("Design seems empty ! (did you define the -top or use 'hierarchy -auto-top' before)\n");
        return;
     }
 

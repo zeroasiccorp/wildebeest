@@ -1984,7 +1984,7 @@ struct SynthFpgaPass : public ScriptPass
      int foundLatch = 0;
 
      if (!yosys_get_design()) {
-       log_warning("Design seems empty !\n");
+       log_warning("Design seems empty ! (did you define the -top or use 'hierarchy -auto-top' before)\n");
        return;
      }
 
@@ -2050,7 +2050,7 @@ struct SynthFpgaPass : public ScriptPass
   void processDffInitValues(int zeroInit) {
 
      if (!yosys_get_design()) {
-       log_warning("Design seems empty !\n");
+       log_warning("Design seems empty ! (did you define the -top or use 'hierarchy -auto-top' before)\n");
        return;
      }
 
@@ -2156,7 +2156,7 @@ struct SynthFpgaPass : public ScriptPass
      int nb = 0;
 
      if (!yosys_get_design()) {
-       log_warning("Design seems empty !\n");
+       log_warning("Design seems empty ! (did you define the -top or use 'hierarchy -auto-top' before)\n");
        return -1;
      }
 
@@ -2177,7 +2177,7 @@ struct SynthFpgaPass : public ScriptPass
      int nb = 0;
 
      if (!yosys_get_design()) {
-       log_warning("Design seems empty !\n");
+       log_warning("Design seems empty ! (did you define the -top or use 'hierarchy -auto-top' before)\n");
        return -1;
      }
 
@@ -2203,7 +2203,7 @@ struct SynthFpgaPass : public ScriptPass
   void dump_csv_file(string fileName, int runTime)
   {
      if (!yosys_get_design()) {
-       log_warning("Design seems empty !\n");
+       log_warning("Design seems empty ! (did you define the -top or use 'hierarchy -auto-top' before)\n");
        return;
      }
 
@@ -2212,7 +2212,7 @@ struct SynthFpgaPass : public ScriptPass
      //
 
      if (!yosys_get_design()->top_module()) {
-       log_warning("Design seems empty !\n");
+       log_warning("Design seems empty ! (did you define the -top or use 'hierarchy -auto-top' before)\n");
        return;
      }
 
@@ -2377,7 +2377,7 @@ struct SynthFpgaPass : public ScriptPass
   void abc_synthesize()
   {
     if (!yosys_get_design()) {
-       log_warning("Design seems empty !\n");
+       log_warning("Design seems empty ! (did you define the -top or use 'hierarchy -auto-top' before)\n");
        return;
     }
 
@@ -3164,14 +3164,14 @@ struct SynthFpgaPass : public ScriptPass
     // Make sure we have a design to synthesize !!!
     //
     if (!yosys_get_design()) {
-       log_warning("Design seems empty !\n");
+       log_warning("Design seems empty ! (did you define the -top or use 'hierarchy -auto-top' before)\n");
        return;
     }
 
     Module* topModule = yosys_get_design()->top_module();
 
     if (!topModule) {
-       log_warning("Design seems empty !\n");
+       log_warning("Design seems empty ! (did you define the -top or use 'hierarchy -auto-top' before)\n");
        return;
     }
 
@@ -3200,13 +3200,15 @@ struct SynthFpgaPass : public ScriptPass
 
     // Check hierarchy and find the TOP
     //
-    run(stringf("hierarchy -check %s", help_mode ? "-top <top>" : top_opt.c_str()));
+    run(stringf("hierarchy %s", help_mode ? "-top <top>" : top_opt.c_str()));
 
     // This is usefull to load non-lut cells models in case we are doing a 
     // resynthesis, e.g when the input design is a previous synthesized
     // netlist which has been synthesized with 'synth_fpga'.
     //
     load_cells_models();
+
+    //run(stringf("hierarchy -check %s", help_mode ? "-top <top>" : top_opt.c_str()));
 
     // In case user invokes the '-resynthesis' option at the command line level, 
     // we perform a light weight synthesis for the second time.

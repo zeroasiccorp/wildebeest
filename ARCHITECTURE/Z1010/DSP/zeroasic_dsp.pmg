@@ -109,32 +109,6 @@ code bypassA bypassB bypassC bypassD bypassPASUB bypassP
 	bypassP = port(dsp, \P_BYPASS, SigSpec());
 endcode
 
-// (2) Match for pre-adder
-// 
-code sigA sigB sigD preAdderStatic moveBtoA
-	subpattern(preAddMatching);
-	preAdderStatic = u_preAdderStatic;
-	moveBtoA = false;
-
-	if (preAdderStatic) {
-		
-		if (port(preAdderStatic, \Y) == sigA)
-		{
-			//used for packing
-			moveBtoA = true;
-
-			// sigA should be the input to the multiplier without the preAdd. sigB and sigD should be 
-			//the preAdd inputs. If our "A" input into the multiplier is from the preAdd (not sigA), then 
-			// we basically swap it.
-			sigA = sigB;
-		}
-
-		// port B of preAdderStatic must be mapped to port D of DSP for subtraction
-		sigD = port(preAdderStatic, \B);
-		sigB = port(preAdderStatic, \A);
-	}
-endcode
-
 //  (3) Match for post-adder
 //
 code postAdderStatic sigP sigC
@@ -229,7 +203,7 @@ endcode
 
 // if any cells are absorbed, invoke the callback function
 code
-	if (preAdderStatic || postAdderStatic)
+	if (postAdderStatic)
 		accept;
 	if (ffA || ffB || ffD || ffP)
 		accept;
