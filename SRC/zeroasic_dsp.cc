@@ -38,30 +38,6 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 	log("Analysing %s.%s for ZeroAsic MACC_PA packing.\n", log_id(pm.module), log_id(st.dsp));
 
 	Cell *cell = st.dsp;
-	// pack pre-adder
-	if (st.preAdderStatic) {
-		SigSpec &pasub = cell->connections_.at(ID(PASUB));
-		log("  static PASUB preadder %s (%s)\n", log_id(st.preAdderStatic), log_id(st.preAdderStatic->type));
-		bool D_SIGNED = st.preAdderStatic->getParam(ID::B_SIGNED).as_bool();
-		bool B_SIGNED = st.preAdderStatic->getParam(ID::A_SIGNED).as_bool();
-		st.sigB.extend_u0(18, B_SIGNED);
-		st.sigD.extend_u0(18, D_SIGNED);
-		if (st.moveBtoA) {
-			cell->setPort(ID::A, st.sigA); // if pre-adder feeds into A, original sigB will be moved to port A
-		}
-		cell->setPort(ID::B, st.sigB);
-		cell->setPort(ID::D, st.sigD);
-		// MACC_PA supports both addition and subtraction with the pre-adder.
-		//   Affects the sign of the 'D' port.
-		if (st.preAdderStatic->type == ID($add))
-			pasub[0] = State::S0;
-		else if (st.preAdderStatic->type == ID($sub))
-			pasub[0] = State::S1;
-		else
-			log_assert(!"strange pre-adder type");
-
-		pm.autoremove(st.preAdderStatic);
-	}
 	// pack post-adder
 	if (st.postAdderStatic) {
 		log("  postadder %s (%s)\n", log_id(st.postAdderStatic), log_id(st.postAdderStatic->type));
