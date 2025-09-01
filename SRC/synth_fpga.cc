@@ -60,7 +60,7 @@ struct SynthFpgaPass : public ScriptPass
   bool no_opt_const_dff;
   bool show_dff_init_value;
   bool continue_if_latch;
-  bool pack_dff_in_dsp;
+  bool do_not_pack_dff_in_dsp;
   bool set_dff_init_value_to_zero;
   string sc_syn_lut_size;
   string sc_syn_fsm_encoding;
@@ -68,7 +68,7 @@ struct SynthFpgaPass : public ScriptPass
   bool config_file_success = false;
   bool no_dsp;
   bool no_bram;
-  bool use_sdff;
+  bool no_sdff;
   string dsp_tech;
   string bram_tech;
 
@@ -728,7 +728,7 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
         ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
 
-	if (pack_dff_in_dsp) {
+	if (!do_not_pack_dff_in_dsp) {
 
           ys_dsps_pack_command = "zeroasic_dsp"; // pack DFF in DSP
 
@@ -1679,9 +1679,9 @@ struct SynthFpgaPass : public ScriptPass
 
     run("stat");
 
+#if 0
     run(stringf("write_verilog -norename -noexpr -nohex -nodec before_binary_decomp_xor_trees.verilog"));
 
-#if 0
     run(stringf("write_blif before_binary_decomp_xor_trees.blif"));
 #endif
 
@@ -2474,7 +2474,7 @@ struct SynthFpgaPass : public ScriptPass
   {
     string sdff_cells = ""; 
 
-    if (use_sdff) { // handle DFF with synchronous set/reset.
+    if (!no_sdff) { // handle DFF with synchronous set/reset.
 
       sdff_cells += " -cell $_SDFF_P??_ 01 -cell $_SDFFE_P???_ 01";
     }
@@ -2808,8 +2808,8 @@ struct SynthFpgaPass : public ScriptPass
         log("        overides -use_dsp_tech.\n");
         log("\n");
 
-        log("    -pack_dff_in_dsp\n");
-        log("        Try to pack DFF into the DSPs. This is off by default.\n");
+        log("    -do_not_pack_dff_in_dsp\n");
+        log("        Specifies to not pack DFF in DSPs. This is off by default.\n");
         log("\n");
 
 
@@ -2869,6 +2869,11 @@ struct SynthFpgaPass : public ScriptPass
         log("        Keep running Synthesis even if some Latch inference is involved. The final netlist will not be valid but it can be usefull to get the final netlist stats. This is off by default.\n");
         log("\n");
 
+        log("    -no_sdff\n");
+        log("        Disable synchronous set/reset DFF mapping. It is off by default.\n");
+        log("\n");
+
+
         log("    -stop_if_undriven_nets\n");
         log("        Stop Synthesis if the final netlist has undriven nets. This is off by default.\n");
 
@@ -2922,7 +2927,7 @@ struct SynthFpgaPass : public ScriptPass
 
 	bram_tech = "microchip";
 	no_bram = false;
-	use_sdff = false;
+	no_sdff = false;
 
 	resynthesis = false;
 	show_config = false;
@@ -2935,7 +2940,7 @@ struct SynthFpgaPass : public ScriptPass
 	show_dff_init_value = false;
 	set_dff_init_value_to_zero = false;
 	continue_if_latch = false;
-	pack_dff_in_dsp = false;
+	do_not_pack_dff_in_dsp = false;
 
 	wait = false;
 
@@ -3016,8 +3021,8 @@ struct SynthFpgaPass : public ScriptPass
              continue;
           }
 
-          if (args[argidx] == "-use_sdff") { // hidden option
-             use_sdff = true;
+          if (args[argidx] == "-no_sdff") { // hidden option
+             no_sdff = true;
              continue;
           }
 
@@ -3061,8 +3066,8 @@ struct SynthFpgaPass : public ScriptPass
              continue;
           }
 
-          if (args[argidx] == "-pack_dff_in_dsp") {
-             pack_dff_in_dsp = true;
+          if (args[argidx] == "-do_not_pack_dff_in_dsp") {
+             do_not_pack_dff_in_dsp = true;
              continue;
           }
 
