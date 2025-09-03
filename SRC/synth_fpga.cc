@@ -635,31 +635,35 @@ struct SynthFpgaPass : public ScriptPass
       ys_dff_features.insert("async_set");
       ys_dff_features.insert("flop_enable");
 
-      ys_dff_models["dffenrs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffenrs.v";
-      ys_dff_models["dffenr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffenr.v";
-      ys_dff_models["dffens"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffens.v";
-      ys_dff_models["dffen"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffen.v";
-      ys_dff_models["dffers"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffers.v";
-      ys_dff_models["dffer"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffer.v";
-      ys_dff_models["dffes"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffes.v";
-      ys_dff_models["dffe"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffe.v";
-      ys_dff_models["dffnrs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffnrs.v";
-      ys_dff_models["dffnr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffnr.v";
-      ys_dff_models["dffns"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffns.v";
-      ys_dff_models["dffn"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffn.v";
-      ys_dff_models["dffrs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffrs.v";
-      ys_dff_models["dffr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffr.v";
-      ys_dff_models["dffs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffs.v";
-      ys_dff_models["dff"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dff.v";
+      // Async. set/reset DFFs
+      //
+      ys_dff_models["dffenrs"] = "+/plugins/yosys-syn/FF_MODELS/dffenrs.v";
+      ys_dff_models["dffenr"] = "+/plugins/yosys-syn/FF_MODELS/dffenr.v";
+      ys_dff_models["dffens"] = "+/plugins/yosys-syn/FF_MODELS/dffens.v";
+      ys_dff_models["dffen"] = "+/plugins/yosys-syn/FF_MODELS/dffen.v";
+      ys_dff_models["dffers"] = "+/plugins/yosys-syn/FF_MODELS/dffers.v";
+      ys_dff_models["dffer"] = "+/plugins/yosys-syn/FF_MODELS/dffer.v";
+      ys_dff_models["dffes"] = "+/plugins/yosys-syn/FF_MODELS/dffes.v";
+      ys_dff_models["dffe"] = "+/plugins/yosys-syn/FF_MODELS/dffe.v";
+      ys_dff_models["dffnrs"] = "+/plugins/yosys-syn/FF_MODELS/dffnrs.v";
+      ys_dff_models["dffnr"] = "+/plugins/yosys-syn/FF_MODELS/dffnr.v";
+      ys_dff_models["dffns"] = "+/plugins/yosys-syn/FF_MODELS/dffns.v";
+      ys_dff_models["dffn"] = "+/plugins/yosys-syn/FF_MODELS/dffn.v";
+      ys_dff_models["dffrs"] = "+/plugins/yosys-syn/FF_MODELS/dffrs.v";
+      ys_dff_models["dffr"] = "+/plugins/yosys-syn/FF_MODELS/dffr.v";
+      ys_dff_models["dffs"] = "+/plugins/yosys-syn/FF_MODELS/dffs.v";
+      ys_dff_models["dff"] = "+/plugins/yosys-syn/FF_MODELS/dff.v";
 
-      ys_dff_models["sdffenr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffenr.v";
-      ys_dff_models["sdffens"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffens.v";
-      ys_dff_models["sdffer"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffer.v";
-      ys_dff_models["sdffes"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffes.v";
-      ys_dff_models["sdffnr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffnr.v";
-      ys_dff_models["sdffns"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffns.v";
-      ys_dff_models["sdffr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffr.v";
-      ys_dff_models["sdffs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffs.v";
+      // Sync. set/reset DFFs
+      //
+      ys_dff_models["sdffenr"] = "+/plugins/yosys-syn/FF_MODELS/sdffenr.v";
+      ys_dff_models["sdffens"] = "+/plugins/yosys-syn/FF_MODELS/sdffens.v";
+      ys_dff_models["sdffer"] = "+/plugins/yosys-syn/FF_MODELS/sdffer.v";
+      ys_dff_models["sdffes"] = "+/plugins/yosys-syn/FF_MODELS/sdffes.v";
+      ys_dff_models["sdffnr"] = "+/plugins/yosys-syn/FF_MODELS/sdffnr.v";
+      ys_dff_models["sdffns"] = "+/plugins/yosys-syn/FF_MODELS/sdffns.v";
+      ys_dff_models["sdffr"] = "+/plugins/yosys-syn/FF_MODELS/sdffr.v";
+      ys_dff_models["sdffs"] = "+/plugins/yosys-syn/FF_MODELS/sdffs.v";
 
 
       // -------------------------
