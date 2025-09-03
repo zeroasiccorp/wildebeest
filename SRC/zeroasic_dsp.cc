@@ -1,7 +1,7 @@
 /*
 ISC License
 
-Copyright (C) 2024 ZeroAsic Technology Inc. and its subsidiaries
+Copyright (C) 2024 Microchip Technology Inc. and its subsidiaries
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -201,6 +201,13 @@ struct ZeroAsicDspPass : public Pass {
 		log("        default: polarfire\n");
 		log("\n");
 	}
+        // We have picked up Microchip DSP inference to give an indication of where
+        // we should be in case we support DSP inference with MULT and Post ADDER
+        // components with DFFs packing.
+        //
+	// This is a default DSP inference that will be overiden by our own DSP
+	// inference.
+	//
 	void execute(std::vector<std::string> args, RTLIL::Design *design) override
 	{
 		log_header(design, "Executing ZEROASIC_DSP pass (pack resources into DSPs).\n");
