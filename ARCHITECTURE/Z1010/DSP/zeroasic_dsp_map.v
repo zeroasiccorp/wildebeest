@@ -16,6 +16,10 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
+// changes:
+// Y width = 40
+// TODO: C not here?
+// add to techlibs: mae.
 module \$__MUL18X18 (input [17:0] A, input [17:0] B, output [35:0] Y);
 	parameter A_SIGNED = 0;
 	parameter B_SIGNED = 0;
@@ -26,7 +30,7 @@ module \$__MUL18X18 (input [17:0] A, input [17:0] B, output [35:0] Y);
 	wire [47:0] P_48;
 	// For pin descriptions, see Section 9 of PolarFire FPGA Macro Library Guide:
 	// https://coredocs.s3.amazonaws.com/Libero/2021_2/Tool/pf_mlg.pdf
-	MACC_PA _TECHMAP_REPLACE_ (
+	MACC_PA _TECHMAP_REPLACE_ (  // MAE
 		.DOTP(1'b0), 
 		.SIMD(1'b0), 
 		.OVFL_CARRYOUT_SEL(1'b0), 

@@ -16,7 +16,7 @@
 
 
 // This file describes the main pattern matcher setup (of three total) that
-//   forms the `zeroasic_dsp` pass described in zeroasic_dsp.cc 
+//   forms the `microchip_dsp` pass described in microchip_dsp.cc 
 // At a high level, it works as follows:
 //   ( 1) Starting from a DSP cell. Capture DSP configurations as states
 //   ( 2) Match for pre-adder
@@ -31,12 +31,12 @@
 //            |MULT|------ | adder |   +----+
 //            +----+       \-------/
 
-pattern zeroasic_dsp_pack
+pattern zeroasic_dsp_pack 	
 
 state <SigBit> clock
 state <SigSpec> sigA sigB sigC sigD sigP
 state <Cell*> ffA ffB ffD ffP
-state <Cell*> preAdderStatic postAdderStatic
+state <Cell*> postAdderStatic
 state <bool> moveBtoA useFeedBack
 
 // static ports, used to detect dsp configuration
@@ -49,7 +49,7 @@ udata <bool> allowAsync
 udata <SigSpec> dffD dffQ
 udata <SigBit> dffclock
 udata <Cell*> dff
-udata <Cell*> u_preAdderStatic u_postAdderStatic
+udata <Cell*> u_postAdderStatic
 udata <IdString> u_postAddAB
 state <IdString> postAddAB
 
@@ -252,50 +252,6 @@ code
 	}
 endcode
 
-
-// #######################
-// Subpattern for matching against pre-adder
-//		support static PASUB only
-
-subpattern preAddMatching
-arg sigA sigB sigD bypassB bypassD bypassPASUB
-
-code 
-	u_preAdderStatic = nullptr;
-
-	// Ensure that preAdder not already used
-	// Assume we can inspect port D to see if its all zeros. 
-	if (!(sigD.empty() || sigD.is_fully_zero())) reject;
-	if (!bypassB.is_fully_ones()) reject;
-	if (!bypassD.is_fully_ones()) reject;
-	if (!bypassPASUB.is_fully_ones()) reject;
-endcode
-
-match preAdd
-
-	// can handle add or sub
-	select preAdd->type.in($add, $sub)
-
-	// Output has to be 18 bits or less, and only has single fanout
-	select GetSize(port(preAdd, \Y)) <= 18
-	select nusers(port(preAdd, \Y)) == 2
-
-	// Adder inputs must be 18 bits or less
-	select GetSize(port(preAdd, \A)) <= 18
-	select GetSize(port(preAdd, \B)) <= 18
-
-	// Output feeds into one of multiplier input
-	filter port(preAdd, \Y) == sigB || port(preAdd, \Y) == sigA
-
-	// optional
-endmatch
-
-code
-	if (preAdd)
-	{
-		u_preAdderStatic = preAdd;
-	}
-endcode
 
 // #######################
 // Subpattern for matching against input registers, based on knowledge of the
