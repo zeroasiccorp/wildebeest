@@ -3236,8 +3236,6 @@ struct SynthFpgaPass : public ScriptPass
     //
     load_cells_models();
 
-    //run(stringf("hierarchy -check %s", help_mode ? "-top <top>" : top_opt.c_str()));
-
     // In case user invokes the '-resynthesis' option at the command line level, 
     // we perform a light weight synthesis for the second time.
     //
@@ -3279,8 +3277,6 @@ struct SynthFpgaPass : public ScriptPass
     //
     coarse_synthesis();
 
-    // Extra line added versus 'sc_synth_fpga.tcl' tcl script version
-    //
     run("stat");
 
     dbg_wait();
@@ -3347,8 +3343,6 @@ struct SynthFpgaPass : public ScriptPass
     //
     optimize_DFFs();
 
-    // Extra lines that help to win Area (ex: vga_lcd from 31K Lut4 downto 14.8K)
-    //
     run("techmap");
 
     // Performs 'opt' pass with light weight version for HUGE designs.
@@ -3363,6 +3357,8 @@ struct SynthFpgaPass : public ScriptPass
        run("opt_clean");
     }
 
+    // Transform Yosys generic DFF into target technology supported ones.
+    //
     legalize_flops (); 
 
     // Map on the DFF of the architecture (partname)
