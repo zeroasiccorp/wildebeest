@@ -16,10 +16,6 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 
-// changes:
-// Y width = 40
-// TODO: C not here?
-// add to techlibs: mae.
 module \$__MUL18X18 (input [17:0] A, input [17:0] B, output [39:0] Y);
 	parameter A_SIGNED = 0;
 	parameter B_SIGNED = 0;
@@ -27,7 +23,7 @@ module \$__MUL18X18 (input [17:0] A, input [17:0] B, output [39:0] Y);
 	parameter B_WIDTH = 0;
 	parameter Y_WIDTH = 0;
 
-	wire [47:0] P_48;
+	wire [39:0] OUT;
 
 	MAE _TECHMAP_REPLACE_ (
 		// keep
@@ -37,7 +33,7 @@ module \$__MUL18X18 (input [17:0] A, input [17:0] B, output [39:0] Y);
 		.B_BYPASS(1'b1),
 		.C(48'b0),
 		.C_BYPASS(1'b1),
-		.P(P_48),
+		.P(OUT),
 
 		.A_SRST_N(1'b1),
 		.B_SRST_N(1'b1),
@@ -46,16 +42,6 @@ module \$__MUL18X18 (input [17:0] A, input [17:0] B, output [39:0] Y);
 		// todo:
 		// clk
 		// resetn ()
-
-		// delete
-
-		.D(18'b0),
-		.D_BYPASS(1'b1),
-		.D_ARST_N(1'b1),
-		.D_SRST_N(1'b1),
-		.D_EN(1'b1),
-
-
 	);
-	assign Y = P_48;
+	assign Y = OUT;
 endmodule

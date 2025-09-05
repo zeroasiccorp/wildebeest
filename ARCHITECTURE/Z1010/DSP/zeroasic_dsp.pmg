@@ -34,7 +34,7 @@ pattern zeroasic_dsp_pack
 
 state <SigBit> clock
 state <SigSpec> sigA sigB sigC sigD sigP
-state <Cell*> ffA ffB ffD
+state <Cell*> ffA ffB ffC
 state <Cell*> postAdderStatic
 state <bool> moveBtoA useFeedBack
 
@@ -102,7 +102,6 @@ code bypassA bypassB bypassC bypassD
 	bypassA = port(dsp, \A_BYPASS, SigSpec());
 	bypassB = port(dsp, \B_BYPASS, SigSpec());
 	bypassC = port(dsp, \C_BYPASS, SigSpec());
-	bypassD = port(dsp, \D_BYPASS, SigSpec());
 endcode
 
 //  (2) Match for post-adder
@@ -151,16 +150,16 @@ code argQ bypassB sigB clock ffB
 	}
 endcode
 
-// 'D' input for REG_D
-code argQ sigD clock ffD
-	if (bypassD.is_fully_ones()){
-		argQ = sigD;
+// 'C' input for REG_C
+code argQ sigC clock ffC
+	if (bypassC.is_fully_ones()){
+		argQ = sigC;
 		allowAsync = true;
 		subpattern(in_dffe);
 		if (dff) {
-			ffD = dff;
+			ffC = dff;
 			clock = dffclock;
-			sigD = dffD;
+			sigC = dffD;
 		}
 	}
 endcode
@@ -188,7 +187,7 @@ endcode
 code
 	if (postAdderStatic)
 		accept;
-	if (ffA || ffB || ffD)
+	if (ffA || ffB || ffC)
 		accept;
 endcode
 

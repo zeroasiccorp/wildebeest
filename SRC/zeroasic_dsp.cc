@@ -131,22 +131,17 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			pm.add_siguser(B, cell);
 			cell->setPort(ID::B, B);
 		}
-		if (st.ffD) {
-			SigSpec D = cell->getPort(ID::D);
-			if (st.ffD->type.in(ID($adff), ID($adffe))) {
-				f(D, st.ffD, ID(D_EN), ID(D_ARST_N), ID(D_BYPASS));
+		if (st.ffC) {
+			SigSpec C = cell->getPort(ID::C);
+			if (st.ffC->type.in(ID($adff), ID($adffe))) {
+				f(C, st.ffC, ID(C_EN), ID(C_ARST_N), ID(C_BYPASS));
 			} else {
-				f(D, st.ffD, ID(D_EN), ID(D_SRST_N), ID(D_BYPASS));
+				f(C, st.ffC, ID(C_EN), ID(C_SRST_N), ID(C_BYPASS));
 			}
 
-			pm.add_siguser(D, cell);
-			cell->setPort(ID::D, D);
+			pm.add_siguser(C, cell);
+			cell->setPort(ID::C, C);
 		}
-		// if (st.ffP) {
-		// 	SigSpec P; // unused
-		// 	f(P, st.ffP, ID(P_EN), ID(P_SRST_N), ID(P_BYPASS));
-		// 	st.ffP->connections_.at(ID::Q).replace(st.sigP, pm.module->addWire(NEW_ID, GetSize(st.sigP)));
-		// }
 
 		log("  clock: %s (%s)\n", log_signal(st.clock), "posedge");
 
@@ -154,8 +149,8 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			log(" \t ffA:%s\n", log_id(st.ffA));
 		if (st.ffB)
 			log(" \t ffB:%s\n", log_id(st.ffB));
-		if (st.ffD)
-			log(" \t ffD:%s\n", log_id(st.ffD));
+		if (st.ffC)
+			log(" \t ffC:%s\n", log_id(st.ffC));
 	}
 	log("\n");
 
