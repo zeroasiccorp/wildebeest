@@ -13,7 +13,7 @@ module \$__MUL18X18
 	);
 
 
-	wire [Y_WIDTH-1:0] OUT;
+	// wire [Y_WIDTH-1:0] OUT;
 
 	MAE #(
 		.BYPASS_A(1'b0),
@@ -28,9 +28,9 @@ module \$__MUL18X18
 		.B_BYPASS(1'b1),
 		// .C(48'b0),  // this being uncommented leads to regio not working? detects constant chunks
 		// .C_BYPASS(1'b1),
-		.P(OUT),  // rename Y
+		.P(Y),  // rename Y
 		.P_BYPASS(1'b1), // rename Y_BYPASS
-
+		
 		.A_SRST_N(1'b1),
 		.B_SRST_N(1'b1),
 		.C_SRST_N(1'b1),
@@ -39,5 +39,5 @@ module \$__MUL18X18
 		// clk
 		// resetn ()
 	);
-	assign Y = OUT;
+	// assign Y = OUT;
 endmodule

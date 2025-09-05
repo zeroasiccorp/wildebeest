@@ -23,19 +23,31 @@ module MAE #(
 );
 
 generate
-  if (BYPASS_A == 1'b0 && BYPASS_B == 1'b0) begin
+  if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_P==1'b0) begin
     efpga_mult_regi _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),
-      .mae_config(6'b100110),
+      .Y(P)
+    );
+  end
+  else if (BYPASS_A == 1'b0 && BYPASS_B == 1'b0 && BYPASS_P==1'b1) begin
+    efpga_mult_rego _TECHMAP_REPLACE_ (
+      .A(A),
+      .B(B),
+      .Y(P)
+    );
+  end
+  else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_P==1'b1) begin
+    efpga_mult_regio _TECHMAP_REPLACE_ (
+      .A(A),
+      .B(B),
       .Y(P)
     );
   end
   else begin
-    fpga_mult_rego _TECHMAP_REPLACE_ (
+    other_brother _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),
-      .mae_config(6'b100110),
       .Y(P)
     );
   end

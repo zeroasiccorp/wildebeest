@@ -104,7 +104,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 
 			// bypass set to 0
 			cell->setPort(bypass, State::S0);
-			cell->setParam(bypass_param, State::S0); // TODO-FT: set it to an actual value
+			cell->setParam(bypass_param, State::S1); // TODO-FT: set it to an actual value
 
 			for (auto c : Q.chunks()) {
 				auto it = c.wire->attributes.find(ID::init);
