@@ -65,9 +65,9 @@ module \$__MUL18X18 (input [17:0] A, input [17:0] B, output [39:0] Y);
 
 		// .C_EN(1'b1),
 
-		.P_BYPASS(1'b1),
-		.P_SRST_N(1'b1),
-		.P_EN(1'b1),
+		// .P_BYPASS(1'b1),
+		// .P_SRST_N(1'b1),
+		// .P_EN(1'b1),
 
 		// .PASUB(1'b0),
 		// .PASUB_BYPASS(1'b1),

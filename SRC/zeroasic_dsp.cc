@@ -35,14 +35,14 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 {
 	auto &st = pm.st_zeroasic_dsp_pack;
 
-	log("Analysing %s.%s for ZeroAsic MACC_PA packing.\n", log_id(pm.module), log_id(st.dsp));
+	log("Analysing %s.%s for ZeroAsic MAE packing.\n", log_id(pm.module), log_id(st.dsp));
 
 	Cell *cell = st.dsp;
 	// pack post-adder
 	if (st.postAdderStatic) {
 		log("  postadder %s (%s)\n", log_id(st.postAdderStatic), log_id(st.postAdderStatic->type));
 		SigSpec &sub = cell->connections_.at(ID(SUB));
-		// Post-adder in MACC_PA also supports subtraction
+		// Post-adder in MAE also supports subtraction
 		//   Determines the sign of the output from the multiplier.
 		if (st.postAdderStatic->type == ID($add))
 			sub[0] = State::S0;
@@ -142,11 +142,11 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			pm.add_siguser(D, cell);
 			cell->setPort(ID::D, D);
 		}
-		if (st.ffP) {
-			SigSpec P; // unused
-			f(P, st.ffP, ID(P_EN), ID(P_SRST_N), ID(P_BYPASS));
-			st.ffP->connections_.at(ID::Q).replace(st.sigP, pm.module->addWire(NEW_ID, GetSize(st.sigP)));
-		}
+		// if (st.ffP) {
+		// 	SigSpec P; // unused
+		// 	f(P, st.ffP, ID(P_EN), ID(P_SRST_N), ID(P_BYPASS));
+		// 	st.ffP->connections_.at(ID::Q).replace(st.sigP, pm.module->addWire(NEW_ID, GetSize(st.sigP)));
+		// }
 
 		log("  clock: %s (%s)\n", log_signal(st.clock), "posedge");
 
@@ -156,8 +156,6 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			log(" \t ffB:%s\n", log_id(st.ffB));
 		if (st.ffD)
 			log(" \t ffD:%s\n", log_id(st.ffD));
-		if (st.ffP)
-			log(" \t ffP:%s\n", log_id(st.ffP));
 	}
 	log("\n");
 
@@ -167,6 +165,24 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 	cell->setPort(ID::P, P);
 
 	pm.blacklist(cell);
+}
+
+void run_chtype_pass(Design *design) {
+    for (auto module : design->modules()) {
+        if (!module->get_blackbox_attribute()) {
+            for (auto cell : module->cells()) {
+				std::string mode_name = "$efpga_";
+                if (cell->type == ID(MAE)) {
+					// if BYPASS_A and BYPASS_B are set
+					// if(cell->getPort(IdString("BYPASS_A")).is_fully_ones()){
+					// // 	mode_name += "a";
+					// }
+                
+					// cell->type = IdString(mode_name);
+				}
+			}
+        }
+    }
 }
 
 struct ZeroAsicDspPass : public Pass {
@@ -236,6 +252,12 @@ struct ZeroAsicDspPass : public Pass {
 			}
 
 		}
+
+		// print cell + modes?
+		
+		// efpga_mult
+		// run_chtype_pass(design);
+		
 	}
 } ZeroAsicDspPass;
 
