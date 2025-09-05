@@ -34,12 +34,12 @@ pattern zeroasic_dsp_pack
 
 state <SigBit> clock
 state <SigSpec> sigA sigB sigC sigP
-state <Cell*> ffA ffB ffC
+state <Cell*> ffA ffB ffC ffP
 state <Cell*> postAdderStatic
 state <bool> moveBtoA useFeedBack
 
 // static ports, used to detect dsp configuration
-state <SigSpec> bypassA bypassB bypassC bypassD
+state <SigSpec> bypassA bypassB bypassC bypassP
 
 // Variables used for subpatterns
 state <SigSpec> argQ argD
@@ -97,10 +97,11 @@ code sigA sigB sigC clock sigP
 endcode
 
 // capture static configuration ports
-code bypassA bypassB bypassC bypassD
+code bypassA bypassB bypassC bypassP
 	bypassA = port(dsp, \A_BYPASS, SigSpec());
 	bypassB = port(dsp, \B_BYPASS, SigSpec());
 	bypassC = port(dsp, \C_BYPASS, SigSpec());
+	bypassP = port(dsp, \P_BYPASS, SigSpec());
 endcode
 
 //  (2) Match for post-adder
@@ -112,7 +113,7 @@ code postAdderStatic sigP sigC
 
 	if (postAdderStatic) {
 		//sigC will be whichever input to the postAdder that is NOT from the multiplier
-		// u_postAddAB is the input to the postAdder from the multiplier 
+		// u_postAddAB is the input to the postAdder from the multiplier
 		sigC = port(postAdderStatic, u_postAddAB == \A ? \B : \A);
 		sigP = port(postAdderStatic, \Y);
 	}
@@ -163,6 +164,20 @@ code argQ sigC clock ffC
 	}
 endcode
 
+// 'P' output for REG_P
+code argD ffP sigP clock bypassP
+	if (bypassP.is_fully_ones() && nusers(sigP) == 2) {
+		argD = sigP;
+		allowAsync = false;
+		subpattern(out_dffe);
+		if (dff) {
+			ffP = dff;
+			clock = dffclock;
+			sigP = dffQ;
+		}
+	}
+
+endcode
 
 // (4) If post-adder and PREG both present, check if PREG feeds into post-adder via port C.
 //        This indicates an accumulator situation. Port C can be freed
@@ -179,15 +194,15 @@ code useFeedBack
 			useFeedBack = true;
 		}
 	}
-
 endcode
 
 // if any cells are absorbed, invoke the callback function
 code
 	if (postAdderStatic)
 		accept;
-	if (ffA || ffB || ffC)
+	if (ffA || ffB || ffC || ffP) {
 		accept;
+	}
 endcode
 
 
@@ -258,7 +273,7 @@ endcode
 match ff
 	// reg D has async rst
 	// reg A, B has sync rst
-	select ff->type.in($dff, $dffe, $sdff, $sdffe, $adff, $adffe)
+	select ff->type.in($dff, $dffe, $sdff, $sdffe, $adff, $adffe, $dffr)
 	// does not support clock inversion
 	select param(ff, \CLK_POLARITY).as_bool()
 
@@ -310,7 +325,7 @@ code
 endcode
 
 match ff
-	select ff->type.in($dff, $dffe, $sdff, $sdffe)
+	select ff->type.in($dff, $dffe, $sdff, $sdffe, $adff, $adffe, $dffr)
 	// does not support clock inversion
 	select param(ff, \CLK_POLARITY).as_bool()
 

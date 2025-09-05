@@ -22,7 +22,8 @@ module \$__MUL18X18
 		.B_BYPASS(1'b1),
 		.C(48'b0),
 		.C_BYPASS(1'b1),
-		.P(OUT),
+		.P(OUT),  // rename Y
+		.P_BYPASS(1'b1), // rename Y_BYPASS
 
 		.A_SRST_N(1'b1),
 		.B_SRST_N(1'b1),
