@@ -204,7 +204,7 @@ arg sigP
 
 match postAdd
 
-	select postAdd->type.in($add, $sub)
+	select postAdd->type.in($add)
 	select GetSize(port(postAdd, \Y)) <= 48
 
 	// AB is the port that connects MUL to ADD
@@ -225,13 +225,8 @@ endmatch
 code
 	if (postAdd)
 	{
-		if (postAdd->type.in(ID($sub)) && postAddAB == \A) {
-			// if $sub, the multiplier output must match to $sub.B, otherwise no match	
-		} else {
-			u_postAddAB = postAddAB;
-			u_postAdderStatic = postAdd;
-		}
-
+		u_postAddAB = postAddAB;
+		u_postAdderStatic = postAdd;
 	}
 endcode
 
