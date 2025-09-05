@@ -42,6 +42,7 @@ module \$__MUL18X18 (input [17:0] A, input [17:0] B, output [39:0] Y);
 		.A_SRST_N(1'b1),
 		.B_SRST_N(1'b1),
 		.C_SRST_N(1'b1),
+		.C_ARST_N(1'b1),
 		// todo:
 		// clk
 		// resetn ()
@@ -60,11 +61,9 @@ module \$__MUL18X18 (input [17:0] A, input [17:0] B, output [39:0] Y);
 		.D_SRST_N(1'b1),
 		.D_EN(1'b1),
 		
-		.CARRYIN(1'b0),
-		
-		.C_ARST_N(1'b1),
-		
-		.C_EN(1'b1),
+		// .CARRYIN(1'b0),
+
+		// .C_EN(1'b1),
 
 		.P_BYPASS(1'b1),
 		.P_SRST_N(1'b1),
