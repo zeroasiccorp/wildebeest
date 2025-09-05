@@ -142,6 +142,11 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			pm.add_siguser(C, cell);
 			cell->setPort(ID::C, C);
 		}
+		if (st.ffP){
+			SigSpec P; // unused
+			f(P, st.ffP, ID(P_EN), ID(P_SRST_N), ID(P_BYPASS));
+			st.ffP->connections_.at(ID::Q).replace(st.sigP, pm.module->addWire(NEW_ID, GetSize(st.sigP)));
+		}
 
 		log("  clock: %s (%s)\n", log_signal(st.clock), "posedge");
 
@@ -151,6 +156,8 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			log(" \t ffB:%s\n", log_id(st.ffB));
 		if (st.ffC)
 			log(" \t ffC:%s\n", log_id(st.ffC));
+		if (st.ffP)
+			log(" \t ffP:%s\n", log_id(st.ffP));
 	}
 	log("\n");
 
