@@ -668,7 +668,7 @@ struct SynthFpgaPass : public ScriptPass
       ys_brams_memory_libmap.clear();
       ys_brams_memory_libmap_parameters.clear();
       ys_brams_techmap.clear();
-
+      
       if (bram_tech == "microchip") {
 
          // bram memory_libmap settings
@@ -725,7 +725,6 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 8;
-        ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
         ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
 
 	if (!do_not_pack_dff_in_dsp) {
@@ -2649,13 +2648,13 @@ struct SynthFpgaPass : public ScriptPass
      log("Call %s\n", sc_syn_dsps_techmap.c_str());
      getchar();
 #endif
-
+    
      log("\nWARNING: Make sure you are using the right 'partname' for the DSP inference in case of failure.\n");
 
      run(sc_syn_dsps_techmap);
 
      run("stat");
-
+   run("write_verilog premap.v");
      run("select a:mul2dsp");
      run("setattr -unset mul2dsp");
      run("opt_expr -fine");
@@ -2667,6 +2666,9 @@ struct SynthFpgaPass : public ScriptPass
      if (sc_syn_dsps_pack_command != "") {
         run(sc_syn_dsps_pack_command);
      }
+
+   //   std::string ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/zeroasic_dsp_map_mode.v";
+   //   run("techmap -map " + ys_dsps_techmap); // modes
 
      run("chtype -set $mul t:$__soft_mul");
 
