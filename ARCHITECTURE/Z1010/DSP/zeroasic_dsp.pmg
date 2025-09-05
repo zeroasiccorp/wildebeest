@@ -33,7 +33,7 @@
 pattern zeroasic_dsp_pack
 
 state <SigBit> clock
-state <SigSpec> sigA sigB sigC sigD sigP
+state <SigSpec> sigA sigB sigC sigP
 state <Cell*> ffA ffB ffC
 state <Cell*> postAdderStatic
 state <bool> moveBtoA useFeedBack
@@ -53,12 +53,12 @@ state <IdString> postAddAB
 
 // (1) Starting from a DSP cell
 match dsp
-	select dsp->type.in(\MACC_PA)
+	select dsp->type.in(\MAE)
 endmatch
 
 // detect existing signals connected to DSP
 // detect configuration ports
-code sigA sigB sigC sigD clock sigP
+code sigA sigB sigC clock sigP
 	//helper function to remove unused bits
 	auto unextend = [](const SigSpec &sig) {
 		int i;
@@ -77,7 +77,6 @@ code sigA sigB sigC sigD clock sigP
 
 	//update signals
 	sigC = port(dsp, \C, SigSpec());
-	sigD = port(dsp, \D, SigSpec());
 
 
 	SigSpec P = port(dsp, \P);

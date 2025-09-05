@@ -215,6 +215,7 @@ struct ZeroAsicDspPass : public Pass {
 				continue;
 
 			{
+				log("pm run-----------\n");
 				// For more details on PolarFire MACC_PA, consult
 				//   the "PolarFire FPGA Macro Library Guide"
 
@@ -225,7 +226,9 @@ struct ZeroAsicDspPass : public Pass {
 				//   a post-adder and PREG are both present AND
 				//   if PREG feeds into this post-adder.
 				zeroasic_dsp_pm pm(module, module->selected_cells());
+				log("post pm run-----------\n");
 				pm.run_zeroasic_dsp_pack(zeroasic_dsp_pack);
+				log("done post pm -----------\n");
 			}
 
 		}		
