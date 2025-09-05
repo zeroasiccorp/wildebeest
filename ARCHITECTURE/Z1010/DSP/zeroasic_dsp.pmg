@@ -286,7 +286,8 @@ match ff
 	filter port(ff, \Q).extract(offset, GetSize(argQ)) == argQ
 
 	// only consider async rst flops when flag is set
-	filter !ff->type.in($adff, $adffe) || allowAsync
+	// LINE BELOW WAS CAUSING ME PROBLEMS TODO-FT
+	//filter !ff->type.in($adff, $adffe) || allowAsync
 
 	// clock must be consistent
 	filter clock == SigBit() || port(ff, \CLK)[0] == clock
@@ -310,7 +311,6 @@ code argQ
 	}
 
 endcode
-// #######################
 
 
 subpattern out_dffe

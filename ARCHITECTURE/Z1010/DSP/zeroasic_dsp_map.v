@@ -20,8 +20,8 @@ module \$__MUL18X18
 		.A_BYPASS(1'b1),
 		.B(B),
 		.B_BYPASS(1'b1),
-		.C(48'b0),
-		.C_BYPASS(1'b1),
+		// .C(48'b0),  // this being uncommented leads to regio not working? detects constant chunks
+		// .C_BYPASS(1'b1),
 		.P(OUT),  // rename Y
 		.P_BYPASS(1'b1), // rename Y_BYPASS
 
