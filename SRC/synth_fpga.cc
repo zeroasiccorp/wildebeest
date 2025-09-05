@@ -2666,9 +2666,9 @@ struct SynthFpgaPass : public ScriptPass
      if (sc_syn_dsps_pack_command != "") {
         run(sc_syn_dsps_pack_command);
      }
-
-   //   std::string ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/zeroasic_dsp_map_mode.v";
-   //   run("techmap -map " + ys_dsps_techmap); // modes
+     log("mode techmap");
+     std::string ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/zeroasic_dsp_map_mode.v";
+     run("techmap -map " + ys_dsps_techmap); // modes
 
      run("chtype -set $mul t:$__soft_mul");
 

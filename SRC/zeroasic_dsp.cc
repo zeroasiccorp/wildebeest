@@ -66,7 +66,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 		cell->setPort(ID::CLK, st.clock);
 
 		// function to absorb a register
-		auto f = [&pm, cell](SigSpec &A, Cell *ff, IdString ceport, IdString rstport, IdString bypass) {
+		auto f = [&pm, cell](SigSpec &A, Cell *ff, IdString ceport, IdString rstport, IdString bypass, IdString bypass_param) {
 			// input/output ports
 			SigSpec D = ff->getPort(ID::D);
 			SigSpec Q = pm.sigmap(ff->getPort(ID::Q));
@@ -101,6 +101,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 
 			// bypass set to 0
 			cell->setPort(bypass, State::S0);
+			cell->setParam(bypass_param, State::S0); // TODO-FT: set it to an actual value
 
 			for (auto c : Q.chunks()) {
 				auto it = c.wire->attributes.find(ID::init);
@@ -118,7 +119,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 		if (st.ffA) {
 			SigSpec A = cell->getPort(ID::A);
 			if (st.ffA) {
-				f(A, st.ffA, ID(A_EN), ID(A_SRST_N), ID(A_BYPASS));
+				f(A, st.ffA, ID(A_EN), ID(A_SRST_N), ID(A_BYPASS), ID(BYPASS_A));
 			}
 			pm.add_siguser(A, cell);
 			cell->setPort(ID::A, A);
@@ -126,7 +127,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 		if (st.ffB) {
 			SigSpec B = cell->getPort(ID::B);
 			if (st.ffB) {
-				f(B, st.ffB, ID(B_EN), ID(B_SRST_N), ID(B_BYPASS));
+				f(B, st.ffB, ID(B_EN), ID(B_SRST_N), ID(B_BYPASS), ID(BYPASS_B));
 			}
 			pm.add_siguser(B, cell);
 			cell->setPort(ID::B, B);
@@ -134,9 +135,9 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 		if (st.ffC) {
 			SigSpec C = cell->getPort(ID::C);
 			if (st.ffC->type.in(ID($adff), ID($adffe))) {
-				f(C, st.ffC, ID(C_EN), ID(C_ARST_N), ID(C_BYPASS));
+				f(C, st.ffC, ID(C_EN), ID(C_ARST_N), ID(C_BYPASS), ID(BYPASS_C));
 			} else {
-				f(C, st.ffC, ID(C_EN), ID(C_SRST_N), ID(C_BYPASS));
+				f(C, st.ffC, ID(C_EN), ID(C_SRST_N), ID(C_BYPASS), ID(BYPASS_C));
 			}
 
 			pm.add_siguser(C, cell);
@@ -144,7 +145,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 		}
 		if (st.ffP){
 			SigSpec P; // unused
-			f(P, st.ffP, ID(P_EN), ID(P_SRST_N), ID(P_BYPASS));
+			f(P, st.ffP, ID(P_EN), ID(P_SRST_N), ID(P_BYPASS), ID(BYPASS_P));
 			st.ffP->connections_.at(ID::Q).replace(st.sigP, pm.module->addWire(NEW_ID, GetSize(st.sigP)));
 		}
 

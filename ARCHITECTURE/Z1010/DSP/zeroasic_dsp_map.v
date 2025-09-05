@@ -15,7 +15,13 @@ module \$__MUL18X18
 
 	wire [Y_WIDTH-1:0] OUT;
 
-	MAE _TECHMAP_REPLACE_ (
+	MAE #(
+		.BYPASS_A(1'b0),
+		.BYPASS_B(1'b0),
+		.BYPASS_C(1'b0),
+		.BYPASS_P(1'b0)
+ 	)
+ _TECHMAP_REPLACE_ (
 		.A(A),
 		.A_BYPASS(1'b1),
 		.B(B),
