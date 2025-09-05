@@ -40,16 +40,19 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 	Cell *cell = st.dsp;
 	// pack post-adder
 	if (st.postAdderStatic) {
+		// TODO: block subtractions
 		log("  postadder %s (%s)\n", log_id(st.postAdderStatic), log_id(st.postAdderStatic->type));
-		SigSpec &sub = cell->connections_.at(ID(SUB));
-		// Post-adder in MAE also supports subtraction
-		//   Determines the sign of the output from the multiplier.
-		if (st.postAdderStatic->type == ID($add))
-			sub[0] = State::S0;
-		else if (st.postAdderStatic->type == ID($sub))
-			sub[0] = State::S1;
-		else
-			log_assert(!"strange post-adder type");
+		log(" do we have a sub\n");
+		// SigSpec &sub = cell->connections_.at(ID(SUB));
+		// log(" did we have a sub\n");
+		// // Post-adder in MAE also supports subtraction
+		// //   Determines the sign of the output from the multiplier.
+		// if (st.postAdderStatic->type == ID($add))
+		// 	sub[0] = State::S0;
+		// else if (st.postAdderStatic->type == ID($sub))
+		// 	sub[0] = State::S1;
+		// else
+		// 	log_assert(!"strange post-adder type");
 
 		if (st.useFeedBack) {
 			cell->setPort(ID(CDIN_FDBK_SEL), {State::S0, State::S1});
