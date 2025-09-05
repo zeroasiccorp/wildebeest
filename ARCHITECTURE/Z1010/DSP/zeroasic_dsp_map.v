@@ -20,7 +20,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // Y width = 40
 // TODO: C not here?
 // add to techlibs: mae.
-module \$__MUL18X18 (input [17:0] A, input [17:0] B, output [35:0] Y);
+module \$__MUL18X18 (input [17:0] A, input [17:0] B, output [39:0] Y);
 	parameter A_SIGNED = 0;
 	parameter B_SIGNED = 0;
 	parameter A_WIDTH = 0;
@@ -28,23 +28,31 @@ module \$__MUL18X18 (input [17:0] A, input [17:0] B, output [35:0] Y);
 	parameter Y_WIDTH = 0;
 
 	wire [47:0] P_48;
-	// For pin descriptions, see Section 9 of PolarFire FPGA Macro Library Guide:
-	// https://coredocs.s3.amazonaws.com/Libero/2021_2/Tool/pf_mlg.pdf
-	MACC_PA _TECHMAP_REPLACE_ (  // MAE
-		.DOTP(1'b0), 
-		.SIMD(1'b0), 
-		.OVFL_CARRYOUT_SEL(1'b0), 
 
-		.AL_N(1'b1),
+	MAE _TECHMAP_REPLACE_ (
+		// keep
 		.A(A),
 		.A_BYPASS(1'b1),
-		.A_SRST_N(1'b1),
-		.A_EN(1'b1),
-
 		.B(B),
 		.B_BYPASS(1'b1),
+		.C(48'b0),
+		.C_BYPASS(1'b1),
+		.P(P_48),
+
+		.A_SRST_N(1'b1),
 		.B_SRST_N(1'b1),
-		.B_EN(1'b1),
+		.C_SRST_N(1'b1),
+		// todo:
+		// clk
+		// resetn ()
+
+		// delete
+		// .DOTP(1'b0), 
+		// .SIMD(1'b0), 
+		// .OVFL_CARRYOUT_SEL(1'b0), 
+		// .AL_N(1'b1),
+		// .A_EN(1'b1),
+		// .B_EN(1'b1),
 
 		.D(18'b0),
 		.D_BYPASS(1'b1),
@@ -53,39 +61,35 @@ module \$__MUL18X18 (input [17:0] A, input [17:0] B, output [35:0] Y);
 		.D_EN(1'b1),
 		
 		.CARRYIN(1'b0),
-		.C(48'b0),
-		.C_BYPASS(1'b1),
-		.C_ARST_N(1'b1),
-		.C_SRST_N(1'b1),
-		.C_EN(1'b1),
-
 		
-		.P(P_48),
+		.C_ARST_N(1'b1),
+		
+		.C_EN(1'b1),
 
 		.P_BYPASS(1'b1),
 		.P_SRST_N(1'b1),
 		.P_EN(1'b1),
 
-		.PASUB(1'b0),
-		.PASUB_BYPASS(1'b1),
-		.PASUB_AD_N(1'b0),
-		.PASUB_SL_N(1'b1),
-		.PASUB_SD_N(1'b0),
-		.PASUB_EN(1'b1),
+		// .PASUB(1'b0),
+		// .PASUB_BYPASS(1'b1),
+		// .PASUB_AD_N(1'b0),
+		// .PASUB_SL_N(1'b1),
+		// .PASUB_SD_N(1'b0),
+		// .PASUB_EN(1'b1),
 
-		.CDIN_FDBK_SEL(2'b00),
-		.CDIN_FDBK_SEL_BYPASS(1'b1),
-		.CDIN_FDBK_SEL_AD_N(2'b00),
-		.CDIN_FDBK_SEL_SL_N(1'b1),
-		.CDIN_FDBK_SEL_SD_N(2'b00),
-		.CDIN_FDBK_SEL_EN(1'b1),
+		// .CDIN_FDBK_SEL(2'b00),
+		// .CDIN_FDBK_SEL_BYPASS(1'b1),
+		// .CDIN_FDBK_SEL_AD_N(2'b00),
+		// .CDIN_FDBK_SEL_SL_N(1'b1),
+		// .CDIN_FDBK_SEL_SD_N(2'b00),
+		// .CDIN_FDBK_SEL_EN(1'b1),
 
-		.ARSHFT17(1'b0),
-		.ARSHFT17_BYPASS(1'b1),
-		.ARSHFT17_AD_N(1'b0),
-		.ARSHFT17_SL_N(1'b1),
-		.ARSHFT17_SD_N(1'b0),
-		.ARSHFT17_EN(1'b1),
+		// .ARSHFT17(1'b0),
+		// .ARSHFT17_BYPASS(1'b1),
+		// .ARSHFT17_AD_N(1'b0),
+		// .ARSHFT17_SL_N(1'b1),
+		// .ARSHFT17_SD_N(1'b0),
+		// .ARSHFT17_EN(1'b1),
 
 		.SUB(1'b0),
 		.SUB_BYPASS(1'b1),

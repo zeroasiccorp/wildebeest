@@ -19,10 +19,9 @@
 //   forms the `microchip_dsp` pass described in microchip_dsp.cc 
 // At a high level, it works as follows:
 //   ( 1) Starting from a DSP cell. Capture DSP configurations as states
-//   ( 2) Match for pre-adder
-//   ( 3) Match for post-adder
-//   ( 4) Match register 'A', 'B', 'D', 'P' 
-//   ( 5) If post-adder and PREG both present, check if PREG feeds into post-adder.
+//   ( 2) Match for post-adder
+//   ( 3) Match register 'A', 'B', 'D', 'P'
+//   ( 4) If post-adder and PREG both present, check if PREG feeds into post-adder.
 //        This indicates an accumulator situation like the ASCII diagram below:
 //             +--------------------------------+
 //             |_________                       |
@@ -31,7 +30,7 @@
 //            |MULT|------ | adder |   +----+
 //            +----+       \-------/
 
-pattern zeroasic_dsp_pack 	
+pattern zeroasic_dsp_pack
 
 state <SigBit> clock
 state <SigSpec> sigA sigB sigC sigD sigP
@@ -41,7 +40,6 @@ state <bool> moveBtoA useFeedBack
 
 // static ports, used to detect dsp configuration
 state <SigSpec> bypassA bypassB bypassC bypassD bypassP
-state <SigSpec> bypassPASUB
 
 // Variables used for subpatterns
 state <SigSpec> argQ argD
@@ -100,16 +98,15 @@ code sigA sigB sigC sigD clock sigP
 endcode
 
 // capture static configuration ports
-code bypassA bypassB bypassC bypassD bypassPASUB bypassP
+code bypassA bypassB bypassC bypassD bypassP
 	bypassA = port(dsp, \A_BYPASS, SigSpec());
 	bypassB = port(dsp, \B_BYPASS, SigSpec());
 	bypassC = port(dsp, \C_BYPASS, SigSpec());
 	bypassD = port(dsp, \D_BYPASS, SigSpec());
-	bypassPASUB = port(dsp, \PASUB_BYPASS, SigSpec());
 	bypassP = port(dsp, \P_BYPASS, SigSpec());
 endcode
 
-//  (3) Match for post-adder
+//  (2) Match for post-adder
 //
 code postAdderStatic sigP sigC
 	u_postAdderStatic = nullptr;
@@ -125,7 +122,7 @@ code postAdderStatic sigP sigC
 endcode
 
 
-// (4) Matching registers
+// (3) Matching registers
 //
 // 'A' input for REG_A
 code argQ bypassA sigA clock ffA
@@ -183,7 +180,7 @@ code argD ffP sigP clock bypassP
 	}
 endcode
 
-// (5) If post-adder and PREG both present, check if PREG feeds into post-adder via port C.
+// (4) If post-adder and PREG both present, check if PREG feeds into post-adder via port C.
 //        This indicates an accumulator situation. Port C can be freed
 //             +--------------------------------+
 //             |_________                       |
