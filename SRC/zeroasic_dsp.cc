@@ -162,24 +162,6 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 	pm.blacklist(cell);
 }
 
-void run_chtype_pass(Design *design) {
-    for (auto module : design->modules()) {
-        if (!module->get_blackbox_attribute()) {
-            for (auto cell : module->cells()) {
-				std::string mode_name = "$efpga_";
-                if (cell->type == ID(MAE)) {
-					// if BYPASS_A and BYPASS_B are set
-					// if(cell->getPort(IdString("BYPASS_A")).is_fully_ones()){
-					// // 	mode_name += "a";
-					// }
-                
-					// cell->type = IdString(mode_name);
-				}
-			}
-        }
-    }
-}
-
 struct ZeroAsicDspPass : public Pass {
 	ZeroAsicDspPass() : Pass("zeroasic_dsp", "ZEROASIC: pack resources into DSPs") {}
 	void help() override
@@ -246,13 +228,7 @@ struct ZeroAsicDspPass : public Pass {
 				pm.run_zeroasic_dsp_pack(zeroasic_dsp_pack);
 			}
 
-		}
-
-		// print cell + modes?
-		
-		// efpga_mult
-		// run_chtype_pass(design);
-		
+		}		
 	}
 } ZeroAsicDspPass;
 
