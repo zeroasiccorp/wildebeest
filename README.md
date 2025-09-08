@@ -4,21 +4,22 @@ The `yosys-syn` project is a dynamically configurable synthesis plugin for [Yosy
 
 The plugin also supports other popular FPGAs via a standardized JSON FPGA specification format.
 
-## Pre-requisites
+## Prerequisites
 
-* C++ compiler: GCC 11 and clang 17 are minimum supported versions
-* CMake 
-
+* Compiler: >=GCC 11 or >=clang 17
+* CMake: 3.20 .. 3.29 
 
 ## Building
 
-First you will need to clone and build `yosys` from source. See the [Yosys readme](https://github.com/YosysHQ/yosys) for complete build instructions.
-
-> **NOTE:** You will need to pass in the source tree directory once you have built yosys to the plugin compilation below. We are working on optimizing this part of the build flow.
-
-Once the yosys build has completed, you are ready to compile and install the `yosys-syn` plugin.
+First you will need to clone and build `yosys` from source. See the [Yosys readme](https://github.com/YosysHQ/yosys) for complete build instructions. 
 
 ```bash
+# build yosys
+git clone --recurse-submodules https://github.com/YosysHQ/yosys.git
+cd yosys
+make -j$(nproc)
+sudo make install
+# build yosys-sy nplugin
 git clone git@github.com:zeroasiccorp/yosys-syn.git
 cd yosys-syn
 cmake -S . -B build -D YOSYS_TREE=<path to Yosys source-dir>
@@ -31,6 +32,8 @@ The build process:
 2. Copies the yosys-syn.so file to "\<path\>/yosys/share/plugins"
 3. Copies architectures files to "\<path\>/yosys/share/plugins"
 
+> **NOTE:** We are working on optimizing the build process to remove the need for recompiling yosys. 
+
 
 ## Quickstart
 
@@ -40,45 +43,40 @@ You can load the `yosys-syn` plugin into Yosys on startup by passing the -m argu
 yosys -m yosys-syn
 ```
 
-Alternatively, you can load the plugn at runtimg wia the yosys `plugin` command.
+Alternatively, you can load the plugin at runtime via the yosys `plugin` command.
 
 
-```
+```bash
 yosys> plugin -i yosys-syn
 ```
 
-Once the plugin is loaded, you are ready to run synthesis. The following "hello world" example illustrates a minimal flow.
+Once the plugin is loaded, you are ready to run synthesis.
 
-```
-read_verilog <my.v>
-synth_fpga
+Download the `picorv32` core into your working directory. Alternatively, bring your own code.
+
+The following example illustrates a simple synthesis script for the single file CPU design [picorv32](https://raw.githubusercontent.com/YosysHQ/picorv32/refs/heads/main/picorv32.v).
+
+```bash
+read_verilog picorv32.v
+synth_fpga -partname Z1010
 stat
 ```
 
-You can get a listing of all of the `synth_fpga` options via the yosys built in `help` command.
+A listing of all of the `synth_fpga` options via the yosys built in `help` command.
 
 ```
 yosys> help synth_fpga
 ```
-
-## Examples
-
-### Platypus Synthesis
-
-### ICE40 Synthesis
-
-
-
    
 ## FPGA Specification Format
 ------------------------
-The FPGA configuration is makes the `synth_fpga` command a powerful general purpose synthesis command rather than a bespoke command targeted at a single specific FPGA hardware target. The configuration file is passed in as a parameter via the -config option as shown below:
+The FPGA configuration option makes the `synth_fpga` command a powerful general purpose synthesis plugin rather than a bespoke command targeted at a single FPGA hardware target.
 
 ```
 yosys > synth_fpga -config <configuration file>
 ```
 
-The configuration format is still work in progress. The current format specification is shown below.
+The configuration format is still work in progress. An draft format specification is shown below.
 
 ```json
 {
@@ -109,8 +107,7 @@ The configuration format is still work in progress. The current format specifica
 }
 ```
 
-Note that all sections like "version", "part_name", "lut_size", ... are required except "root_path", "brams" and "dsps" which are optional.
-If "root_path" is not specified, it will correspond to the path where the config file is located.
+Sections version, partname, lut_size, flip-flops, a required. Sections root_path, brams,and dsps are optional. If "root_path" is not specified, it will correspond to the path where the config file is located.
 
 ### Logic Only Example: No BRAMs or DSPs
 
@@ -222,5 +219,3 @@ If "root_path" is not specified, it will correspond to the path where the config
        }
 }
 ```
-
-
