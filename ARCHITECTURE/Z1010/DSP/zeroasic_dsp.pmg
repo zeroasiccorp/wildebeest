@@ -33,10 +33,10 @@
 pattern zeroasic_dsp_pack
 
 state <SigBit> clock
-state <SigSpec> sigA sigB sigC sigP
+state <SigSpec> sigA sigB sigC sigP sigMultOut
 state <Cell*> ffA ffB ffC ffP
 state <Cell*> postAdderStatic
-state <bool> useFeedBack
+state <bool> useFeedBack multHasReg
 
 // static ports, used to detect dsp configuration
 state <SigSpec> bypassA bypassB bypassC bypassP
@@ -58,7 +58,7 @@ endmatch
 
 // detect existing signals connected to DSP
 // detect configuration ports
-code sigA sigB sigC clock sigP
+code sigA sigB sigC clock sigP sigMultOut
 	//helper function to remove unused bits
 	auto unextend = [](const SigSpec &sig) {
 		int i;
@@ -96,6 +96,22 @@ code sigA sigB sigC clock sigP
 
 endcode
 
+// detect if multiplier output is registered (useful for discerning macc vs macc_pipe)
+code argD sigMultOut multHasReg
+	sigMultOut = sigP; // sigP moves around, we want to keep track of multiplier output.
+	log("detect if mult output is registered\n");
+	if (nusers(sigP) == 2) {
+		log("still detecting if mult output is registered\n");
+		argD = sigMultOut;
+		allowAsync = false;
+		subpattern(out_dffe);
+		if (dff) {
+			multHasReg = true;
+		}
+	}
+
+endcode
+
 // capture static configuration ports
 code bypassA bypassB bypassC bypassP
 	bypassA = port(dsp, \A_BYPASS, SigSpec());
@@ -107,6 +123,7 @@ endcode
 //  (2) Match for post-adder
 //
 code postAdderStatic sigP sigC
+	log("trying to match post-adder \n");
 	u_postAdderStatic = nullptr;
 	subpattern(postAddMatching);
 	postAdderStatic = u_postAdderStatic;
@@ -160,19 +177,7 @@ code argQ bypassB sigB clock ffB
 	}
 endcode
 
-// 'C' input for REG_C
-//code argQ sigC clock ffC
-//	if (bypassC.is_fully_ones()){
-//		argQ = sigC;
-//		allowAsync = true;
-//		subpattern(in_dffe);
-//		if (dff) {
-//			ffC = dff;
-//			clock = dffclock;
-//			sigC = dffD;
-//		}
-//	}
-//endcode
+
 
 // 'P' output for REG_P
 code argD ffP sigP clock bypassP
@@ -223,6 +228,20 @@ code
 	}
 endcode
 
+// TODO-FT
+// 'C' input for REG_C
+code argQ sigC clock ffC
+	if (bypassC.is_fully_ones() and not useFeedBack){
+		argQ = sigC;
+		allowAsync = true;
+		subpattern(in_dffe);
+		if (dff) {
+			ffC = dff;
+			clock = dffclock;
+			sigC = dffD;
+		}
+	}
+endcode
 
 // #######################
 // Subpattern for matching against post-adder
@@ -240,6 +259,8 @@ match postAdd
 
 	// AB is the port that connects MUL to ADD
 	choice <IdString> AB {\A, \B}
+
+	// TODO-FT something strange here...
 	select nusers(port(postAdd, AB)) == 2
 
 	// has one input coming from multiplier

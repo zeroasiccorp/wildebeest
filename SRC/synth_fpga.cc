@@ -2657,7 +2657,7 @@ struct SynthFpgaPass : public ScriptPass
      run("opt_expr -fine");
      run("wreduce");
      run("select -clear");
-
+     
      // Call the DSP packer command
      //
      if (sc_syn_dsps_pack_command != "") {
@@ -2665,6 +2665,7 @@ struct SynthFpgaPass : public ScriptPass
      }
      log("mode techmap");
      std::string ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/zeroasic_dsp_map_mode.v";
+     run("write_verilog postpack.v");
      run("techmap -map " + ys_dsps_techmap); // modes
 
      run("chtype -set $mul t:$__soft_mul");

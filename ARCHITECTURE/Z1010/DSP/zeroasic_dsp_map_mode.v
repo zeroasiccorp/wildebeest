@@ -5,7 +5,8 @@ module MAE #(
   parameter BYPASS_P=0
   ,
   parameter POST_ADDER_STATIC=0,
-  parameter USE_FEEDBACK=0
+  parameter USE_FEEDBACK=0,
+  parameter MULT_HAS_REG=0
  )
 (
   input [17:0] A,
@@ -74,7 +75,7 @@ generate
       .Y(P)
     );
   end
-  else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1) begin
+  else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_C==1'b0 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK==1'b0) begin
     efpga_mult_addc_regio _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),
@@ -90,28 +91,28 @@ generate
       .Y(P)
     );
   end
-  else if (BYPASS_A == 1'b0 && BYPASS_B == 1'b0 && BYPASS_P==1'b0 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK==1'b1) begin
+  else if (BYPASS_A == 1'b0 && BYPASS_B == 1'b0 && BYPASS_P==1'b0 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK==1'b1 && MULT_HAS_REG == 1'b1) begin
     efpga_macc_pipe _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),
       .Y(P)
     );
   end
-  else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK == 1'b1) begin
+  else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK == 1'b1 && MULT_HAS_REG == 1'b1) begin
     efpga_macc_pipe_regi _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),
       .Y(P)
     );
   end
-  else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK == 1'b1) begin
+  else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 /*&& BYPASS_C==1'b0*/ && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK == 1'b1 && MULT_HAS_REG == 1'b0) begin
     efpga_macc_regi _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),
       .Y(P)
     );
   end
-  else if (BYPASS_A == 1'b0 && BYPASS_B == 1'b0 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK == 1'b1) begin
+  else if (BYPASS_A == 1'b0 && BYPASS_B == 1'b0 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK == 1'b1 && MULT_HAS_REG == 1'b0) begin
     efpga_macc _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),

@@ -73,6 +73,14 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 		log("POST ADDER STATIC FALSE\n");
 	}
 
+	if(st.multHasReg) {
+		cell->setParam(ID(MULT_HAS_REG), State::S1);
+		log("MULTHAS REG!\n");
+	}
+	else{
+		cell->setParam(ID(MULT_HAS_REG), State::S0);
+		log("nooo mult does not have REG!\n");
+	}
 	// pack registers
 	if (st.clock != SigBit()) {
 		cell->setPort(ID::CLK, st.clock);
