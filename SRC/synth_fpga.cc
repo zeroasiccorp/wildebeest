@@ -717,10 +717,7 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/zeroasic_dsp_map.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
-        ys_dsps_parameter_int["DSP_A_MAXWIDTH_PARTIAL"] = 18;  // Partial multipliers are intentionally
-                                                               // limited to 18x18 in order to take
-                                                               // advantage of the (PCOUT >> 17) -> PCIN
-                                                               // dedicated cascade chain capability
+        ys_dsps_parameter_int["DSP_A_MAXWIDTH_PARTIAL"] = 18;
 
         ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;

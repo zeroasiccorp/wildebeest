@@ -15,6 +15,7 @@ module \$__MUL18X18
 
 	// wire [Y_WIDTH-1:0] OUT;
 
+	// Don't specify clock or reset.
 	MAE #(
 		.BYPASS_A(1'b0),
 		.BYPASS_B(1'b0),
@@ -27,19 +28,15 @@ module \$__MUL18X18
 		.A_BYPASS(1'b1),
 		.B(B),
 		.B_BYPASS(1'b1),
-		// .C(Y_WIDTH'b0),// this being uncommented leads to regio not working? detects constant chunks
-		// .C_BYPASS(1'b1),
-		// .C_EN(1'b1), // dont include
-		.P(Y),  // rename Y
-		.P_BYPASS(1'b1), // rename Y_BYPASS
-		
+		.P(Y),
+		.P_BYPASS(1'b1),
 		.A_SRST_N(1'b1),
 		.B_SRST_N(1'b1),
 		.C_SRST_N(1'b1),
-		.C_ARST_N(1'b1),
-		// todo:
-		// clk
-		// resetn ()
+		.C_ARST_N(1'b1)
+		// .C(Y_WIDTH'b0),// this being uncommented leads to regio not working? detects constant chunks
+		// .C_BYPASS(1'b1),
+		// .C_EN(1'b1), // dont include
 	);
 	// assign Y = OUT;
 endmodule
