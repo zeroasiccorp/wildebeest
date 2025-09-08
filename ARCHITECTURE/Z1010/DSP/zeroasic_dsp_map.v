@@ -19,15 +19,17 @@ module \$__MUL18X18
 		.BYPASS_A(1'b0),
 		.BYPASS_B(1'b0),
 		.BYPASS_C(1'b0),
-		.BYPASS_P(1'b0)
+		.BYPASS_P(1'b0),
+		.POST_ADDER_STATIC(1'b0)
  	)
- _TECHMAP_REPLACE_ (
+    _TECHMAP_REPLACE_ (
 		.A(A),
 		.A_BYPASS(1'b1),
 		.B(B),
 		.B_BYPASS(1'b1),
-		// .C(48'b0),  // this being uncommented leads to regio not working? detects constant chunks
+		// .C(Y_WIDTH'b0),// this being uncommented leads to regio not working? detects constant chunks
 		// .C_BYPASS(1'b1),
+		// .C_EN(1'b1), // dont include
 		.P(Y),  // rename Y
 		.P_BYPASS(1'b1), // rename Y_BYPASS
 		

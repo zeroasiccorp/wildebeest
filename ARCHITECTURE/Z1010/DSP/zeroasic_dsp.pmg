@@ -191,7 +191,11 @@ code useFeedBack
 	useFeedBack = false;
 	if (postAdderStatic)	{
 		if (sigC == sigP) {
+			log("sigC == sigP\n");
 			useFeedBack = true;
+		}
+		else {
+			log("NOT NOT NOT sigC == sigP\n");
 		}
 	}
 endcode
@@ -218,7 +222,7 @@ arg sigP
 match postAdd
 
 	select postAdd->type.in($add)
-	select GetSize(port(postAdd, \Y)) <= 48
+	select GetSize(port(postAdd, \Y)) <= 40
 
 	// AB is the port that connects MUL to ADD
 	choice <IdString> AB {\A, \B}

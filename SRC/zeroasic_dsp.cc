@@ -40,6 +40,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 	Cell *cell = st.dsp;
 	// pack post-adder
 	if (st.postAdderStatic) {
+		log("POST ADDER STATIC TRUE\n");
 		// TODO: block subtractions
 		log("  postadder %s (%s)\n", log_id(st.postAdderStatic), log_id(st.postAdderStatic->type));
 		log(" do we have a sub\n");
@@ -53,15 +54,21 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 		// 	sub[0] = State::S1;
 		// else
 		// 	log_assert(!"strange post-adder type");
-
+		
+		cell->setParam(ID(POST_ADDER_STATIC), State::S1);
 		if (st.useFeedBack) {
+			log("USE FEEDBACK TRUE!\n");
 			cell->setPort(ID(CDIN_FDBK_SEL), {State::S0, State::S1});
 		} else {
-			st.sigC.extend_u0(48, st.postAdderStatic->getParam(ID::A_SIGNED).as_bool());
+			log("USE FEEDBACK FALSE!\n");
+			// st.sigC.extend_u0(48, st.postAdderStatic->getParam(ID::A_SIGNED).as_bool()); // problem
 			cell->setPort(ID::C, st.sigC);
 		}
 
 		pm.autoremove(st.postAdderStatic);
+	}
+	else {
+		log("POST ADDER STATIC FALSE\n");
 	}
 
 	// pack registers
@@ -166,8 +173,8 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 	log("\n");
 
 	SigSpec P = st.sigP;
-	if (GetSize(P) < 48)
-		P.append(pm.module->addWire(NEW_ID, 48 - GetSize(P)));
+	if (GetSize(P) < 40)
+		P.append(pm.module->addWire(NEW_ID, 40 - GetSize(P)));
 	cell->setPort(ID::P, P);
 
 	pm.blacklist(cell);
