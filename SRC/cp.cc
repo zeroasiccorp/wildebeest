@@ -55,8 +55,12 @@ struct MaxHeigthWorker
 
          if ((cell->type != "$lut") &&
 
+             // Handle Ice40 cells
+             //
+             (cell->type != "\\SB_LUT4") &&
+
              // Handle also Xilinx lut cells
-	     //
+             //
              (cell->type != "\\MUXF5") &&
              (cell->type != "\\MUXF6") &&
              (cell->type != "\\MUXF7") &&
