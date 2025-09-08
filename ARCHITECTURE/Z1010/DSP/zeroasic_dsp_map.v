@@ -21,7 +21,8 @@ module \$__MUL18X18
 		.BYPASS_B(1'b0),
 		.BYPASS_C(1'b0),
 		.BYPASS_P(1'b0),
-		.POST_ADDER_STATIC(1'b0)
+		.POST_ADDER_STATIC(1'b0),
+		.USE_FEEDBACK(1'b0)
  	)
     _TECHMAP_REPLACE_ (
 		.A(A),
@@ -34,9 +35,10 @@ module \$__MUL18X18
 		.B_SRST_N(1'b1),
 		.C_SRST_N(1'b1),
 		.C_ARST_N(1'b1)
+		,	
 		// .C(Y_WIDTH'b0),// this being uncommented leads to regio not working? detects constant chunks
 		// .C_BYPASS(1'b1),
-		// .C_EN(1'b1), // dont include
+		// .C_EN(1'b1) // dont include
 	);
 	// assign Y = OUT;
 endmodule

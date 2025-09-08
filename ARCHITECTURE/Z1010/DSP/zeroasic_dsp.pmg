@@ -36,7 +36,7 @@ state <SigBit> clock
 state <SigSpec> sigA sigB sigC sigP
 state <Cell*> ffA ffB ffC ffP
 state <Cell*> postAdderStatic
-state <bool> moveBtoA useFeedBack
+state <bool> useFeedBack
 
 // static ports, used to detect dsp configuration
 state <SigSpec> bypassA bypassB bypassC bypassP
@@ -114,8 +114,18 @@ code postAdderStatic sigP sigC
 	if (postAdderStatic) {
 		//sigC will be whichever input to the postAdder that is NOT from the multiplier
 		// u_postAddAB is the input to the postAdder from the multiplier
+		log("There's a post-adder. Assigning sigC\n");
+		log("log port a %s\n", log_signal(port(postAdderStatic, \A)));
+		log("log port b %s\n", log_signal(port(postAdderStatic, \B)));
+		log("log port y %s\n", log_signal(port(postAdderStatic, \Y)));
 		sigC = port(postAdderStatic, u_postAddAB == \A ? \B : \A);
 		sigP = port(postAdderStatic, \Y);
+
+		log("sigC: %s\n", log_signal(sigC));
+		log("sigP: %s\n", log_signal(sigP));
+		log("\n");
+
+
 	}
 endcode
 
@@ -151,18 +161,18 @@ code argQ bypassB sigB clock ffB
 endcode
 
 // 'C' input for REG_C
-code argQ sigC clock ffC
-	if (bypassC.is_fully_ones()){
-		argQ = sigC;
-		allowAsync = true;
-		subpattern(in_dffe);
-		if (dff) {
-			ffC = dff;
-			clock = dffclock;
-			sigC = dffD;
-		}
-	}
-endcode
+//code argQ sigC clock ffC
+//	if (bypassC.is_fully_ones()){
+//		argQ = sigC;
+//		allowAsync = true;
+//		subpattern(in_dffe);
+//		if (dff) {
+//			ffC = dff;
+//			clock = dffclock;
+//			sigC = dffD;
+//		}
+//	}
+//endcode
 
 // 'P' output for REG_P
 code argD ffP sigP clock bypassP
@@ -190,12 +200,15 @@ endcode
 code useFeedBack
 	useFeedBack = false;
 	if (postAdderStatic)	{
+		log("determine whether to use feedback\n");
+		printf("sigC: %s\n", log_signal(sigC));
+		printf("sigP: %s\n", log_signal(sigP));
 		if (sigC == sigP) {
 			log("sigC == sigP\n");
 			useFeedBack = true;
 		}
 		else {
-			log("NOT NOT NOT sigC == sigP\n");
+			log("sigC != sigP\n");
 		}
 	}
 endcode
@@ -204,7 +217,8 @@ endcode
 code
 	if (postAdderStatic)
 		accept;
-	if (ffA || ffB || ffC || ffP) {
+	// temporarily remove ffC because it causes issues with mac
+	if (ffA || ffB || ffP) { 
 		accept;
 	}
 endcode
@@ -241,9 +255,14 @@ endmatch
 
 code
 	if (postAdd)
-	{
+	{	
+		log("post add is true\n");
 		u_postAddAB = postAddAB;
 		u_postAdderStatic = postAdd;
+
+	}
+	else {
+		log("post add is false\n");
 	}
 endcode
 

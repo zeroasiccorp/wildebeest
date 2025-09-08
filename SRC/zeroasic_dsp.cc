@@ -58,11 +58,13 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 		cell->setParam(ID(POST_ADDER_STATIC), State::S1);
 		if (st.useFeedBack) {
 			log("USE FEEDBACK TRUE!\n");
+			cell->setParam(ID(USE_FEEDBACK), State::S1);
 			cell->setPort(ID(CDIN_FDBK_SEL), {State::S0, State::S1});
 		} else {
 			log("USE FEEDBACK FALSE!\n");
+			cell->setParam(ID(USE_FEEDBACK), State::S0);
 			// st.sigC.extend_u0(48, st.postAdderStatic->getParam(ID::A_SIGNED).as_bool()); // problem
-			cell->setPort(ID::C, st.sigC);
+			// cell->setPort(ID::C, st.sigC);
 		}
 
 		pm.autoremove(st.postAdderStatic);

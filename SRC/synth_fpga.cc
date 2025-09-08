@@ -3253,7 +3253,7 @@ struct SynthFpgaPass : public ScriptPass
     if (!no_flatten) {
       run("flatten");
     }
-
+    run("write_verilog prepremap.v");
     // Note there are two possibilities for how macro mapping might be done:
     // using the extract command (to pattern match user RTL against
     // the techmap) or using the techmap command.  The latter is better
