@@ -1,125 +1,86 @@
 # yosys-syn
-Zero Asic synthesis plugin for Yosys.
 
-Introduction :
-------------
-This repository stores the Zero Asic synthesis plugin that provides both FPGA and Asic synthesis flows.
+The `yosys-syn` project is a dynamically configurable synthesis plugin for [Yosys](https://github.com/YosysHQ/yosys) with support for the [Zero ASIC Platypus FPGAs](https://www.zeroasic.com/platypus). 
 
-The plugin is called 'yosys-syn' and it provides two top level commands : 
+The plugin also supports other popular FPGAs via a standardized JSON FPGA specification format.
 
-	1. 'synth_fpga' : this top level command corresponds to 
-            the FPGA synthesis flow.  This flow is partially 
-            implemented. 
-            Once plugin is loaded under Yosys, you need to type 
-            "help synth_fpga" to get all the options.
+## Pre-requisites
 
-	2. 'synth_asic' : this top level command corresponds to 
-           the Asic synthesis flow. This flow is not implemented 
-           yet.
-
-How to build the 'yosys-syn' dynamic plugin:
---------------------------------------------
-
-*Prerequisities:*
-
- * Yosys installed: supported versions are **0.47 0.48 0.49 0.50 0.51 0.52 0.53 0.54 0.55 0.56**
-
- * C++ compiler: GCC 11 and clang 17 are minimum supported versions
-
- * Usual toolchains, CMake
-
-To build and install 'yosys-syn':
-
-        cmake -S . -B build
-        cmake --build build
-        cmake --install build
+* C++ compiler: GCC 11 and clang 17 are minimum supported versions
+* CMake 
 
 
-It will : 
+## Building
 
-        - build 'yosys-syn.so'
+First you will need to clone and build `yosys` from source. See the [Yosys readme](https://github.com/YosysHQ/yosys) for complete build instructions.
 
-        - copy it under your 'yosys/share/plugins'
+> **NOTE:** You will need to pass in the source tree directory once you have built yosys to the plugin compilation below. We are working on optimizing this part of the build flow.
 
-        - copy Architectures and support files under 'yosys/share/plugins'.
+Once the yosys build has completed, you are ready to compile and install the `yosys-syn` plugin.
 
+```bash
+git clone git@github.com:zeroasiccorp/yosys-syn.git
+cd yosys-syn
+cmake -S . -B build -D YOSYS_TREE=<path to Yosys source-dir>
+cmake --build build
+cmake --install build
+```
 
-How to build the 'yosys-syn' dynamic plugin against a different yosys install:
-------------------------------------------------------------------------------
-
-To build and install 'yosys-syn':
-
-        cmake -S . -B build -D YOSYS_CONFIG=<path to yosys config>
-        cmake --build build
-        cmake --install build
-
-
-How to build the 'yosys-syn' dynamic plugin against an installed version of yosys:
-------------------------------------------------------------------------------
-
-To build and install 'yosys-syn':
-
-        cmake -S . -B build -D YOSYS_TREE=<path to yosys git tree>
-        cmake --build build
-        cmake --install build
+The build process:
+1. Builds the plugin `yosys-syn.so`
+2. Copies the yosys-syn.so file to "\<path\>/yosys/share/plugins"
+3. Copies architectures files to "\<path\>/yosys/share/plugins"
 
 
+## Quickstart
 
-How to use 'yosys-syn' plugin with Yosys :
-------------------------------------------
-When the 'yosys-syn' plugin is built and installed, you can use the plugin either way: 
+You can load the `yosys-syn` plugin into Yosys on startup by passing the -m argument:
 
-            1. at command line : 
+```bash
+yosys -m yosys-syn
+```
 
-                  yosys -m yosys-syn -s <script file>
+Alternatively, you can load the plugn at runtimg wia the yosys `plugin` command.
 
-            2. Or directly in the Yosys executable : 
-
-                  plugin -i yosys-syn
-               
-
-Example : 
---------
-
-Here is below a classical sequence of commands to install the 'yosys-syn' plugin with Yosys-HQ : 
-
-        // Clone YosysHQ and compile it
-        //
-        1. git clone https://github.com/YosysHQ/yosys
-        2. cd yosys
-        3. git submodule update --init --recursive
-        4. make
-
-        // Clone 'yosys-syn' under 'yosys' ('yosys' is the directory 
-        // where you currently are when you 'cd' in line 2.)
-        //
-        5. git clone https://github.com/zeroasiccorp/yosys-syn.git
-        6. cd yosys-syn
-        
-        // Install 'yosys-plugin' under 'yosys'
-        //
-        7. cmake -S . -B build -D YOSYS_TREE=<path to yosys git tree in 2.>
-        8. cmake --build build
-        9. cmake --install build 
-
-Your 'yosys-syn' plugin can now be part of your 'yosys' executable as soon as you download it.
-
-To download it you can do :
-  
-        1. yosys -m yosys-syn -s <script file> 
-
-        2. run yosys executable and as first command you can do :
-           plugin -i yosys-syn
-
-   
-FPGA Configuration file :
-------------------------
-The configuration file helps to configure important technology parameters used by the
-'synth_fpga' command. It is provided through the option 'synth_fpga -config <configuration file>".
-
-The template of this file is as follows:
 
 ```
+yosys> plugin -i yosys-syn
+```
+
+Once the plugin is loaded, you are ready to run synthesis. The following "hello world" example illustrates a minimal flow.
+
+```
+read_verilog <my.v>
+synth_fpga
+stat
+```
+
+You can get a listing of all of the `synth_fpga` options via the yosys built in `help` command.
+
+```
+yosys> help synth_fpga
+```
+
+## Examples
+
+### Platypus Synthesis
+
+### ICE40 Synthesis
+
+
+
+   
+## FPGA Specification Format
+------------------------
+The FPGA configuration is makes the `synth_fpga` command a powerful general purpose synthesis command rather than a bespoke command targeted at a single specific FPGA hardware target. The configuration file is passed in as a parameter via the -config option as shown below:
+
+```
+yosys > synth_fpga -config <configuration file>
+```
+
+The configuration format is still work in progress. The current format specification is shown below.
+
+```json
 {
         "version": <int, version of file schema, current version is 1>,
         "partname": <str, name of the fpga part>,
@@ -151,8 +112,34 @@ The template of this file is as follows:
 Note that all sections like "version", "part_name", "lut_size", ... are required except "root_path", "brams" and "dsps" which are optional.
 If "root_path" is not specified, it will correspond to the path where the config file is located.
 
+### Logic Only Example: No BRAMs or DSPs
+
 ```
-Example : z1010 architecture (with brams and dsps)
+{
+    "version": 1,
+    "partname": "z1000",
+    "lut_size": 4,
+    "flipflops": {
+        "features": ["async_reset", "async_set", "flop_enable"],
+        "models": {
+            "dffers": "/ffs/dffers.v",
+            "dffer": "/ffs/dffer.v",
+            "dffes": "/ffs/dffes.v",
+            "dffe": "/ffs/dffe.v",
+            "dffrs": "/ffs/dffrs.v",
+            "dffr": "/ffs/dffr.v",
+            "dffs": "/ffs/dffs.v",
+            "dff": "/ffs/dff.v"
+        },
+        "techmap": "/tech_flops.v"
+    }
+}
+```
+### Full Example: With BRAMs and DSPs
+
+**Example One:
+
+```json
 {
     "version": 1,
     "partname": "z1010",
@@ -189,9 +176,9 @@ Example : z1010 architecture (with brams and dsps)
         }
     }
 }
-
-Example : Using 3rd party BRAM and DSP inference : 
-{
+```
+### Third Party Example: With BRAM and DSPs
+```json
 {
   "version": 2,
   "partname": "Z1010",
@@ -234,25 +221,6 @@ Example : Using 3rd party BRAM and DSP inference :
           "pack_command": "microchip_dsp -family polarfire"
        }
 }
-
-Example : z1000 architecture (without brams and dsps)
-{
-    "version": 1,
-    "partname": "z1000",
-    "lut_size": 4,
-    "flipflops": {
-        "features": ["async_reset", "async_set", "flop_enable"],
-        "models": {
-            "dffers": "/ffs/dffers.v",
-            "dffer": "/ffs/dffer.v",
-            "dffes": "/ffs/dffes.v",
-            "dffe": "/ffs/dffe.v",
-            "dffrs": "/ffs/dffrs.v",
-            "dffr": "/ffs/dffr.v",
-            "dffs": "/ffs/dffs.v",
-            "dff": "/ffs/dff.v"
-        },
-        "techmap": "/tech_flops.v"
-    }
-}
 ```
+
+
