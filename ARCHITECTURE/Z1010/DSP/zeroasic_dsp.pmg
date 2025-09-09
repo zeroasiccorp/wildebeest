@@ -99,9 +99,7 @@ endcode
 // detect if multiplier output is registered (useful for discerning macc vs macc_pipe)
 code argD sigMultOut multHasReg
 	sigMultOut = sigP; // sigP moves around, we want to keep track of multiplier output.
-	log("detect if mult output is registered\n");
 	if (nusers(sigP) == 2) {
-		log("still detecting if mult output is registered\n");
 		argD = sigMultOut;
 		allowAsync = false;
 		subpattern(out_dffe);
@@ -123,7 +121,6 @@ endcode
 //  (2) Match for post-adder
 //
 code postAdderStatic sigP sigC
-	log("trying to match post-adder \n");
 	u_postAdderStatic = nullptr;
 	subpattern(postAddMatching);
 	postAdderStatic = u_postAdderStatic;
@@ -131,18 +128,8 @@ code postAdderStatic sigP sigC
 	if (postAdderStatic) {
 		//sigC will be whichever input to the postAdder that is NOT from the multiplier
 		// u_postAddAB is the input to the postAdder from the multiplier
-		log("There's a post-adder. Assigning sigC\n");
-		log("log port a %s\n", log_signal(port(postAdderStatic, \A)));
-		log("log port b %s\n", log_signal(port(postAdderStatic, \B)));
-		log("log port y %s\n", log_signal(port(postAdderStatic, \Y)));
 		sigC = port(postAdderStatic, u_postAddAB == \A ? \B : \A);
 		sigP = port(postAdderStatic, \Y);
-
-		log("sigC: %s\n", log_signal(sigC));
-		log("sigP: %s\n", log_signal(sigP));
-		log("\n");
-
-
 	}
 endcode
 
@@ -205,15 +192,8 @@ endcode
 code useFeedBack
 	useFeedBack = false;
 	if (postAdderStatic)	{
-		log("determine whether to use feedback\n");
-		printf("sigC: %s\n", log_signal(sigC));
-		printf("sigP: %s\n", log_signal(sigP));
 		if (sigC == sigP) {
-			log("sigC == sigP\n");
 			useFeedBack = true;
-		}
-		else {
-			log("sigC != sigP\n");
 		}
 	}
 endcode
@@ -260,13 +240,10 @@ match postAdd
 	// AB is the port that connects MUL to ADD
 	choice <IdString> AB {\A, \B}
 
-	// TODO-FT something strange here...
 	select nusers(port(postAdd, AB)) == 2
 
-	// has one input coming from multiplier
-	index <SigBit> port(postAdd, AB)[0] === sigP[0]
-	filter GetSize(port(postAdd, AB)) >= GetSize(sigP)
-	filter port(postAdd, AB).extract(0, GetSize(sigP)) == sigP
+	// skip check that ensures one input coming from multiplier
+
 	// Check that remainder of AB is a sign- or zero-extension
 	filter port(postAdd, AB).extract_end(GetSize(sigP)) == SigSpec(sigP[GetSize(sigP)-1], GetSize(port(postAdd, AB))-GetSize(sigP)) || port(postAdd, AB).extract_end(GetSize(sigP)) == SigSpec(State::S0, GetSize(port(postAdd, AB))-GetSize(sigP))
 
@@ -276,14 +253,10 @@ endmatch
 
 code
 	if (postAdd)
-	{	
-		log("post add is true\n");
+	{
 		u_postAddAB = postAddAB;
 		u_postAdderStatic = postAdd;
 
-	}
-	else {
-		log("post add is false\n");
 	}
 endcode
 
