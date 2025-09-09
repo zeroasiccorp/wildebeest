@@ -2,8 +2,7 @@ module MAE #(
   parameter BYPASS_A=0,
   parameter BYPASS_B=0,
   parameter BYPASS_C=0,
-  parameter BYPASS_P=0
-  ,
+  parameter BYPASS_P=0,
   parameter POST_ADDER_STATIC=0,
   parameter USE_FEEDBACK=0,
   parameter MULT_HAS_REG=0
