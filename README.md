@@ -214,7 +214,7 @@ The configuration format is still work in progress. An draft format specificatio
 }
 ```
 
-Sections version, partname, lut_size, flip-flops, a required. Sections root_path, brams,and dsps are optional. If "root_path" is not specified, it will correspond to the path where the config file is located.
+Sections version, partname, lut_size, flip-flops, are required. Sections root_path, brams,and dsps are optional. If "root_path" is not specified, it will correspond to the path where the config file is located.
 
 ### Logic Only Example: No BRAMs or DSPs
 
@@ -291,23 +291,23 @@ Sections version, partname, lut_size, flip-flops, a required. Sections root_path
   "flipflops": {
                 "features": ["async_reset", "async_set", "flop_enable"]
                 "models": {
-                        "dffers": "SRC/FF_MODELS/dffers.v",
-                        "dffer": "SRC/FF_MODELS/dffer.v",
-                        "dffes": "SRC/FF_MODELS/dffes.v",
-                        "dffe": "SRC/FF_MODELS/dffe.v",
-                        "dffrs": "SRC/FF_MODELS/dffrs.v",
-                        "dffr": "SRC/FF_MODELS/dffr.v",
-                        "dffs": "SRC/FF_MODELS/dffs.v",
-                        "dff": "SRC/FF_MODELS/dff.v"
+                        "dffers": "SRC/ff_models/dffers.v",
+                        "dffer": "SRC/ff_models/dffer.v",
+                        "dffes": "SRC/ff_models/dffes.v",
+                        "dffe": "SRC/ff_models/dffe.v",
+                        "dffrs": "SRC/ff_models/dffrs.v",
+                        "dffr": "SRC/ff_models/dffr.v",
+                        "dffs": "SRC/ff_models/dffs.v",
+                        "dff": "SRC/ff_models/dff.v"
                 },
-                "techmap": "ARCHITECTURE/Z1010/techlib/tech_flops.v"
+                "techmap": "architecture/Z1010/techlib/tech_flops.v"
         },
   "brams": {
-            "memory_libmap": [ "ARCHITECTURE/Z1010/bram/LSRAM.txt",
-                               "ARCHITECTURE/Z1010/bram/uSRAM.txt"]
+            "memory_libmap": [ "architecture/Z1010/bram/LSRAM.txt",
+                               "architecture/Z1010/bram/uSRAM.txt"]
             "memory_libmap_parameters": ["-logic-cost-rom 0.5"]
-            "techmap": ["ARCHITECTURE/Z1010/bram/LSRAM_map.v",
-                        "ARCHITECTURE/Z1010/bram/uSRAM_map.v"]
+            "techmap": ["architecture/Z1010/bram/LSRAM_map.v",
+                        "architecture/Z1010/bram/uSRAM_map.v"]
         },
   "dsps": {
           "family": "microchip",

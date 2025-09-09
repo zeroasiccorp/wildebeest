@@ -58,6 +58,7 @@ struct MaxHeigthWorker
              // Handle Ice40 cells
              //
              (cell->type != "\\SB_LUT4") &&
+             (cell->type != "\\SB_CARRY") &&
 
              // Handle also Xilinx lut cells
              //
@@ -497,7 +498,7 @@ struct MaxHeigthPass : public ScriptPass {
    // -------------------------
    void load_LUT_models()
    {
-     run("read_verilog +/plugins/yosys-syn/LUT_MODELS/LUTs.v");
+     run("read_verilog +/plugins/yosys-syn/lut_models/LUTs.v");
 
      run("hierarchy -auto-top");
    }

@@ -83,9 +83,13 @@ struct ReportStatPass : public ScriptPass
 	     continue;
          }
 	 
-         // ice40 'hx' Luts
+         // ice40 'hx' Luts, carry cells
          //
          if (cell->type.in(ID(SB_LUT4))) {
+             nb++;
+	     continue;
+         }
+         if (cell->type.in(ID(SB_CARRY))) {
              nb++;
 	     continue;
          }
