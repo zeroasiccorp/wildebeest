@@ -47,11 +47,11 @@ set_target_properties(yosys-syn PROPERTIES
 )
 
 set(SHARE_DIRECTORIES
-    FF_MODELS
-    RAM_MODELS
-    LUT_MODELS
-    ABC_SCRIPTS
-    ../ARCHITECTURE
+    ff_models
+    ram_models
+    lut_models
+    abc_scripts
+    ../architecture
 )
 
 if (WIN32)

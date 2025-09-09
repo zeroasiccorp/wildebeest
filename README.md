@@ -303,11 +303,11 @@ Sections version, partname, lut_size, flip-flops, a required. Sections root_path
                 "techmap": "ARCHITECTURE/Z1010/techlib/tech_flops.v"
         },
   "brams": {
-            "memory_libmap": [ "ARCHITECTURE/Z1010/BRAM/LSRAM.txt",
-                               "ARCHITECTURE/Z1010/BRAM/uSRAM.txt"]
+            "memory_libmap": [ "ARCHITECTURE/Z1010/bram/LSRAM.txt",
+                               "ARCHITECTURE/Z1010/bram/uSRAM.txt"]
             "memory_libmap_parameters": ["-logic-cost-rom 0.5"]
-            "techmap": ["ARCHITECTURE/Z1010/BRAM/LSRAM_map.v",
-                        "ARCHITECTURE/Z1010/BRAM/uSRAM_map.v"]
+            "techmap": ["ARCHITECTURE/Z1010/bram/LSRAM_map.v",
+                        "ARCHITECTURE/Z1010/bram/uSRAM_map.v"]
         },
   "dsps": {
           "family": "microchip",
