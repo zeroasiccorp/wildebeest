@@ -23,8 +23,8 @@ find_package(Yosys)
 
 set(YOSYS_SHARE_DIR ${YOSYS_DATDIR}/plugins/${OUTPUT_NAME})
 
-add_subdirectory(SRC)
-add_subdirectory(ARCHITECTURE)
+add_subdirectory(src)
+add_subdirectory(architecture)
 
 # Add back once testing is possible
 enable_testing()

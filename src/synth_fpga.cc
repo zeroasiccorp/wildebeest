@@ -362,23 +362,23 @@ struct SynthFpgaPass : public ScriptPass
   "flipflops": {
                 "features": ["async_reset", "async_set", "flop_enable"]
                 "models": {
-                        "dffers": "SRC/FF_MODELS/dffers.v",
-                        "dffer": "SRC/FF_MODELS/dffer.v",
-                        "dffes": "SRC/FF_MODELS/dffes.v",
-                        "dffe": "SRC/FF_MODELS/dffe.v",
-                        "dffrs": "SRC/FF_MODELS/dffrs.v",
-                        "dffr": "SRC/FF_MODELS/dffr.v",
-                        "dffs": "SRC/FF_MODELS/dffs.v",
-                        "dff": "SRC/FF_MODELS/dff.v"
+                        "dffers": "SRC/ff_models/dffers.v",
+                        "dffer": "SRC/ff_models/dffer.v",
+                        "dffes": "SRC/ff_models/dffes.v",
+                        "dffe": "SRC/ff_models/dffe.v",
+                        "dffrs": "SRC/ff_models/dffrs.v",
+                        "dffr": "SRC/ff_models/dffr.v",
+                        "dffs": "SRC/ff_models/dffs.v",
+                        "dff": "SRC/ff_models/dff.v"
                 },
-                "techmap": "ARCHITECTURE/Z1010/techlib/tech_flops.v"
+                "techmap": "architecture/Z1010/techlib/tech_flops.v"
         },
   "brams": {
-            "memory_libmap": [ "ARCHITECTURE/Z1010/BRAM/LSRAM.txt",
-                               "ARCHITECTURE/Z1010/BRAM/uSRAM.txt"]
+            "memory_libmap": [ "architecture/Z1010/bram/LSRAM.txt",
+                               "architecture/Z1010/bram/uSRAM.txt"]
             "memory_libmap_parameters": ["-logic-cost-rom 0.5"]
-            "techmap": ["ARCHITECTURE/Z1010/BRAM/LSRAM_map.v",
-                        "ARCHITECTURE/Z1010/BRAM/uSRAM_map.v"]
+            "techmap": ["architecture/Z1010/bram/LSRAM_map.v",
+                        "architecture/Z1010/bram/uSRAM_map.v"]
         },
   "dsps": {
           "family": "microchip",
@@ -630,36 +630,40 @@ struct SynthFpgaPass : public ScriptPass
     
       // DFF setting
       //
-      ys_dff_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/techlib/tech_flops.v";
+      ys_dff_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/techlib/tech_flops.v";
       ys_dff_features.insert("async_reset");
       ys_dff_features.insert("async_set");
       ys_dff_features.insert("flop_enable");
 
-      ys_dff_models["dffenrs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffenrs.v";
-      ys_dff_models["dffenr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffenr.v";
-      ys_dff_models["dffens"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffens.v";
-      ys_dff_models["dffen"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffen.v";
-      ys_dff_models["dffers"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffers.v";
-      ys_dff_models["dffer"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffer.v";
-      ys_dff_models["dffes"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffes.v";
-      ys_dff_models["dffe"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffe.v";
-      ys_dff_models["dffnrs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffnrs.v";
-      ys_dff_models["dffnr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffnr.v";
-      ys_dff_models["dffns"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffns.v";
-      ys_dff_models["dffn"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffn.v";
-      ys_dff_models["dffrs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffrs.v";
-      ys_dff_models["dffr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffr.v";
-      ys_dff_models["dffs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dffs.v";
-      ys_dff_models["dff"] = "+/plugins/yosys-syn/SRC/FF_MODELS/dff.v";
+      // Async. set/reset DFFs
+      //
+      ys_dff_models["dffenrs"] = "+/plugins/yosys-syn/ff_models/dffenrs.v";
+      ys_dff_models["dffenr"] = "+/plugins/yosys-syn/ff_models/dffenr.v";
+      ys_dff_models["dffens"] = "+/plugins/yosys-syn/ff_models/dffens.v";
+      ys_dff_models["dffen"] = "+/plugins/yosys-syn/ff_models/dffen.v";
+      ys_dff_models["dffers"] = "+/plugins/yosys-syn/ff_models/dffers.v";
+      ys_dff_models["dffer"] = "+/plugins/yosys-syn/ff_models/dffer.v";
+      ys_dff_models["dffes"] = "+/plugins/yosys-syn/ff_models/dffes.v";
+      ys_dff_models["dffe"] = "+/plugins/yosys-syn/ff_models/dffe.v";
+      ys_dff_models["dffnrs"] = "+/plugins/yosys-syn/ff_models/dffnrs.v";
+      ys_dff_models["dffnr"] = "+/plugins/yosys-syn/ff_models/dffnr.v";
+      ys_dff_models["dffns"] = "+/plugins/yosys-syn/ff_models/dffns.v";
+      ys_dff_models["dffn"] = "+/plugins/yosys-syn/ff_models/dffn.v";
+      ys_dff_models["dffrs"] = "+/plugins/yosys-syn/ff_models/dffrs.v";
+      ys_dff_models["dffr"] = "+/plugins/yosys-syn/ff_models/dffr.v";
+      ys_dff_models["dffs"] = "+/plugins/yosys-syn/ff_models/dffs.v";
+      ys_dff_models["dff"] = "+/plugins/yosys-syn/ff_models/dff.v";
 
-      ys_dff_models["sdffenr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffenr.v";
-      ys_dff_models["sdffens"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffens.v";
-      ys_dff_models["sdffer"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffer.v";
-      ys_dff_models["sdffes"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffes.v";
-      ys_dff_models["sdffnr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffnr.v";
-      ys_dff_models["sdffns"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffns.v";
-      ys_dff_models["sdffr"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffr.v";
-      ys_dff_models["sdffs"] = "+/plugins/yosys-syn/SRC/FF_MODELS/sdffs.v";
+      // Sync. set/reset DFFs
+      //
+      ys_dff_models["sdffenr"] = "+/plugins/yosys-syn/ff_models/sdffenr.v";
+      ys_dff_models["sdffens"] = "+/plugins/yosys-syn/ff_models/sdffens.v";
+      ys_dff_models["sdffer"] = "+/plugins/yosys-syn/ff_models/sdffer.v";
+      ys_dff_models["sdffes"] = "+/plugins/yosys-syn/ff_models/sdffes.v";
+      ys_dff_models["sdffnr"] = "+/plugins/yosys-syn/ff_models/sdffnr.v";
+      ys_dff_models["sdffns"] = "+/plugins/yosys-syn/ff_models/sdffns.v";
+      ys_dff_models["sdffr"] = "+/plugins/yosys-syn/ff_models/sdffr.v";
+      ys_dff_models["sdffs"] = "+/plugins/yosys-syn/ff_models/sdffs.v";
 
 
       // -------------------------
@@ -673,8 +677,8 @@ struct SynthFpgaPass : public ScriptPass
 
          // bram memory_libmap settings
 	 //
-         string brams_memory_libmap1 = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM.txt";
-         string brams_memory_libmap2 = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM.txt";
+         string brams_memory_libmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/LSRAM.txt";
+         string brams_memory_libmap2 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/uSRAM.txt";
 	 ys_brams_memory_libmap.push_back(brams_memory_libmap1);
 	 ys_brams_memory_libmap.push_back(brams_memory_libmap2);
 
@@ -686,8 +690,8 @@ struct SynthFpgaPass : public ScriptPass
 
          // bram techmap settings
 	 //
-         string brams_techmap1 = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/LSRAM_map.v";
-         string brams_techmap2 = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/uSRAM_map.v";
+         string brams_techmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/LSRAM_map.v";
+         string brams_techmap2 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/uSRAM_map.v";
 	 ys_brams_techmap.push_back(brams_techmap1);
 	 ys_brams_techmap.push_back(brams_techmap2);
 
@@ -695,12 +699,12 @@ struct SynthFpgaPass : public ScriptPass
   
          // bram memory_libmap settings
 	 //
-         string brams_memory_libmap1 = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/memory_libmap.txt";
+         string brams_memory_libmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/memory_libmap.txt";
 	 ys_brams_memory_libmap.push_back(brams_memory_libmap1);
 
          // bram techmap settings
 	 //
-         string brams_techmap1 = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/BRAM/techmap.v";
+         string brams_techmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/techmap.v";
 	 ys_brams_techmap.push_back(brams_techmap1);
       }
   
@@ -714,7 +718,7 @@ struct SynthFpgaPass : public ScriptPass
 
       if (dsp_tech == "zeroasic") {
 
-        ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/zeroasic_dsp_map.v ";
+        ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/zeroasic_dsp_map.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_A_MAXWIDTH_PARTIAL"] = 18;
@@ -737,7 +741,7 @@ struct SynthFpgaPass : public ScriptPass
 
       } else if (dsp_tech == "bare_mult") {
 
-        ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/bare_mult_tech_dsp.v ";
+        ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/bare_mult_tech_dsp.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
@@ -750,7 +754,7 @@ struct SynthFpgaPass : public ScriptPass
 
       } else if (dsp_tech == "mae") {
 
-        ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/mae_tech_dsp.v ";
+        ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/mae_tech_dsp.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
@@ -2259,31 +2263,31 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void load_cells_models()
   {
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffenrs.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffenr.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffens.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffen.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffers.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffer.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffes.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffe.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffnrs.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffnr.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffns.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffn.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffrs.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffr.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffs.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dff.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffenrs.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffenr.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffens.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffen.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffers.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffer.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffes.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffe.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffnrs.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffnr.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffns.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffn.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffrs.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffr.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffs.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dff.v");
 
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffenr.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffens.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffer.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffes.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffnr.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffns.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffr.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffs.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffenr.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffens.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffer.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffes.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffnr.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffns.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffr.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffs.v");
 
      // At some point should use our own cells
      //
@@ -2295,31 +2299,31 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void load_bb_cells_models()
   {
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffenrs.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffenr.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffens.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffen.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffers.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffer.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffes.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffe.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffnrs.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffnr.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffns.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffn.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffrs.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffr.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dffs.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/dff.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffenrs.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffenr.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffens.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffen.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffers.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffer.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffes.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffe.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffnrs.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffnr.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffns.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffn.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffrs.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffr.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dffs.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/dff.v");
 
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffenr.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffens.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffer.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffes.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffnr.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffns.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffr.v");
-     run("read_verilog +/plugins/yosys-syn/FF_MODELS/sdffs.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffenr.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffens.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffer.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffes.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffnr.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffns.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffr.v");
+     run("read_verilog +/plugins/yosys-syn/ff_models/sdffs.v");
 
      // At some point should use our own cells
      //
@@ -2447,7 +2451,7 @@ struct SynthFpgaPass : public ScriptPass
 
     // Otherwise specific ABC script based flow
     //
-    string abc_script = "+/plugins/yosys-syn/ABC_SCRIPTS/LUT" + sc_syn_lut_size +
+    string abc_script = "+/plugins/yosys-syn/abc_scripts/LUT" + sc_syn_lut_size +
 	                "/" + abc_script_version + "/" + mode + "_lut" + 
 			sc_syn_lut_size + ".scr";
 
@@ -3232,8 +3236,6 @@ struct SynthFpgaPass : public ScriptPass
     //
     load_cells_models();
 
-    //run(stringf("hierarchy -check %s", help_mode ? "-top <top>" : top_opt.c_str()));
-
     // In case user invokes the '-resynthesis' option at the command line level, 
     // we perform a light weight synthesis for the second time.
     //
@@ -3275,8 +3277,6 @@ struct SynthFpgaPass : public ScriptPass
     //
     coarse_synthesis();
 
-    // Extra line added versus 'sc_synth_fpga.tcl' tcl script version
-    //
     run("stat");
 
     dbg_wait();
@@ -3343,8 +3343,6 @@ struct SynthFpgaPass : public ScriptPass
     //
     optimize_DFFs();
 
-    // Extra lines that help to win Area (ex: vga_lcd from 31K Lut4 downto 14.8K)
-    //
     run("techmap");
 
     // Performs 'opt' pass with light weight version for HUGE designs.
@@ -3359,6 +3357,8 @@ struct SynthFpgaPass : public ScriptPass
        run("opt_clean");
     }
 
+    // Transform Yosys generic DFF into target technology supported ones.
+    //
     legalize_flops (); 
 
     // Map on the DFF of the architecture (partname)

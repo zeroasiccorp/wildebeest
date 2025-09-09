@@ -138,7 +138,10 @@ struct MaxLvlWorker
      ff_celltypes.setup_type(ID(SB_DFFESS), {}, {});
      ff_celltypes.setup_type(ID(SB_DFFN), {}, {});
      ff_celltypes.setup_type(ID(SB_DFFR), {}, {});
+     ff_celltypes.setup_type(ID(SB_DFFRS), {}, {});
+     ff_celltypes.setup_type(ID(SB_DFFRR), {}, {});
      ff_celltypes.setup_type(ID(SB_DFFS), {}, {});
+     ff_celltypes.setup_type(ID(SB_DFFSS), {}, {});
      ff_celltypes.setup_type(ID(SB_DFFSR), {}, {});
      ff_celltypes.setup_type(ID(SB_DFFES), {}, {});
    }
@@ -573,7 +576,7 @@ struct MaxLvlWorker
    // -------------------------
    void load_LUT_models()
    {
-     run("read_verilog +/plugins/yosys-syn/LUT_MODELS/LUTs.v");
+     run("read_verilog +/plugins/yosys-syn/lut_models/LUTs.v");
 
      run("hierarchy -auto-top");
    }
