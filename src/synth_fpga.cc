@@ -2552,6 +2552,16 @@ struct SynthFpgaPass : public ScriptPass
 
   }
 
+  bool has_cell_type(RTLIL::Design *design, const std::string &target_type) {
+    for (auto module : design->modules()) {
+        for (auto cell : module->cells()) {
+            if (cell->type.str() == target_type)
+                return true;
+        }
+    }
+    return false;
+  }
+
   // -------------------------
   // infer_BRAMs
   // -------------------------
@@ -3291,6 +3301,10 @@ struct SynthFpgaPass : public ScriptPass
     //
     infer_DSPs();
 
+
+   if(has_cell_type(yosys_get_design(), "\\MAE")) {
+      log_error("Could not techmap DSP to a valid configuration.\n");
+   }
     // Mimic ICE40 flow by running an alumacc and memory -nomap passes
     // after DSP mapping
     //  
