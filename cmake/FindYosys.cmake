@@ -3,12 +3,12 @@
 if(TARGET yosys::yosys)
 else()
     set(YOSYS_CONFIG "yosys-config" CACHE STRING "Location of yosys-config utility")
-    if(DEFINED YOSYS_PATH)
-	    message(STATUS "Using yosys path: ${YOSYS_PATH}")
+    if(DEFINED YOSYS_TREE)
+	    message(STATUS "Using yosys path: ${YOSYS_TREE}")
 
-	    set(YOSYS_CONFIG "${YOSYS_PATH}bin/yosys-config")
-	    set(YOSYS_BINDIR "${YOSYS_PATH}bin")
-	    set(YOSYS_DATDIR "${YOSYS_PATH}share/yosys")
+	    set(YOSYS_CONFIG "${YOSYS_TREE}/yosys-config")
+	    set(YOSYS_BINDIR "${YOSYS_TREE}")
+	    set(YOSYS_DATDIR "${YOSYS_TREE}/share")
 
         message(STATUS "yosys-config --bindir (override): ${YOSYS_BINDIR}")
         message(STATUS "yosys-config --datdir (override): ${YOSYS_DATDIR}")
@@ -24,6 +24,28 @@ else()
         string(REGEX REPLACE " +" ";" YOSYS_CXXFLAGS ${YOSYS_CXXFLAGS})
         list(FILTER YOSYS_CXXFLAGS INCLUDE REGEX "^-[ID]")
         message(STATUS "yosys-config --cxxflags (filtered): ${YOSYS_CXXFLAGS}")
+    elseif(DEFINED YOSYS_PATH)
+            message(STATUS "Using yosys path: ${YOSYS_PATH}")
+
+            set(YOSYS_CONFIG "${YOSYS_PATH}bin/yosys-config")
+            set(YOSYS_BINDIR "${YOSYS_PATH}bin")
+            set(YOSYS_DATDIR "${YOSYS_PATH}share/yosys")
+
+        message(STATUS "yosys-config --bindir (override): ${YOSYS_BINDIR}")
+        message(STATUS "yosys-config --datdir (override): ${YOSYS_DATDIR}")
+
+        execute_process(
+            COMMAND ${YOSYS_CONFIG} --cxxflags
+            OUTPUT_VARIABLE YOSYS_CXXFLAGS
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            COMMAND_ERROR_IS_FATAL ANY
+        )
+        # Prepend to ensure tree include paths are used
+        string(PREPEND YOSYS_CXXFLAGS "-I${YOSYS_DATDIR}/include ")
+        string(REGEX REPLACE " +" ";" YOSYS_CXXFLAGS ${YOSYS_CXXFLAGS})
+        list(FILTER YOSYS_CXXFLAGS INCLUDE REGEX "^-[ID]")
+        message(STATUS "yosys-config --cxxflags (filtered): ${YOSYS_CXXFLAGS}")
+
     else()
         message(STATUS "Using yosys: ${YOSYS_CONFIG}")
 
