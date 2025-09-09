@@ -138,7 +138,10 @@ struct MaxLvlWorker
      ff_celltypes.setup_type(ID(SB_DFFESS), {}, {});
      ff_celltypes.setup_type(ID(SB_DFFN), {}, {});
      ff_celltypes.setup_type(ID(SB_DFFR), {}, {});
+     ff_celltypes.setup_type(ID(SB_DFFRS), {}, {});
+     ff_celltypes.setup_type(ID(SB_DFFRR), {}, {});
      ff_celltypes.setup_type(ID(SB_DFFS), {}, {});
+     ff_celltypes.setup_type(ID(SB_DFFSS), {}, {});
      ff_celltypes.setup_type(ID(SB_DFFSR), {}, {});
      ff_celltypes.setup_type(ID(SB_DFFES), {}, {});
    }
