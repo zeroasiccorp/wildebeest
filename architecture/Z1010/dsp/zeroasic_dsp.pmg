@@ -1,5 +1,6 @@
 // ISC License
 // 
+// Copyright (C) 2025  Frederick Tombs <fred@zeroasic.com>, Zero Asic Corp.
 // Copyright (C) 2024 Microchip Technology Inc. and its subsidiaries
 // 
 // Permission to use, copy, modify, and/or distribute this software for any
@@ -13,22 +14,6 @@
 // WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
-
-// This file describes the main pattern matcher setup (of three total) that
-//   forms the `microchip_dsp` pass described in microchip_dsp.cc 
-// At a high level, it works as follows:
-//   ( 1) Starting from a DSP cell. Capture DSP configurations as states
-//   ( 2) Match for post-adder
-//   ( 3) Match register 'A', 'B', 'D', 'P'
-//   ( 4) If post-adder and PREG both present, check if PREG feeds into post-adder.
-//        This indicates an accumulator situation like the ASCII diagram below:
-//             +--------------------------------+
-//             |_________                       |
-//                       | /-------\   +----+   |
-//            +----+     +-| post- |___|PREG|---+ 'P'
-//            |MULT|------ | adder |   +----+
-//            +----+       \-------/
 
 pattern zeroasic_dsp_pack
 
@@ -51,7 +36,7 @@ udata <Cell*> u_postAdderStatic
 udata <IdString> u_postAddAB
 state <IdString> postAddAB
 
-// (1) Starting from a DSP cell
+// Identify MAE
 match dsp
 	select dsp->type.in(\MAE)
 endmatch
@@ -118,7 +103,7 @@ code bypassA bypassB bypassC bypassP
 	bypassP = port(dsp, \P_BYPASS, SigSpec());
 endcode
 
-//  (2) Match for post-adder
+//  post adder
 //
 code postAdderStatic sigP sigC
 	u_postAdderStatic = nullptr;
@@ -134,7 +119,7 @@ code postAdderStatic sigP sigC
 endcode
 
 
-// (3) Matching registers
+// REG_A, B, P
 //
 // 'A' input for REG_A
 code argQ bypassA sigA clock ffA
@@ -181,30 +166,13 @@ code argD ffP sigP clock bypassP
 
 endcode
 
-// (4) If post-adder and PREG both present, check if PREG feeds into post-adder via port C.
-//        This indicates an accumulator situation. Port C can be freed
-//             +--------------------------------+
-//             |_________                       |
-//                       | /-------\   +----+   |
-//            +----+     +-| post- |___|PREG|---+ 'P'
-//            |MULT|------ | adder |   +----+
-//            +----+       \-------/
+// Detect if registered output of post-adder feeds back into post-adder (feedback)
 code useFeedBack
 	useFeedBack = false;
 	if (postAdderStatic)	{
 		if (sigC == sigP) {
 			useFeedBack = true;
 		}
-	}
-endcode
-
-// if any cells are absorbed, invoke the callback function
-code
-	if (postAdderStatic)
-		accept;
-	// temporarily remove ffC because it causes issues with mac
-	if (ffA || ffB || ffP) { 
-		accept;
 	}
 endcode
 
@@ -219,6 +187,16 @@ code argQ sigC clock ffC
 			clock = dffclock;
 			sigC = dffD;
 		}
+	}
+endcode
+
+// if any cells are absorbed, invoke the callback function
+code
+	if (postAdderStatic)
+		accept;
+	// temporarily remove ffC because it causes issues with mac
+	if (ffA || ffB || ffP) { 
+		accept;
 	}
 endcode
 

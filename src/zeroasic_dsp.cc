@@ -1,6 +1,7 @@
 /*
 ISC License
 
+Copyright (C) 2025  Frederick Tombs <fred@zeroasic.com>, Zero Asic Corp.
 Copyright (C) 2024 Microchip Technology Inc. and its subsidiaries
 
 Permission to use, copy, modify, and/or distribute this software for any
@@ -48,8 +49,6 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			cell->setPort(ID(CDIN_FDBK_SEL), {State::S0, State::S1});
 		} else {
 			cell->setParam(ID(USE_FEEDBACK), State::S0);
-			// st.sigC.extend_u0(48, st.postAdderStatic->getParam(ID::A_SIGNED).as_bool());
-			// cell->setPort(ID::C, st.sigC);
 		}
 
 		pm.autoremove(st.postAdderStatic);
