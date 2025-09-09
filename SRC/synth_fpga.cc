@@ -2651,7 +2651,6 @@ struct SynthFpgaPass : public ScriptPass
      run(sc_syn_dsps_techmap);
 
      run("stat");
-   run("write_verilog premap.v");
      run("select a:mul2dsp");
      run("setattr -unset mul2dsp");
      run("opt_expr -fine");
@@ -2663,10 +2662,11 @@ struct SynthFpgaPass : public ScriptPass
      if (sc_syn_dsps_pack_command != "") {
         run(sc_syn_dsps_pack_command);
      }
-     log("mode techmap");
-     std::string ys_dsps_techmap = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/zeroasic_dsp_map_mode.v";
-     run("write_verilog postpack.v");
-     run("techmap -map " + ys_dsps_techmap); // modes
+
+     std::string ys_dsps_techmap_modes = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/zeroasic_dsp_map_mode.v";
+
+     // after dsp packing, map to modes for compatibility with our vpr solution 
+     run("techmap -map " + ys_dsps_techmap_modes);
 
      run("chtype -set $mul t:$__soft_mul");
 
@@ -3254,7 +3254,7 @@ struct SynthFpgaPass : public ScriptPass
     if (!no_flatten) {
       run("flatten");
     }
-    run("write_verilog prepremap.v");
+
     // Note there are two possibilities for how macro mapping might be done:
     // using the extract command (to pattern match user RTL against
     // the techmap) or using the techmap command.  The latter is better
