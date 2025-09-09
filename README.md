@@ -2,9 +2,26 @@
 
 The `yosys-syn` project is an open source synthesis plug-in for [Yosys](https://github.com/YosysHQ/yosys) with support for the [Zero ASIC Platypus FPGAs](https://www.zeroasic.com/platypus). The plug-in also includes experimental support for a an FPGA specification format that lowers the barrier to synthesis exploration for a variety of hardware targets.
 
-The `yosys-syn` synthesis recipes represents a significant improvement over existing open source synthesis solutions and compares favorably with commercial proprietary FPGA synthesis tools as shown by the results table below.
+The `yosys-syn` synthesis recipes represents a significant improvement over existing open source synthesis solutions and even compares favorably with state of the art commercial proprietary FPGA synthesis tools. The tables below illustrate the synthesis results for various architectures and tools for the [picorv32](https://raw.githubusercontent.com/YosysHQ/picorv32/refs/heads/main/picorv32.v). For a complete set of RTL benchmarks, see the [LogikBench project](https://github.com/zeroasiccorp/logikbench).
 
-!!!RESULTS TABLE GO HERE!!!
+
+## LUT4 Architectures
+
+| Architecture | Tool      | Synthesis Command      | LUTs   | Logic Depth |
+|--------------|-----------|------------------------|:------:|:-----------:|
+| ice40        | yosys     | synth_ice40            |        |             |
+| z1010        | yosys-syn | synth_fpga             |        |             |
+| z1010        | yosys-syn | synth_fpga -opt delay  |        |             |
+
+## LUT6 Architectures
+
+| Architecture | Tool      | Synthesis Command      | LUTs   | Logic Depth |
+|--------------|-----------|------------------------|:------:|:-----------:|
+| Vendor-1     | vendor    | (proprietary)          |        |             |
+| Vendor-2     | vendor    | (proprietary)          |        |             |
+| xc7          | yosys     | synth_xilinx           |        |             |
+| z1XXX        | yosys-syn | synth_fpga             |        |             |
+| z1XXX        | yosys-syn | synth_fpga -opt delay  |        |             |
 
 ## Prerequisites
 
@@ -14,18 +31,15 @@ The `yosys-syn` synthesis recipes represents a significant improvement over exis
 
 ## Building
 
-The build process relies on a correctly installed yosys distribution. For ubuntu
-
 ```bash
 git clone git@github.com:zeroasiccorp/yosys-syn.git
 cd yosys-syn
 cmake -S . -B build
 cmake --build build
-cmake --install build
+sudo cmake --install build
 ```
 
-> **NOTE:** The `cmake` flow builds the plugin and copies all files to the yosys share directory, located in parallel to the `bin` directory.
-As an example, if the yosys executable is located at /user/local/bin/yosys, then the `yosys-syn` plugin will be copied to  /usr/local/share/yosys/plugins/yosys-syn.so.
+> **NOTE:** The `cmake` flow builds the plugin and copies all files to the yosys executable share directory. As an example, if the `yosys` executable is located at /usr/local/bin/yosys, then the `yosys-syn` plugin will be copied to /usr/local/share/yosys/plugins/yosys-syn.so.
 
 ## Quickstart
 
@@ -50,7 +64,8 @@ The following example illustrates a simple synthesis script for the single file 
 
 ```bash
 read_verilog picorv32.v
-synth_fpga -partname Z1010 -opt area
+hierarchy -check -top picorv32
+synth_fpga -partname Z1010
 stat
 ```
 
@@ -68,110 +83,96 @@ synth_fpga [options]
 This command runs Zero Asic FPGA synthesis flow.
 
     -top <module>
-        use the specified module as top module
+        Use the specified module as top module, in case more than one exists.
+
+    -opt <mode>
+        Specifies optimization mode [area, delay] (default=area).
+
+    -partname <name>
+        Specifies architecture partname [Z1000, Z1010]. (default=Z1000).
 
     -config <file name>
-        Specifies the config file setting main 'synth_fpga' parameters.
-
-    -show_config
-        Show the parameters set by the config file.
+        Specifies config file containing FPGA architecture target parameters.
+        If not specified, the -partname value is used to set synthesis target.
 
     -no_flatten
-        skip flatening. By default, design is flatened.
-
-    -opt
-        specifies the optimization target : area, delay, default, fast.
-
-    -partname
-        Specifies the Architecture partname used. By default it is Z1000.
+        Disable design flattening.
 
     -no_bram
-        Bypass BRAM inference. It is off by default.
-
-    -use_bram_tech [zeroasic, microchip]
-        Invoke architecture specific DSP inference. It is off by default. -no_bram
-        overides -use_BRAM_TECH.
+        Disable BRAM inference.
 
     -no_dsp
         Bypass DSP inference. It is off by default.
 
-    -use_dsp_tech [zeroasic, bare_mult, mae]
-        Invoke architecture specific DSP inference. It is off by default. -no_dsp
-        overides -use_dsp_tech.
-
-    -do_not_pack_dff_in_dsp
+    -no_dff_in_dsp
         Specifies to not pack DFF in DSPs. This is off by default.
+
+    -no_xor_tree_process
+        Disable xor trees depth reduction in DELAY optimization mode.
+
+    -no_dff_enable
+        Disables mapping to DFF with enable.
+
+    -no_dff_async_set
+        Disable mapping to DFF with asynchronous set.
+
+    -no_dff_async_reset
+        Disable mapping to DFF with asynchronous reset.
+
+    -no_opt_sat_dff
+        Disable SAT-based DFF optimizations.
+
+    -no_opt_const_dff
+        Disable constant driven DFF optimization.
+
+    -no_sdff
+        Disable synchronous set/reset DFF mapping.
 
     -fsm_encoding [one-hot, binary]
         Specifies FSM encoding : by default a 'one-hot' encoding is performed.
 
     -resynthesis
-        switch synthesis flow to resynthesis mode which means a lighter flow.
+        Runs in resynthesis mode which means a lighter touch flow.
         It can be used only after performing a first 'synth_fpga' synthesis pass
 
-    -insbuf
-        performs buffers insertion (Off by default).
-
-    -no_xor_tree_process
-        Disable xor trees depth reduction for DELAY mode (Off by default).
-
     -autoname
-        Generate, if possible, better wire and cells names close to RTL names rather than
-        $abc generic names. This is off by default. Be careful because it may blow up runtime.
-
-    -no_dff_enable
-        specifies that DFF with enable feature is not supported. By default,
-        DFF with enable is supported.
-
-    -no_dff_async_set
-        specifies that DFF with asynchronous set feature is not supported. By default,
-        DFF with asynchronous set is supported.
-
-    -no_dff_async_reset
-        specifies that DFF with asynchronous reset feature is not supported. By default,
-        DFF with asynchronous reset is supported.
-
-    -no_opt_sat_dff
-        Disable SAT-based DFF optimizations. This is off by default.
-
-    -no_opt_const_dff
-        Disable constant driven DFF optimization as it can create simulation differences (since it may ignore DFF init values in some cases). This is off by default.
+        Generate wire and cells names that mimic RTL (instead of generic
+        $abc names). Possibly significant runtime impact. (default=off)
 
     -set_dff_init_value_to_zero
-        Set un-initialized DFF to initial value 0. Insert double inverters for DFF with initial value 1 and switch its initial value to 0 and modify its clear/set/reset functionalities if any. This is off by default.
+        Set un-initialized DFF to initial value 0. Insert double inverters for DFF
+        with initial value 1 and switch its initial value to 0 and modify its
+        clear/set/reset functionalities if any.
 
     -show_dff_init_value
-        Show all DFF initial values coming from the original RTL. This is off by default.
+        Show DFF initial values in RTL.
 
     -continue_if_latch
-        Keep running Synthesis even if some Latch inference is involved. The final netlist will not be valid but it can be usefull to get the final netlist stats. This is off by default.
-
-    -no_sdff
-        Disable synchronous set/reset DFF mapping. It is off by default.
+        Keep running even if latches are inferred.
 
     -stop_if_undriven_nets
-        Stop Synthesis if the final netlist has undriven nets. This is off by default.
+        Stop synthesis if the final netlist has undriven nets.
 
     -obs_clean
-        specifies to use 'obs_clean' cleanup function instead of regular
-        'opt_clean'. This is off by default.
+        Overrides built-in Yosys 'opt_clean' function.
 
     -lut_size
-        specifies lut size. By default lut size is 4.
+        Specifies lut size. (default=4).
 
     -verilog <file>
-        write the design to the specified Verilog netlist file. writing of an
-        output file is omitted if this parameter is not specified.
+        Writes out design to the specified file.
 
     -show_max_level
-        Show longest paths. This is off by default except if we are in delay mode.
+        Show longest paths.
 
-    -csv
-        Dump a 'stat.csv' file. This is off by default.
+    -csv <file>
+        Dump synthesis statistics to file.
 
     -wait
-        wait after each 'stat' report for user to touch <enter> key. Help for
-        flow analysis/debug.
+        Wait after each 'stat' for user to press <enter> key.
+
+    -show_config
+        Show the parameters set by the config file.
 
 ```
 
