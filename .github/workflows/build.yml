@@ -97,7 +97,7 @@ jobs:
       - name: Build yosys-syn
         run: |
           export PATH="$HOME/.local/bin:$PATH"
-          cmake -S . -B build
+          cmake -S . -B build -D YOSYS_PATH="$HOME/.local"
           cmake --build build
           cmake --install build
       - name: Pack build
