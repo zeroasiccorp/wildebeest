@@ -5,6 +5,7 @@
  *  yosys -- Yosys Open SYnthesis Suite
  *
  *  Copyright (C) 2012  Claire Xenia Wolf <claire@yosyshq.com>
+ *  Copyright (C) 2025  Thierry Besson <thierry@zeroasic.com>, Zero Asic Corp.
  *
  *  Permission to use, copy, modify, and/or distribute this software for any
  *  purpose with or without fee is hereby granted, provided that the above
@@ -19,9 +20,6 @@
  *  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  */
-//
-// Author : Thierry Besson , Zero Asic Corp.
-//
 
 #include "kernel/register.h"
 #include "kernel/celltypes.h"
