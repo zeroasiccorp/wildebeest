@@ -2659,7 +2659,7 @@ struct SynthFpgaPass : public ScriptPass
      log("Call %s\n", sc_syn_dsps_techmap.c_str());
      getchar();
 #endif
-    
+
      log("\nWARNING: Make sure you are using the right 'partname' for the DSP inference in case of failure.\n");
 
      run(sc_syn_dsps_techmap);
@@ -2670,7 +2670,7 @@ struct SynthFpgaPass : public ScriptPass
      run("opt_expr -fine");
      run("wreduce");
      run("select -clear");
-     
+
      // Call the DSP packer command
      //
      if (sc_syn_dsps_pack_command != "") {
