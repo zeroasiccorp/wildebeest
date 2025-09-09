@@ -1014,7 +1014,7 @@ struct SynthFpgaPass : public ScriptPass
     for (auto it : dff_features->data_array) {
           JsonNode *dff_mode = it;
           if (dff_mode->type != 'S') {
-              log_error("Array associated to DFF 'features' must be contain only strings.\n");
+              log_error("Array associated to DFF 'features' must contain only strings.\n");
           }
 	  string dff_mode_str = dff_mode->data_string;
 
