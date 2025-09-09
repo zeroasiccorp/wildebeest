@@ -58,8 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # yosys_version: ${{ fromJSON(needs.define-matrix.outputs.all_versions) }}
-        yosys_version: ["0.56"]
+        yosys_version: ${{ fromJSON(needs.define-matrix.outputs.all_versions) }}
     steps:
       - name: Install Dependencies
         shell: bash
