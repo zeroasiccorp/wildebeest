@@ -671,7 +671,7 @@ struct SynthFpgaPass : public ScriptPass
       ys_brams_memory_libmap_parameters.clear();
       ys_brams_techmap.clear();
 
-      if (bram_tech == "microchip") {
+      if ((part_name == "Z1010") && (bram_tech == "microchip")) {
 
          // bram memory_libmap settings
 	 //
@@ -693,7 +693,7 @@ struct SynthFpgaPass : public ScriptPass
 	 ys_brams_techmap.push_back(brams_techmap1);
 	 ys_brams_techmap.push_back(brams_techmap2);
 
-      } else if (bram_tech == "zeroasic") {
+      } else if ((part_name == "Z1010") && (bram_tech == "zeroasic")) {
   
          // bram memory_libmap settings
 	 //
@@ -714,7 +714,7 @@ struct SynthFpgaPass : public ScriptPass
       ys_dsps_parameter_string.clear();
       ys_dsps_pack_command = "";
 
-      if (dsp_tech == "zeroasic") {
+      if ((part_name == "Z1010") && (dsp_tech == "zeroasic")) {
 
         ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/zeroasic_dsp_map.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
@@ -741,7 +741,7 @@ struct SynthFpgaPass : public ScriptPass
 
 	return;
 
-      } else if (dsp_tech == "bare_mult") {
+      } else if ((part_name == "Z1010") && (dsp_tech == "bare_mult")) {
 
         ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/bare_mult_tech_dsp.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
@@ -754,7 +754,7 @@ struct SynthFpgaPass : public ScriptPass
 
 	return;
 
-      } else if (dsp_tech == "mae") {
+      } else if ((part_name == "Z1010") && (dsp_tech == "mae")) {
 
         ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/mae_tech_dsp.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
@@ -768,8 +768,10 @@ struct SynthFpgaPass : public ScriptPass
 	return;
       }
 
-      log_warning("Could not find any specific DSP tech settings with 'dsp_tech' = '%s'\n", 
-                  dsp_tech.c_str());
+      if (part_name == "Z1010") {
+         log_warning("Could not find any specific DSP tech settings with 'dsp_tech' = '%s'\n", 
+                     dsp_tech.c_str());
+      }
 
     }
 
