@@ -208,7 +208,6 @@ code
 	}
 endcode
 
-// TODO-FT
 // 'C' input for REG_C
 code argQ sigC clock ffC
 	if (bypassC.is_fully_ones() and not useFeedBack){
@@ -301,10 +300,6 @@ match ff
 	// Check that the rest of argQ is present
 	filter GetSize(port(ff, \Q)) >= offset + GetSize(argQ)
 	filter port(ff, \Q).extract(offset, GetSize(argQ)) == argQ
-
-	// only consider async rst flops when flag is set
-	// LINE BELOW WAS CAUSING ME PROBLEMS TODO-FT
-	//filter !ff->type.in($adff, $adffe) || allowAsync
 
 	// clock must be consistent
 	filter clock == SigBit() || port(ff, \CLK)[0] == clock
