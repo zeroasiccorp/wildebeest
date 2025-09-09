@@ -70,7 +70,7 @@ struct SynthFpgaPass : public ScriptPass
   string dsp_tech;
   string bram_tech;
 
-  pool<string> opt_options  = {"default", "fast", "area", "delay"};
+  pool<string> opt_options  = {"fast", "area", "delay"};
   pool<string> partnames  = {"Z1000", "Z1010"};
   pool<string> dsp_arch  = {"config", "zeroasic", "bare_mult", "mae"};
   pool<string> bram_arch  = {"config", "zeroasic", "microchip"};
@@ -2785,11 +2785,12 @@ struct SynthFpgaPass : public ScriptPass
         log("\n");
 
         log("    -opt\n");
-        log("        specifies the optimization target : area, delay, default, fast.\n");
+        log("        specifies the optimization target : 'area', 'delay', 'fast'. \n");
+	log("        Target 'area' is used by default\n");
         log("\n");
 
         log("    -partname\n");
-        log("        Specifies the Architecture partname used. By default it is Z1000.\n");
+        log("        Specifies the Architecture partname used. 'Z1010' is used by default.\n");
         log("\n");
 
         log("    -no_bram\n");
@@ -2916,9 +2917,9 @@ struct SynthFpgaPass : public ScriptPass
   void clear_flags() override
   {
 	top_opt = "-auto-top";
-	opt = "";
+	opt = "area";
 
-	part_name = "Z1000";
+	part_name = "Z1010";
 
 	no_flatten = false;
 	no_opt_sat_dff = false;
@@ -3462,6 +3463,7 @@ struct SynthFpgaPass : public ScriptPass
     log("   PartName   : %s\n", part_name.c_str());
     log("   DSP Style  : %s\n", dsp_tech.c_str());
     log("   BRAM Style : %s\n", bram_tech.c_str());
+    log("   OPT target : %s\n", opt.c_str());
     log("\n");
     log("   'Zero Asic' FPGA Synthesis Version : %s\n", SYNTH_FPGA_VERSION);
     log("\n");
