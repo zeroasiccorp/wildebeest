@@ -40,46 +40,27 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 	Cell *cell = st.dsp;
 	// pack post-adder
 	if (st.postAdderStatic) {
-		log("POST ADDER STATIC TRUE\n");
-		// TODO: block subtractions
-		log("  postadder %s (%s)\n", log_id(st.postAdderStatic), log_id(st.postAdderStatic->type));
-		log(" do we have a sub\n");
-		// SigSpec &sub = cell->connections_.at(ID(SUB));
-		// log(" did we have a sub\n");
-		// // Post-adder in MAE also supports subtraction
-		// //   Determines the sign of the output from the multiplier.
-		// if (st.postAdderStatic->type == ID($add))
-		// 	sub[0] = State::S0;
-		// else if (st.postAdderStatic->type == ID($sub))
-		// 	sub[0] = State::S1;
-		// else
-		// 	log_assert(!"strange post-adder type");
+		// subtraction not yet handled
 		
 		cell->setParam(ID(POST_ADDER_STATIC), State::S1);
 		if (st.useFeedBack) {
-			log("USE FEEDBACK TRUE!\n");
 			cell->setParam(ID(USE_FEEDBACK), State::S1);
 			cell->setPort(ID(CDIN_FDBK_SEL), {State::S0, State::S1});
 		} else {
-			log("USE FEEDBACK FALSE!\n");
 			cell->setParam(ID(USE_FEEDBACK), State::S0);
-			// st.sigC.extend_u0(48, st.postAdderStatic->getParam(ID::A_SIGNED).as_bool()); // problem
+			// st.sigC.extend_u0(48, st.postAdderStatic->getParam(ID::A_SIGNED).as_bool());
 			// cell->setPort(ID::C, st.sigC);
 		}
 
 		pm.autoremove(st.postAdderStatic);
 	}
-	else {
-		log("POST ADDER STATIC FALSE\n");
-	}
 
 	if(st.multHasReg) {
 		cell->setParam(ID(MULT_HAS_REG), State::S1);
-		log("MULTHAS REG!\n");
 	}
 	else{
 		cell->setParam(ID(MULT_HAS_REG), State::S0);
-		log("nooo mult does not have REG!\n");
+
 	}
 	// pack registers
 	if (st.clock != SigBit()) {
@@ -243,7 +224,6 @@ struct ZeroAsicDspPass : public Pass {
 				continue;
 
 			{
-				log("pm run-----------\n");
 				// For more details on PolarFire MACC_PA, consult
 				//   the "PolarFire FPGA Macro Library Guide"
 
@@ -254,11 +234,8 @@ struct ZeroAsicDspPass : public Pass {
 				//   a post-adder and PREG are both present AND
 				//   if PREG feeds into this post-adder.
 				zeroasic_dsp_pm pm(module, module->selected_cells());
-				log("post pm run-----------\n");
 				pm.run_zeroasic_dsp_pack(zeroasic_dsp_pack);
-				log("done post pm -----------\n");
 			}
-
 		}		
 	}
 } ZeroAsicDspPass;
