@@ -58,6 +58,7 @@ struct MaxHeigthWorker
              // Handle Ice40 cells
              //
              (cell->type != "\\SB_LUT4") &&
+             (cell->type != "\\SB_CARRY") &&
 
              // Handle also Xilinx lut cells
              //
