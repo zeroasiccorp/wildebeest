@@ -2667,7 +2667,7 @@ struct SynthFpgaPass : public ScriptPass
         run(sc_syn_dsps_pack_command);
      }
 
-     std::string ys_dsps_techmap_modes = "+/plugins/yosys-syn/ARCHITECTURE/" + part_name + "/DSP/zeroasic_dsp_map_mode.v";
+     std::string ys_dsps_techmap_modes = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/zeroasic_dsp_map_mode.v";
 
      // after dsp packing, map to modes for compatibility with our vpr solution 
      run("techmap -map " + ys_dsps_techmap_modes);
