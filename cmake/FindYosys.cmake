@@ -3,12 +3,12 @@
 if(TARGET yosys::yosys)
 else()
     set(YOSYS_CONFIG "yosys-config" CACHE STRING "Location of yosys-config utility")
-    if(DEFINED YOSYS_PATH)
-	    message(STATUS "Using yosys path: ${YOSYS_PATH}")
+    if(DEFINED YOSYS_TREE)
+	    message(STATUS "Using yosys path: ${YOSYS_TREE}")
 
-	    set(YOSYS_CONFIG "${YOSYS_PATH}bin/yosys-config")
-	    set(YOSYS_BINDIR "${YOSYS_PATH}bin")
-	    set(YOSYS_DATDIR "${YOSYS_PATH}share/yosys")
+	    set(YOSYS_CONFIG "${YOSYS_TREE}/yosys-config")
+	    set(YOSYS_BINDIR "${YOSYS_TREE}")
+	    set(YOSYS_DATDIR "${YOSYS_TREE}/share")
 
         message(STATUS "yosys-config --bindir (override): ${YOSYS_BINDIR}")
         message(STATUS "yosys-config --datdir (override): ${YOSYS_DATDIR}")
