@@ -1,6 +1,6 @@
 time
 echo " "
-echo "** Starting ABC SMALL DELAY LUT6 optimization and mapping !!!"
+echo "** Starting ABC TINY DELAY LUT6 optimization and mapping !!!"
 
 write_blif small_delay_lut6.blif
 
