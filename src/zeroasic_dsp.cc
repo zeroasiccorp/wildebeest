@@ -1,6 +1,7 @@
 /*
 ISC License
 
+Copyright (C) 2025  Frederick Tombs <fred@zeroasic.com>, Zero Asic Corp.
 Copyright (C) 2024 Microchip Technology Inc. and its subsidiaries
 
 Permission to use, copy, modify, and/or distribute this software for any
@@ -35,38 +36,37 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 {
 	auto &st = pm.st_zeroasic_dsp_pack;
 
-	log("Analysing %s.%s for ZeroAsic MACC_PA packing.\n", log_id(pm.module), log_id(st.dsp));
+	log("Analysing %s.%s for ZeroAsic MAE packing.\n", log_id(pm.module), log_id(st.dsp));
 
 	Cell *cell = st.dsp;
 	// pack post-adder
 	if (st.postAdderStatic) {
-		log("  postadder %s (%s)\n", log_id(st.postAdderStatic), log_id(st.postAdderStatic->type));
-		SigSpec &sub = cell->connections_.at(ID(SUB));
-		// Post-adder in MACC_PA also supports subtraction
-		//   Determines the sign of the output from the multiplier.
-		if (st.postAdderStatic->type == ID($add))
-			sub[0] = State::S0;
-		else if (st.postAdderStatic->type == ID($sub))
-			sub[0] = State::S1;
-		else
-			log_assert(!"strange post-adder type");
-
+		// subtraction not yet handled
+		
+		cell->setParam(ID(POST_ADDER_STATIC), State::S1);
 		if (st.useFeedBack) {
+			cell->setParam(ID(USE_FEEDBACK), State::S1);
 			cell->setPort(ID(CDIN_FDBK_SEL), {State::S0, State::S1});
 		} else {
-			st.sigC.extend_u0(48, st.postAdderStatic->getParam(ID::A_SIGNED).as_bool());
-			cell->setPort(ID::C, st.sigC);
+			cell->setParam(ID(USE_FEEDBACK), State::S0);
 		}
 
 		pm.autoremove(st.postAdderStatic);
 	}
 
+	if(st.multHasReg) {
+		cell->setParam(ID(MULT_HAS_REG), State::S1);
+	}
+	else{
+		cell->setParam(ID(MULT_HAS_REG), State::S0);
+
+	}
 	// pack registers
 	if (st.clock != SigBit()) {
 		cell->setPort(ID::CLK, st.clock);
 
 		// function to absorb a register
-		auto f = [&pm, cell](SigSpec &A, Cell *ff, IdString ceport, IdString rstport, IdString bypass) {
+		auto f = [&pm, cell](SigSpec &A, Cell *ff, IdString ceport, IdString rstport, IdString bypass, IdString bypass_param) {
 			// input/output ports
 			SigSpec D = ff->getPort(ID::D);
 			SigSpec Q = pm.sigmap(ff->getPort(ID::Q));
@@ -101,6 +101,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 
 			// bypass set to 0
 			cell->setPort(bypass, State::S0);
+			cell->setParam(bypass_param, State::S1);
 
 			for (auto c : Q.chunks()) {
 				auto it = c.wire->attributes.find(ID::init);
@@ -118,7 +119,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 		if (st.ffA) {
 			SigSpec A = cell->getPort(ID::A);
 			if (st.ffA) {
-				f(A, st.ffA, ID(A_EN), ID(A_SRST_N), ID(A_BYPASS));
+				f(A, st.ffA, ID(A_EN), ID(A_SRST_N), ID(A_BYPASS), ID(BYPASS_A));
 			}
 			pm.add_siguser(A, cell);
 			cell->setPort(ID::A, A);
@@ -126,25 +127,25 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 		if (st.ffB) {
 			SigSpec B = cell->getPort(ID::B);
 			if (st.ffB) {
-				f(B, st.ffB, ID(B_EN), ID(B_SRST_N), ID(B_BYPASS));
+				f(B, st.ffB, ID(B_EN), ID(B_SRST_N), ID(B_BYPASS), ID(BYPASS_B));
 			}
 			pm.add_siguser(B, cell);
 			cell->setPort(ID::B, B);
 		}
-		if (st.ffD) {
-			SigSpec D = cell->getPort(ID::D);
-			if (st.ffD->type.in(ID($adff), ID($adffe))) {
-				f(D, st.ffD, ID(D_EN), ID(D_ARST_N), ID(D_BYPASS));
+		if (st.ffC) {
+			SigSpec C = cell->getPort(ID::C);
+			if (st.ffC->type.in(ID($adff), ID($adffe))) {
+				f(C, st.ffC, ID(C_EN), ID(C_ARST_N), ID(C_BYPASS), ID(BYPASS_C));
 			} else {
-				f(D, st.ffD, ID(D_EN), ID(D_SRST_N), ID(D_BYPASS));
+				f(C, st.ffC, ID(C_EN), ID(C_SRST_N), ID(C_BYPASS), ID(BYPASS_C));
 			}
 
-			pm.add_siguser(D, cell);
-			cell->setPort(ID::D, D);
+			pm.add_siguser(C, cell);
+			cell->setPort(ID::C, C);
 		}
-		if (st.ffP) {
+		if (st.ffP){
 			SigSpec P; // unused
-			f(P, st.ffP, ID(P_EN), ID(P_SRST_N), ID(P_BYPASS));
+			f(P, st.ffP, ID(P_EN), ID(P_SRST_N), ID(P_BYPASS), ID(BYPASS_P));
 			st.ffP->connections_.at(ID::Q).replace(st.sigP, pm.module->addWire(NEW_ID, GetSize(st.sigP)));
 		}
 
@@ -154,16 +155,16 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			log(" \t ffA:%s\n", log_id(st.ffA));
 		if (st.ffB)
 			log(" \t ffB:%s\n", log_id(st.ffB));
-		if (st.ffD)
-			log(" \t ffD:%s\n", log_id(st.ffD));
+		if (st.ffC)
+			log(" \t ffC:%s\n", log_id(st.ffC));
 		if (st.ffP)
 			log(" \t ffP:%s\n", log_id(st.ffP));
 	}
 	log("\n");
 
 	SigSpec P = st.sigP;
-	if (GetSize(P) < 48)
-		P.append(pm.module->addWire(NEW_ID, 48 - GetSize(P)));
+	if (GetSize(P) < 40)
+		P.append(pm.module->addWire(NEW_ID, 40 - GetSize(P)));
 	cell->setPort(ID::P, P);
 
 	pm.blacklist(cell);
@@ -241,8 +242,7 @@ struct ZeroAsicDspPass : public Pass {
 				zeroasic_dsp_pm pm(module, module->selected_cells());
 				pm.run_zeroasic_dsp_pack(zeroasic_dsp_pack);
 			}
-
-		}
+		}		
 	}
 } ZeroAsicDspPass;
 
