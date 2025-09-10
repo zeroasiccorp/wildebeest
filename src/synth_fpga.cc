@@ -87,7 +87,7 @@ struct SynthFpgaPass : public ScriptPass
   pool<string>            ys_dff_features;
   dict<string, string>    ys_dff_models;
   string                  ys_dff_techmap = ""; 
-
+  vector<string>          ys_legal_flops;
   // BRAMs
   //
   vector<string>          ys_brams_memory_libmap; 
@@ -412,6 +412,7 @@ struct SynthFpgaPass : public ScriptPass
 	  pool<string>         dff_features;
 	  dict<string, string> dff_models;
 	  string               dff_techmap;
+          vector<string>       legal_flops;
 
           // BRAM related
 	  //
@@ -462,6 +463,11 @@ struct SynthFpgaPass : public ScriptPass
     log("  DFF MODELS         : \n");
     for (auto it : G_config.dff_models) {
        log("                       %s %s\n", (it.first).c_str(), (it.second).c_str());
+    }
+
+    log("  DFF Legal Flop Types : \n");
+    for (auto it : G_config.legal_flops) {
+       log("                       %s\n", (it).c_str());
     }
 
     log("  DFF techmap        : \n");
@@ -535,6 +541,9 @@ struct SynthFpgaPass : public ScriptPass
        }
        for (auto it : G_config.dff_models) {
           ys_dff_models[it.first] = it.second;
+       }
+       for (auto it : G_config.legal_flops) {
+          ys_legal_flops.push_back(it);
        }
        ys_dff_techmap = G_config.root_path + "/" + G_config.dff_techmap;
 
@@ -663,7 +672,19 @@ struct SynthFpgaPass : public ScriptPass
       ys_dff_models["sdffr"] = "+/plugins/yosys-syn/ff_models/sdffr.v";
       ys_dff_models["sdffs"] = "+/plugins/yosys-syn/ff_models/sdffs.v";
 
-
+      // Legal Flops for dfflegalize
+      //
+      ys_legal_flops.push_back("$_DFF_P_");
+      ys_legal_flops.push_back("$_DFF_PN?_");
+      ys_legal_flops.push_back("$_DFFE_PP_");
+      ys_legal_flops.push_back("$_DFFE_PN?P_");
+      ys_legal_flops.push_back("$_DFFSR_PNN_");
+      ys_legal_flops.push_back("$_DFFSR_PNNE_");
+      if (!no_sdff) {
+        ys_legal_flops.push_back("$_SDFF_P??_");
+        ys_legal_flops.push_back("$_SDFFE_P???_");
+      }
+      
       // -------------------------
       // BRAM setting
       // 
@@ -989,7 +1010,7 @@ struct SynthFpgaPass : public ScriptPass
     for (auto it : dff_features->data_array) {
           JsonNode *dff_mode = it;
           if (dff_mode->type != 'S') {
-              log_error("Array associated to DFF 'features' must be contain only strings.\n");
+              log_error("Array associated to DFF 'features' must contain only strings.\n");
           }
 	  string dff_mode_str = dff_mode->data_string;
 
@@ -1014,7 +1035,23 @@ struct SynthFpgaPass : public ScriptPass
 	  G_config.dff_models[dff_model_str] = dff_model_path->data_string;
     }
 
+    if (flipflops->data_dict.count("legalize_list") == 0) {
+        log_error("'legalize_list' from 'flipflops' is missing in config file '%s'.\n", config_file.c_str());
+    }
+    JsonNode *dff_legalize_list = flipflops->data_dict.at("legalize_list");
+    if (dff_legalize_list->type != 'A') {
+        log_error("'legalize_list' associated to 'flipflops' must be an array.\n");
+    }
 
+    for (auto it : dff_legalize_list->data_array) {
+          JsonNode *legal_flop = it;
+          if (legal_flop->type != 'S') {
+              log_error("Array associated to DFF 'legalize_list' must be contain only strings.\n");
+          }
+	  string legal_flop_str = legal_flop->data_string;
+
+	  (G_config.legal_flops).push_back(legal_flop_str);
+    }
     if (flipflops->data_dict.count("techmap") == 0) {
         log_error("'techmap' from 'flipflops' is missing in config file '%s'.\n", config_file.c_str());
     }
@@ -2472,84 +2509,8 @@ struct SynthFpgaPass : public ScriptPass
   //
   void legalize_flops ()
   {
-    string sdff_cells = ""; 
-
-    if (!no_sdff) { // handle DFF with synchronous set/reset.
-
-      sdff_cells += " -cell $_SDFF_P??_ 01 -cell $_SDFFE_P???_ 01";
-    }
-
-    // Consider all feature combinations 'enable" x "async_set' x 
-    // 'async_reset' when features are supported or not : 2x2x2 = 8 
-    // combinations to handle.
-    //
-    
-    // 1.
-    //
-    if (dff_enable && dff_async_set && dff_async_reset) {
-
-      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN?_ 01 -cell $_DFFE_PP_ 01 -cell $_DFFE_PN?P_ 01 -cell $_DFFSR_PNN_ 01 -cell $_DFFSRE_PNNP_ 01" + sdff_cells);
-
-      return;
-    }
-
-    // 2.
-    //
-    if (dff_enable && dff_async_set) {
-      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN1_ 01 -cell $_DFFE_PP_ 01 -cell $_DFFE_PN1P_ 01" + sdff_cells);
-
-      return;
-    }
-
-    // 3.
-    //
-    if (dff_enable && dff_async_reset) {
-      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN0_ 01 -cell $_DFFE_PP_ 01 -cell $_DFFE_PN0P_ 01" + sdff_cells);
-
-      return;
-    }
-
-    // 4.
-    //
-    if (dff_enable) {
-      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_P??_ 01 -cell $_DFFE_PP_ 01 -cell $_DFFE_P??P_ 01" + sdff_cells);
-
-      return;
-    }
-
-    // 5.
-    //
-    if (dff_async_set && dff_async_reset) {
-      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN?_ 01 -cell $_DFFSR_PNN_ 01" + sdff_cells);
-
-      return;
-    }
-
-    // 6.
-    //
-    if (dff_async_set) {
-      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN1_ 01" + sdff_cells);
-
-      return;
-    }
-
-    // 7.
-    //
-    if (dff_async_reset) {
-      run("dfflegalize -cell $_DFF_P_ 01 -cell $_DFF_PN0_ 01" + sdff_cells);
-
-      return;
-    }
-
-    // 8.
-    //
-    // case of all features are not supported
-    //
-
-    log_warning("No DFF features are suported !\n");
-    log_warning("Still Legalize list: $_DFF_P_\n");
-    run("dfflegalize -cell $_DFF_P_ 01" + sdff_cells);
-
+    string legalize_list = format_legal_flops();
+    run("dfflegalize" + legalize_list);
   }
 
   bool has_cell_type(RTLIL::Design *design, const std::string &target_type) {
@@ -2562,6 +2523,22 @@ struct SynthFpgaPass : public ScriptPass
     return false;
   }
 
+  string format_legal_flops()
+  {
+    string flop_list_string = "";
+    if (ys_legal_flops.size() == 0) {
+      log_warning("No DFF features are suported !\n");
+      log_warning("Still Legalize list: $_DFF_P_\n");
+      flop_list_string += "-cell $_DFF_P_ 01";
+    }
+    else {
+      for (auto it : ys_legal_flops) {
+        flop_list_string = flop_list_string + " -cell " + it + " 01";
+      }
+    }
+    return flop_list_string;
+  }
+  
   // -------------------------
   // infer_BRAMs
   // -------------------------
