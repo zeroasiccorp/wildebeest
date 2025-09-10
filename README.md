@@ -1,8 +1,8 @@
 # yosys-syn
 
-The `yosys-syn` project is an open source synthesis plug-in for [Yosys](https://github.com/YosysHQ/yosys) with support for the [Zero ASIC Platypus FPGAs](https://www.zeroasic.com/platypus). The plug-in also includes experimental support for a an FPGA specification format that lowers the barrier to synthesis exploration for a variety of hardware targets.
+The `yosys-syn` project is an open source synthesis plugin for [Yosys](https://github.com/YosysHQ/yosys) with support for the [Zero ASIC Platypus FPGAs](https://www.zeroasic.com/platypus). The plugin also includes experimental configuration support that enables synthesis for hardware targets beyond the Platypus FPGAs.
 
-The `yosys-syn` synthesis recipes represents a significant improvement over existing open source synthesis solutions and even compares favorably with state of the art commercial proprietary FPGA synthesis tools. The tables below illustrate the synthesis results for various architectures and tools for the [picorv32](https://raw.githubusercontent.com/YosysHQ/picorv32/refs/heads/main/picorv32.v). For a complete set of RTL benchmarks, see the [LogikBench project](https://github.com/zeroasiccorp/logikbench).
+The `yosys-syn` synthesis recipes represents a significant improvement over existing open source synthesis tools and even compares favorably with state of the art commercial proprietary FPGA tools. The tables below illustrate the synthesis results for various architectures for the [picorv32 CPU](https://raw.githubusercontent.com/zeroasiccorp/logikbench/refs/heads/main/logikbench/blocks/picorv32/rtl/picorv32.v). For a complete set of RTL benchmarks, see the [LogikBench project](https://github.com/zeroasiccorp/logikbench).
 
 
 ## LUT4 Architectures
@@ -43,13 +43,13 @@ sudo cmake --install build
 
 ## Quickstart
 
-You can load the `yosys-syn` plugin into Yosys on startup by passing the -m argument:
+You can load the `yosys-syn` plugin into Yosys on startup using the -m argument:
 
 ```bash
 yosys -m yosys-syn
 ```
 
-Alternatively you can load the plugin at runtime via the yosys `plugin` command.
+Alternatively you can load the plugin at runtime via the `plugin` command:
 
 
 ```bash
@@ -58,18 +58,19 @@ yosys> plugin -i yosys-syn
 
 Once the plugin is loaded, you are ready to run synthesis.
 
-Download the `picorv32` core into your working directory. Alternatively, bring your own code.
-
-The following example illustrates a simple synthesis script for the single file CPU design [picorv32](https://raw.githubusercontent.com/YosysHQ/picorv32/refs/heads/main/picorv32.v).
+The following "hello world" example runs synthesis on the [picorv32 CPU](https://raw.githubusercontent.com/zeroasiccorp/logikbench/refs/heads/main/logikbench/blocks/picorv32/rtl/picorv32.v). We encourage you to try your own RTL and report back results.
 
 ```bash
 read_verilog picorv32.v
 hierarchy -check -top picorv32
 synth_fpga -partname Z1010
-stat
 ```
 
+## Limitations
 
+* No carry chain inferences
+* No tri-state circuit inferences
+* No latch inferences
 
 ## Command Options
 
