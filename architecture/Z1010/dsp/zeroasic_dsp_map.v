@@ -1,4 +1,4 @@
-module \$__MUL18X18
+module \$__MAE__
   #(
 	parameter A_SIGNED = 0,
 	parameter B_SIGNED = 0,

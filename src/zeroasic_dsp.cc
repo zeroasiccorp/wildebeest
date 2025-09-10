@@ -100,7 +100,6 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			}
 
 			// bypass set to 0
-			cell->setPort(bypass, State::S0);
 			cell->setParam(bypass_param, State::S1);
 
 			for (auto c : Q.chunks()) {
@@ -114,17 +113,14 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			}
 		};
 
-		// NOTE: flops are not autoremoved because it is possible that they
-		//       are only partially absorbed into DSP, or have fanouts.
-		if (st.ffA) {
+		if (st.ffA && st.ffB) { // both A and B have to be registered
 			SigSpec A = cell->getPort(ID::A);
 			if (st.ffA) {
 				f(A, st.ffA, ID(A_EN), ID(A_SRST_N), ID(A_BYPASS), ID(BYPASS_A));
 			}
 			pm.add_siguser(A, cell);
 			cell->setPort(ID::A, A);
-		}
-		if (st.ffB) {
+
 			SigSpec B = cell->getPort(ID::B);
 			if (st.ffB) {
 				f(B, st.ffB, ID(B_EN), ID(B_SRST_N), ID(B_BYPASS), ID(BYPASS_B));
@@ -132,6 +128,11 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			pm.add_siguser(B, cell);
 			cell->setPort(ID::B, B);
 		}
+		else {
+			cell->setParam(ID(BYPASS_A), State::S0);
+			cell->setParam(ID(BYPASS_B), State::S0);
+		}
+
 		if (st.ffC) {
 			SigSpec C = cell->getPort(ID::C);
 			if (st.ffC->type.in(ID($adff), ID($adffe))) {
@@ -242,7 +243,7 @@ struct ZeroAsicDspPass : public Pass {
 				zeroasic_dsp_pm pm(module, module->selected_cells());
 				pm.run_zeroasic_dsp_pack(zeroasic_dsp_pack);
 			}
-		}		
+		}
 	}
 } ZeroAsicDspPass;
 

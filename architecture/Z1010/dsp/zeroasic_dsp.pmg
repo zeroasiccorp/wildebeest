@@ -219,11 +219,6 @@ match postAdd
 
 	select nusers(port(postAdd, AB)) == 2
 
-	// skip check that ensures one input coming from multiplier
-
-	// Check that remainder of AB is a sign- or zero-extension
-	filter port(postAdd, AB).extract_end(GetSize(sigP)) == SigSpec(sigP[GetSize(sigP)-1], GetSize(port(postAdd, AB))-GetSize(sigP)) || port(postAdd, AB).extract_end(GetSize(sigP)) == SigSpec(State::S0, GetSize(port(postAdd, AB))-GetSize(sigP))
-
 	set postAddAB AB
 	// optional
 endmatch

@@ -745,7 +745,7 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 8;
-        ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
+        ys_dsps_parameter_string["DSP_NAME"] = "$__MAE__";
 
 	if (!do_not_pack_dff_in_dsp) {
 

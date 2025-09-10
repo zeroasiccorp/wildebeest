@@ -3,9 +3,9 @@ module MAE #(
   parameter BYPASS_B=0,
   parameter BYPASS_C=0,
   parameter BYPASS_P=0,
+  parameter MULT_HAS_REG=0,
   parameter POST_ADDER_STATIC=0,
-  parameter USE_FEEDBACK=0,
-  parameter MULT_HAS_REG=0
+  parameter USE_FEEDBACK=0
  )
 (
   input [17:0] A,
@@ -51,7 +51,7 @@ generate
       .Y(P)
     );
   end
-  else if (BYPASS_A == 1'b0 && BYPASS_B == 1'b0 && BYPASS_P==1'b0 && POST_ADDER_STATIC==1'b0) begin
+  else if (BYPASS_A == 1'h0 && BYPASS_B == 1'h0 && BYPASS_C==1'h0 && BYPASS_P==1'h0 && POST_ADDER_STATIC==1'h0 && USE_FEEDBACK==1'h0) begin
     efpga_mult _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),
@@ -120,7 +120,11 @@ generate
   end
   else 
   begin
-    wire _TECHMAP_FAIL_ = 1'b1;
+    last_resort _TECHMAP_REPLACE_ (
+      .A(A),
+      .B(B),
+      .Y(P)
+    );
   end
 endgenerate
 endmodule
