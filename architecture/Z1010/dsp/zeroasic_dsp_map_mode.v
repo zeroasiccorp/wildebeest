@@ -120,11 +120,7 @@ generate
   end
   else 
   begin
-    last_resort _TECHMAP_REPLACE_ (
-      .A(A),
-      .B(B),
-      .Y(P)
-    );
+    wire _TECHMAP_FAIL_ = 1'b1;
   end
 endgenerate
 endmodule

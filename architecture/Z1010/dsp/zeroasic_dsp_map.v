@@ -26,6 +26,7 @@ module \$__MAE__
 		.A_BYPASS(1'b1),
 		.B(B),
 		.B_BYPASS(1'b1),
+		.C(40'b0),
 		.P(Y),
 		.P_BYPASS(1'b1),
 		.A_SRST_N(1'b1),
