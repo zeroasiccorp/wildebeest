@@ -72,8 +72,8 @@ struct SynthFpgaPass : public ScriptPass
 
   pool<string> opt_options  = {"fast", "area", "delay"};
   pool<string> partnames  = {"Z1000", "Z1010", "Z1060"};
-  pool<string> dsp_arch  = {"config", "zeroasic", "bare_mult", "mae"};
-  pool<string> bram_arch  = {"config", "zeroasic", "microchip"};
+  pool<string> dsp_arch  = {"config", "zeroasic", "bare_mult"};
+  pool<string> bram_arch  = {"config", "zeroasic"};
 
   typedef enum e_dff_init_value {S0, S1, SX, SK} dff_init_value;
 
@@ -353,46 +353,30 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
 #if 0
   {
-  "version": 3,
-  "partname": "Z1010",
-  "lut_size": 6,
-  "root_path" : "/home/thierry/YOSYS_DYN/yosys/yosys-syn/",
-  "flipflops": {
-                "features": ["async_reset", "async_set", "flop_enable"]
-                "models": {
-                        "dffers": "SRC/ff_models/dffers.v",
-                        "dffer": "SRC/ff_models/dffer.v",
-                        "dffes": "SRC/ff_models/dffes.v",
-                        "dffe": "SRC/ff_models/dffe.v",
-                        "dffrs": "SRC/ff_models/dffrs.v",
-                        "dffr": "SRC/ff_models/dffr.v",
-                        "dffs": "SRC/ff_models/dffs.v",
-                        "dff": "SRC/ff_models/dff.v"
-                },
-                "techmap": "architecture/Z1010/techlib/tech_flops.v"
+        "version": 1,
+        "partname": "z1010",
+        "lut_size": 4,
+        "flipflops": {
+                "features": ["async_reset", "sync_reset", "sync_set", "flop_enable"],
+                "models": {"dffr": "cad/techlib_custom_plugin/dffr.v", "dff": "cad/techlib_custom_plugin/dff.v", "dffe": "cad/techlib_custom_plugin/dffe.v", "dffer": "cad/techlib_custom_plugin/dffer.v"},
+                "legalize_list": ["\$_DFFE_PP_", "\$_SDFF_PN1_", "\$_DFFE_PN0P_", "\$_DFF_PN0_", "\$_SDFF_PN0_", "\$_SDFFE_PN0P_", "\$_SDFFE_PN1P_", "\$_DFF_P_"],
+                "techmap": "tech_flops.v"
         },
-  "brams": {
-            "memory_libmap": [ "architecture/Z1010/bram/LSRAM.txt",
-                               "architecture/Z1010/bram/uSRAM.txt"]
-            "memory_libmap_parameters": ["-logic-cost-rom 0.5"]
-            "techmap": ["architecture/Z1010/bram/LSRAM_map.v",
-                        "architecture/Z1010/bram/uSRAM_map.v"]
+        "brams": {
+                "memory_libmap": ["/bram_memory_map.txt"],
+                "techmap": ["/tech_bram.v"]
         },
-  "dsps": {
-          "family": "microchip",
-          "techmap": "../techlibs/microchip/polarfire_dsp_map.v",
-          "techmap_parameters": {
-                   "DSP_A_MAXWIDTH": 18,
-                   "DSP_B_MAXWIDTH": 18,
-                   "DSP_A_MAXWIDTH_PARTIAL": 18,
-                   "DSP_A_MINWIDTH": 2,
-                   "DSP_B_MINWIDTH": 2,
-                   "DSP_Y_MINWIDTH": 9,
-                   "DSP_SIGNEDONLY": 1,
-                   "DSP_NAME": "$__MUL18X18"
-          },
-          "pack_command": "microchip_dsp -family polarfire"
-       }
+        "dsps": {
+                "family": "mae",
+                "techmap": "/tech_dsp.v",
+                "techmap_parameters": {
+                   "DSP_A_MAXWIDTH": "18",
+                   "DSP_B_MAXWIDTH": "18",
+                   "DSP_A_MINWIDTH": "2",
+                   "DSP_B_MINWIDTH": "2",
+                   "DSP_NAME": "_dsp_block_"
+                }
+        }
 }
 ~
 #endif
@@ -731,7 +715,7 @@ struct SynthFpgaPass : public ScriptPass
       ys_dsps_parameter_string.clear();
       ys_dsps_pack_command = "";
 
-      if ((part_name == "Z1010") && (dsp_tech == "zeroasic")) {
+      if (((part_name == "Z1010") || (part_name == "Z1060")) && (dsp_tech == "zeroasic")) {
 
         ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/zeroasic_dsp_map.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
@@ -758,34 +742,21 @@ struct SynthFpgaPass : public ScriptPass
 
 	return;
 
-      } else if ((part_name == "Z1010") && (dsp_tech == "bare_mult")) {
+      } else if (((part_name == "Z1010") || (part_name == "Z1060")) && (dsp_tech == "bare_mult")) {
 
-        ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/bare_mult_tech_dsp.v ";
+        ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/tech_dsp.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
         ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
-        ys_dsps_parameter_string["DSP_NAME"] = "$__dsp_block";
-
-	return;
-
-      } else if ((part_name == "Z1010") && (dsp_tech == "mae")) {
-
-        ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/mae_tech_dsp.v ";
-        ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
-        ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
-        ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
-        ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
-        ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 9;
-        ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
-        ys_dsps_parameter_string["DSP_NAME"] = "$__dsp_block";
+        ys_dsps_parameter_string["DSP_NAME"] = "_dsp_block_";
 
 	return;
       }
 
-      if (part_name == "Z1010") {
+      if ((part_name == "Z1010") || (part_name == "Z1060")) {
          log_warning("Could not find any specific DSP tech settings with 'dsp_tech' = '%s'\n", 
                      dsp_tech.c_str());
       }
@@ -2781,7 +2752,7 @@ struct SynthFpgaPass : public ScriptPass
         log("        Bypass DSP inference. It is off by default.\n");
         log("\n");
 
-        log("    -use_dsp_tech [zeroasic, bare_mult, mae]\n");
+        log("    -use_dsp_tech [zeroasic, bare_mult]\n");
         log("        Invoke architecture specific DSP inference. It is off by default. -no_dsp \n");
         log("        overides -use_dsp_tech.\n");
         log("\n");
