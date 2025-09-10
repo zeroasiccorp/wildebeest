@@ -66,6 +66,11 @@ hierarchy -check -top picorv32
 synth_fpga -partname Z1010
 ```
 
+## Limitations
+
+* No support for tri-state circuit inference
+* No support for latch inference
+
 ## Command Options
 
 To get a listing of all `synth_fpga` options, use the yosys built in `help` command.
