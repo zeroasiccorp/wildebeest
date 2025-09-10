@@ -679,7 +679,7 @@ struct SynthFpgaPass : public ScriptPass
       ys_legal_flops.push_back("$_DFFE_PP_");
       ys_legal_flops.push_back("$_DFFE_PN?P_");
       ys_legal_flops.push_back("$_DFFSR_PNN_");
-      ys_legal_flops.push_back("$_DFFSR_PNNE_");
+      ys_legal_flops.push_back("$_DFFSRE_PNNP_");
       if (!no_sdff) {
         ys_legal_flops.push_back("$_SDFF_P??_");
         ys_legal_flops.push_back("$_SDFFE_P???_");
