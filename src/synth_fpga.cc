@@ -71,7 +71,7 @@ struct SynthFpgaPass : public ScriptPass
   string bram_tech;
 
   pool<string> opt_options  = {"fast", "area", "delay"};
-  pool<string> partnames  = {"Z1000", "Z1010"};
+  pool<string> partnames  = {"Z1000", "Z1010", "Z1060"};
   pool<string> dsp_arch  = {"config", "zeroasic", "bare_mult", "mae"};
   pool<string> bram_arch  = {"config", "zeroasic", "microchip"};
 
@@ -673,16 +673,35 @@ struct SynthFpgaPass : public ScriptPass
       ys_dff_models["sdffs"] = "+/plugins/yosys-syn/ff_models/sdffs.v";
 
       // Legal Flops for dfflegalize
-      //
-      ys_legal_flops.push_back("$_DFF_P_");
-      ys_legal_flops.push_back("$_DFF_PN?_");
-      ys_legal_flops.push_back("$_DFFE_PP_");
-      ys_legal_flops.push_back("$_DFFE_PN?P_");
-      ys_legal_flops.push_back("$_DFFSR_PNN_");
-      ys_legal_flops.push_back("$_DFFSR_PNNE_");
-      if (!no_sdff) {
-        ys_legal_flops.push_back("$_SDFF_P??_");
-        ys_legal_flops.push_back("$_SDFFE_P???_");
+      if ((part_name == "Z1010") || (part_name == "Z1060")) {
+        // Match legal flop types from config file exactly
+        ys_legal_flops.push_back("$_DFFE_PP_");
+        ys_legal_flops.push_back("$_SDFFE_PN1P_");
+        ys_legal_flops.push_back("$_DFF_P_");
+        ys_legal_flops.push_back("$_DFF_PN0_");
+        ys_legal_flops.push_back("$_SDFFE_PN0P_");
+        ys_legal_flops.push_back("$_DFFE_PN0P_");
+        ys_legal_flops.push_back("$_SDFF_PN0_");
+        ys_legal_flops.push_back("$_SDFF_PN1_");
+      } else if (part_name == "Z1000") {
+        // Match legal flop types from config file exactly
+        ys_legal_flops.push_back("$_DFF_P_");
+        ys_legal_flops.push_back("$_DFF_PN0_");
+        ys_legal_flops.push_back("$_DFFE_PP_");
+        ys_legal_flops.push_back("$_DFFE_PN0P_");
+      } else {
+        // When no part name is specified provide a generic setup
+        // for legalization
+        ys_legal_flops.push_back("$_DFF_P_");
+        ys_legal_flops.push_back("$_DFF_PN?_");
+        ys_legal_flops.push_back("$_DFFE_PP_");
+        ys_legal_flops.push_back("$_DFFE_PN?P_");
+        ys_legal_flops.push_back("$_DFFSR_PNN_");
+        ys_legal_flops.push_back("$_DFFSRE_PNNP_");
+        if (!no_sdff) {
+          ys_legal_flops.push_back("$_SDFF_P??_");
+          ys_legal_flops.push_back("$_SDFFE_P???_");
+        }
       }
       
       // -------------------------
@@ -692,38 +711,15 @@ struct SynthFpgaPass : public ScriptPass
       ys_brams_memory_libmap_parameters.clear();
       ys_brams_techmap.clear();
 
-      if ((part_name == "Z1010") && (bram_tech == "microchip")) {
-
+      if ((part_name == "Z1010") || (part_name == "Z1060")) {
          // bram memory_libmap settings
 	 //
-         string brams_memory_libmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/LSRAM.txt";
-         string brams_memory_libmap2 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/uSRAM.txt";
-	 ys_brams_memory_libmap.push_back(brams_memory_libmap1);
-	 ys_brams_memory_libmap.push_back(brams_memory_libmap2);
-
-	 string brams_memory_libmap_param1 = "-logic-cost-rom 0.5";
-	 ys_brams_memory_libmap_parameters.push_back(brams_memory_libmap_param1);
-
-	 string brams_memory_libmap_param2 = "-logic-cost-ram 1.0";
-	 ys_brams_memory_libmap_parameters.push_back(brams_memory_libmap_param2);
-
-         // bram techmap settings
-	 //
-         string brams_techmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/LSRAM_map.v";
-         string brams_techmap2 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/uSRAM_map.v";
-	 ys_brams_techmap.push_back(brams_techmap1);
-	 ys_brams_techmap.push_back(brams_techmap2);
-
-      } else if ((part_name == "Z1010") && (bram_tech == "zeroasic")) {
-  
-         // bram memory_libmap settings
-	 //
-         string brams_memory_libmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/memory_libmap.txt";
+         string brams_memory_libmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/bram_memory_map.txt";
 	 ys_brams_memory_libmap.push_back(brams_memory_libmap1);
 
          // bram techmap settings
 	 //
-         string brams_techmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/techmap.v";
+         string brams_techmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/tech_bram.v";
 	 ys_brams_techmap.push_back(brams_techmap1);
       }
   
@@ -2907,7 +2903,7 @@ struct SynthFpgaPass : public ScriptPass
 	dsp_tech = "zeroasic";
 	no_dsp = false;
 
-	bram_tech = "microchip";
+	bram_tech = "zeroasic";
 	no_bram = false;
 	no_sdff = false;
 
