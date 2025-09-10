@@ -68,8 +68,9 @@ synth_fpga -partname Z1010
 
 ## Limitations
 
-* No support for tri-state circuit inference
-* No support for latch inference
+* No carry chain inferences
+* No tri-state circuit inferences
+* No latch inferences
 
 ## Command Options
 
