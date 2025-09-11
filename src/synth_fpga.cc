@@ -58,7 +58,6 @@ struct SynthFpgaPass : public ScriptPass
   bool no_opt_const_dff;
   bool show_dff_init_value;
   bool continue_if_latch;
-  bool do_not_pack_dff_in_dsp;
   bool set_dff_init_value_to_zero;
   string sc_syn_lut_size;
   string sc_syn_fsm_encoding;
@@ -72,7 +71,7 @@ struct SynthFpgaPass : public ScriptPass
 
   pool<string> opt_options  = {"fast", "area", "delay"};
   pool<string> partnames  = {"z1000", "z1010", "z1060"};
-  pool<string> dsp_arch  = {"config", "zeroasic", "bare_mult"};
+  pool<string> dsp_arch  = {"config", "zeroasic", "bare_mult", "mae"};
   pool<string> bram_arch  = {"config", "zeroasic"};
 
   typedef enum e_dff_init_value {S0, S1, SX, SK} dff_init_value;
@@ -696,8 +695,9 @@ struct SynthFpgaPass : public ScriptPass
       ys_brams_techmap.clear();
 
       if ((part_name == "z1010") || (part_name == "z1060")) {
+
          // bram memory_libmap settings
-	 //
+	       //
          string brams_memory_libmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/bram_memory_map.txt";
 	 ys_brams_memory_libmap.push_back(brams_memory_libmap1);
 
@@ -720,25 +720,14 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/zeroasic_dsp_map.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
-        ys_dsps_parameter_int["DSP_A_MAXWIDTH_PARTIAL"] = 18;  // Partial multipliers are intentionally
-                                                               // limited to 18x18 in order to take
-                                                               // advantage of the (PCOUT >> 17) -> PCIN
-                                                               // dedicated cascade chain capability
+        ys_dsps_parameter_int["DSP_A_MAXWIDTH_PARTIAL"] = 18;
 
         ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 8;
-        ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
-        ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
+        ys_dsps_parameter_string["DSP_NAME"] = "$__MAE__";
 
-	if (!do_not_pack_dff_in_dsp) {
-
-          ys_dsps_pack_command = "zeroasic_dsp"; // pack DFF in DSP
-
-	} else {
-
-          ys_dsps_pack_command = "zeroasic_dsp_noff"; // do not pack DFF in DSP
-	}
+        ys_dsps_pack_command = "zeroasic_dsp"; // pack DFF in DSP
 
 	return;
 
@@ -772,15 +761,15 @@ struct SynthFpgaPass : public ScriptPass
   {
      if (!config_file_success) {
 
-       // Converting 'partname' to upper case only if part name is 
+       // Converting 'partname' to lower case only if part name is 
        // used as 'synth_fpga' option and not through config file. 
        // If we do that also for partname set from config file, we may 
-       // have trouble since we may upper case 3rd party partnames and
+       // have trouble since we may lower case 3rd party partnames and
        // we would have no way to refer to the exact partname name,
        // set from config file, therefore the check on 'config_file_success'.
        //
        std::transform (part_name.begin(), part_name.end(), 
-		       part_name.begin(), ::toupper);
+		       part_name.begin(), ::tolower);
      }
 
      if (partnames.count(part_name) == 0) {
@@ -2484,6 +2473,16 @@ struct SynthFpgaPass : public ScriptPass
     run("dfflegalize" + legalize_list);
   }
 
+  bool has_cell_type(RTLIL::Design *design, const std::string &target_type) {
+    for (auto module : design->modules()) {
+        for (auto cell : module->cells()) {
+            if (cell->type.str() == target_type)
+                return true;
+        }
+    }
+    return false;
+  }
+
   string format_legal_flops()
   {
     string flop_list_string = "";
@@ -2603,7 +2602,6 @@ struct SynthFpgaPass : public ScriptPass
      run(sc_syn_dsps_techmap);
 
      run("stat");
-
      run("select a:mul2dsp");
      run("setattr -unset mul2dsp");
      run("opt_expr -fine");
@@ -2616,9 +2614,18 @@ struct SynthFpgaPass : public ScriptPass
         run(sc_syn_dsps_pack_command);
      }
 
+     std::string ys_dsps_techmap_modes = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/zeroasic_dsp_map_mode.v";
+
+     // after dsp packing, map to modes for compatibility with our vpr solution 
+     run("techmap -map " + ys_dsps_techmap_modes);
+
      run("chtype -set $mul t:$__soft_mul");
 
      run("stat");
+
+     if(has_cell_type(yosys_get_design(), "\\MAE")) {
+      log_error("Could not techmap DSP to a valid configuration.\n");
+   }
   }
 
   // -------------------------
@@ -2757,11 +2764,6 @@ struct SynthFpgaPass : public ScriptPass
         log("        overides -use_dsp_tech.\n");
         log("\n");
 
-        log("    -do_not_pack_dff_in_dsp\n");
-        log("        Specifies to not pack DFF in DSPs. This is off by default.\n");
-        log("\n");
-
-
         log("    -fsm_encoding [one-hot, binary]\n");
         log("        Specifies FSM encoding : by default a 'one-hot' encoding is performed.\n");
         log("\n");
@@ -2889,7 +2891,6 @@ struct SynthFpgaPass : public ScriptPass
 	show_dff_init_value = false;
 	set_dff_init_value_to_zero = false;
 	continue_if_latch = false;
-	do_not_pack_dff_in_dsp = false;
 
 	wait = false;
 
@@ -3012,11 +3013,6 @@ struct SynthFpgaPass : public ScriptPass
 
           if (args[argidx] == "-continue_if_latch") {
              continue_if_latch = true;
-             continue;
-          }
-
-          if (args[argidx] == "-do_not_pack_dff_in_dsp") {
-             do_not_pack_dff_in_dsp = true;
              continue;
           }
 

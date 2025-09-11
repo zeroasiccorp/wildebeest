@@ -279,60 +279,6 @@ struct ReportStatPass : public ScriptPass
              nb++;
              continue;
         }
-	
-	// ZeroAsic
-	//
-	// Make sure it is in sync. with file under :
-	//    yosys-syn/architecture/z1010/dsp/zeroasic_dsp_map_mode.v
-	//
-        if (cell->type.in(ID(efpga_mult_regi))) {
-             nb++;
-             continue;
-        }
-        if (cell->type.in(ID(efpga_mult_rego))) {
-             nb++;
-             continue;
-        }
-        if (cell->type.in(ID(efpga_mult_regio))) {
-             nb++;
-             continue;
-        }
-        if (cell->type.in(ID(efpga_mult))) {
-             nb++;
-             continue;
-        }
-        if (cell->type.in(ID(efpga_mult_addc_regi))) {
-             nb++;
-             continue;
-        }
-        if (cell->type.in(ID(efpga_mult_addc_rego))) {
-             nb++;
-             continue;
-        }
-        if (cell->type.in(ID(efpga_mult_addc_regio))) {
-             nb++;
-             continue;
-        }
-        if (cell->type.in(ID(efpga_mult_addc))) {
-             nb++;
-             continue;
-        }
-        if (cell->type.in(ID(efpga_macc_pipe))) {
-             nb++;
-             continue;
-        }
-        if (cell->type.in(ID(efpga_macc_pipe_regi))) {
-             nb++;
-             continue;
-        }
-        if (cell->type.in(ID(efpga_macc_regi))) {
-             nb++;
-             continue;
-        }
-        if (cell->type.in(ID(efpga_macc))) {
-             nb++;
-             continue;
-        }
     }
 
     return nb;
@@ -392,57 +338,33 @@ struct ReportStatPass : public ScriptPass
         // Zeroasic 
         //
         if (cell->type.in(
-                          // New Peter's RAM
-			  //
                           // sprams
- 			  //
+			  //
                           ID(spram_512x32),
                           ID(spram_1024x16),
                           ID(spram_2048x8),
                           ID(spram_4096x4),
                           ID(spram_8192x2),
                           ID(spram_16384x1),
- 			  
+			  
                           // sdprams
- 			  //
+			  //
                           ID(sdpram_1024x16),
                           ID(sdpram_2048x8),
                           ID(sdpram_4096x4),
                           ID(sdpram_8192x2),
                           ID(sdpram_16384x1),
                           ID(sdpram_16384x1),
- 			  
+			  
                           // tdprams
- 			  //
+			  //
                           ID(tdpram_1024x16),
                           ID(tdpram_2048x8),
                           ID(tdpram_4096x4),
                           ID(tdpram_8192x2),
-                          ID(tdpram_16384x1),
-
-			  // Old RAM names
-			  //
-                          ID(spram_512x64),
-                          ID(spram_1024x32), 
-                          ID(spram_2048x16), 
-			  ID(spram_4096x8), 
-			  ID(spram_8192x4), 
-			  ID(spram_16384x2), 
-			  ID(spram_32768x1), 
-
-			  ID(sdpram_1024x32), 
-			  ID(sdpram_2048x16), 
-			  ID(sdpram_4096x8), 
-			  ID(sdpram_8192x4), 
-			  ID(sdpram_16384x2), 
-			  ID(sdpram_32768x1), 
-
-			  ID(tdpram_1024x32), 
-			  ID(tdpram_2048x16), 
-			  ID(tdpram_4096x8), 
-			  ID(tdpram_8192x4), 
-			  ID(tdpram_16384x2), 
-			  ID(tdpram_32768x1))) {
+                          ID(tdpram_16384x1)
+			  )
+	) {
              nb++;
              continue;
         }

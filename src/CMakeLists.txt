@@ -11,7 +11,6 @@ add_library(yosys-syn SHARED
     time_chrono.cc
     report_stat.cc
     zeroasic_dsp.cc
-    zeroasic_dsp_noff.cc
     cp.cc
     obs_clean.cc
     synth_fpga.cc
@@ -29,7 +28,6 @@ target_link_libraries(yosys-syn
     PRIVATE
         yosys::yosys
         zeroasic_dsp
-        zeroasic_dsp_noff
 )
 target_compile_definitions(yosys-syn
     PRIVATE
