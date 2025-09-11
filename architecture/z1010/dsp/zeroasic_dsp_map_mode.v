@@ -77,7 +77,7 @@ generate
       .y(P)
     );
   end
-  else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_C==1'b0 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK==1'b0) begin
+  else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK==1'b0) begin
     efpga_mult_addc_regio _TECHMAP_REPLACE_ (
       .a(A),
       .b(B),

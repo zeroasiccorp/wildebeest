@@ -62,7 +62,7 @@ code sigA sigB sigC sigD clock sigP sigMultOut
 
 	//update signals
 	sigC = port(dsp, \C, SigSpec());
-
+	sigD = SigSpec();
 
 	SigSpec P = port(dsp, \P);
 	// Only care about bits that are used
@@ -104,8 +104,8 @@ code bypassA bypassB bypassC bypassP
 endcode
 
 //  post adder
-// sigD will be aborbed.
-code postAdderStatic sigP sigD
+// sigD will be absorbed.
+code postAdderStatic sigP sigD sigC
 	u_postAdderStatic = nullptr;
 	subpattern(postAddMatching);
 	postAdderStatic = u_postAdderStatic;
@@ -114,6 +114,7 @@ code postAdderStatic sigP sigD
 		//sigD will be whichever input to the postAdder that is NOT from the multiplier
 		// u_postAddAB is the input to the postAdder from the multiplier
 		sigD = port(postAdderStatic, u_postAddAB == \A ? \B : \A);
+		sigC = sigD;
 		sigP = port(postAdderStatic, \Y);
 	}
 endcode
@@ -171,14 +172,26 @@ code useFeedBack
 	useFeedBack = false;
 	if (postAdderStatic)	{
 		if (sigD == sigP) {
+			log("sigD == sigP\n");
 			useFeedBack = true;
+		}
+		else {
+			log("sigD != sigP\n");
+			log("sigD: %s\n", log_signal(sigD));
+
+			log("sigP: %s\n", log_signal(sigP));
+
 		}
 	}
 endcode
 
 // 'C' input for REG_C
 code argQ sigC clock ffC
+	log("trying to pick up C\n");
+	log("initial sigC: %s\n", log_signal(sigC));
 	if (bypassC.is_fully_ones() and not useFeedBack){
+		//sigC = sigD; // ?
+		log("sigC: %s\n", log_signal(sigC));
 		argQ = sigC;
 		allowAsync = true;
 		subpattern(in_dffe);
@@ -206,7 +219,8 @@ endcode
 //   The other input to the adder is assumed to come in from the 'C' input
 
 subpattern postAddMatching
-arg sigP
+arg sigP postAdderStatic
+
 
 match postAdd
 
@@ -218,9 +232,27 @@ match postAdd
 
 	select nusers(port(postAdd, AB)) == 2
 
+//	index <SigBit> port(postAdd, AB)[0] === sigP[0]
+	// aka 
+
+//	filter GetSize(port(postAdd, AB)) >= GetSize(sigP)
+// aka 40 >= 36 or 36 >= 36
+//	filter port(postAdd, AB).extract(0, GetSize(sigP)) == sigP
+// 
+	// Check that remainder of AB is a sign- or zero-extension
+//	filter port(postAdd, AB).extract_end(GetSize(sigP)) == SigSpec(sigP[GetSize(sigP)-1], GetSize(port(postAdd, AB))-GetSize(sigP)) || port(postAdd, AB).extract_end(GetSize(sigP)) == SigSpec(State::S0, GetSize(port(postAdd, AB))-GetSize(sigP))
+
 	set postAddAB AB
 	// optional
 endmatch
+
+code 
+	log("224\n");
+	log("GetSize(port(postAdderStatic, \\A)): %i\n", GetSize(port(postAdd, \A))); // 40
+	log("GetSize(sigP): %i\n",  GetSize(sigP)); // 36
+	log("GetSize(port(postAdderStatic, \\B)): %i\n", GetSize(port(postAdd, \B))); // 46
+	log("GetSize(sigP): %i\n",  GetSize(sigP)); // 36
+endcode
 
 code
 	if (postAdd)
