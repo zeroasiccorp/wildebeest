@@ -2286,9 +2286,6 @@ struct SynthFpgaPass : public ScriptPass
      run("read_verilog +/plugins/yosys-syn/ff_models/sdffr.v");
      run("read_verilog +/plugins/yosys-syn/ff_models/sdffs.v");
 
-     // At some point should use our own cells
-     //
-     run("read_verilog +/microchip/cells_sim.v");
   }
 
   // -------------------------
@@ -2321,10 +2318,6 @@ struct SynthFpgaPass : public ScriptPass
      run("read_verilog +/plugins/yosys-syn/ff_models/sdffns.v");
      run("read_verilog +/plugins/yosys-syn/ff_models/sdffr.v");
      run("read_verilog +/plugins/yosys-syn/ff_models/sdffs.v");
-
-     // At some point should use our own cells
-     //
-     run("read_verilog +/microchip/cells_sim.v");
 
      // Black box them all
      //
@@ -2750,7 +2743,7 @@ struct SynthFpgaPass : public ScriptPass
         log("        Bypass BRAM inference. It is off by default.\n");
         log("\n");
 
-        log("    -use_bram_tech [zeroasic, microchip]\n");
+        log("    -use_bram_tech [zeroasic]\n");
         log("        Invoke architecture specific DSP inference. It is off by default. -no_bram \n");
         log("        overides -use_BRAM_TECH.\n");
         log("\n");

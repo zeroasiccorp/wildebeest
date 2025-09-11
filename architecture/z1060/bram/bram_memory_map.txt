@@ -11,7 +11,7 @@ ram block $__tech_spram__ {
     clock posedge;
     clken;
     rden;
-    # read/write modes; adapted from techlibs/microchip/LSRAM.txt
+    # read/write modes; adapted from third party
     # Goal:  cover all the modes that are compatible with a
     # conventional memory architecture, which amounts to
     # everything except for write first
@@ -47,7 +47,7 @@ ram block $__tech_sdpram__ {
       clock posedge;
     }
     clken;
-    # read/write modes; adapted from techlibs/microchip/LSRAM.txt
+    # read/write modes; adapted from third party
     # Goal:  cover all the modes that are compatible with a
     # conventional memory architecture, which amounts to
     # everything except for write first; on a write only
@@ -93,7 +93,7 @@ ram block $__tech_tdpram__ {
     # to instantiate a TDP port when its ports are not fully utilized
     optional_rw;
 
-    # read/write modes; adapted from techlibs/microchip/LSRAM.txt
+    # read/write modes; adapted from third party
     # Goal:  cover all the modes that are compatible with a
     # conventional memory architecture, which amounts to
     # everything except for write first
