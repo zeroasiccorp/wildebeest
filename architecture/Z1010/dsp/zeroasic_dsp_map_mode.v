@@ -32,99 +32,99 @@ module MAE #(
 generate
   if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_P==1'b0 && POST_ADDER_STATIC==1'b0) begin
     efpga_mult_regi _TECHMAP_REPLACE_ (
-      .A(A),
-      .B(B),
-      .CLK(CLK),
-      .Y(P)
+      .a(A),
+      .b(B),
+      .clk(CLK),
+      .y(P)
     );
   end
   else if (BYPASS_A == 1'b0 && BYPASS_B == 1'b0 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b0 && USE_FEEDBACK==1'b0) begin
     efpga_mult_rego _TECHMAP_REPLACE_ (
-      .A(A),
-      .B(B),
-      .CLK(CLK),
-      .Y(P)
+      .a(A),
+      .b(B),
+      .clk(CLK),
+      .y(P)
     );
   end
   else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b0 && USE_FEEDBACK==1'b0) begin
     efpga_mult_regio _TECHMAP_REPLACE_ (
-      .A(A),
-      .B(B),
-      .CLK(CLK),
-      .Y(P)
+      .a(A),
+      .b(B),
+      .clk(CLK),
+      .y(P)
     );
   end
   else if (BYPASS_A == 1'h0 && BYPASS_B == 1'h0 && BYPASS_C==1'h0 && BYPASS_P==1'h0 && POST_ADDER_STATIC==1'h0 && USE_FEEDBACK==1'h0) begin
     efpga_mult _TECHMAP_REPLACE_ (
-      .A(A),
-      .B(B),
-      .Y(P)
+      .a(A),
+      .b(B),
+      .y(P)
     );
   end
   else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_P==1'b0 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK==1'b0) begin
     efpga_mult_addc_regi _TECHMAP_REPLACE_ (
-      .A(A),
-      .B(B),
-      .C(C),
-      .CLK(CLK),
-      .Y(P)
+      .a(A),
+      .b(B),
+      .c(C),
+      .clk(CLK),
+      .y(P)
     );
   end
   else if (BYPASS_A == 1'b0 && BYPASS_B == 1'b0 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK == 1'b0) begin
     efpga_mult_addc_rego _TECHMAP_REPLACE_ (
-      .A(A),
-      .B(B),
-      .C(C),
-      .Y(P)
+      .a(A),
+      .b(B),
+      .c(C),
+      .y(P)
     );
   end
   else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_C==1'b0 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK==1'b0) begin
     efpga_mult_addc_regio _TECHMAP_REPLACE_ (
-      .A(A),
-      .B(B),
-      .C(C),
-      .CLK(CLK),
-      .Y(P)
+      .a(A),
+      .b(B),
+      .c(C),
+      .clk(CLK),
+      .y(P)
     );
   end
   else if (BYPASS_A == 1'b0 && BYPASS_B == 1'b0 && BYPASS_P==1'b0 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK==1'b0) begin
     efpga_mult_addc _TECHMAP_REPLACE_ (
-      .A(A),
-      .B(B),
-      .C(C),
-      .Y(P)
+      .a(A),
+      .b(B),
+      .c(C),
+      .y(P)
     );
   end
   else if (BYPASS_A == 1'b0 && BYPASS_B == 1'b0 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK==1'b1 && MULT_HAS_REG == 1'b1) begin
     efpga_macc_pipe _TECHMAP_REPLACE_ (
-      .A(A),
-      .B(B),
-      .CLK(CLK),
-      .Y(P)
+      .a(A),
+      .b(B),
+      .clk(CLK),
+      .y(P)
     );
   end
   else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK == 1'b1 && MULT_HAS_REG == 1'b1) begin
     efpga_macc_pipe_regi _TECHMAP_REPLACE_ (
-      .A(A),
-      .B(B),
-      .CLK(CLK),
-      .Y(P)
+      .a(A),
+      .b(B),
+      .clk(CLK),
+      .y(P)
     );
   end
   else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK == 1'b1 && MULT_HAS_REG == 1'b0) begin
     efpga_macc_regi _TECHMAP_REPLACE_ (
-      .A(A),
-      .B(B),
-      .CLK(CLK),
-      .Y(P)
+      .a(A),
+      .b(B),
+      .clk(CLK),
+      .y(P)
     );
   end
   else if (BYPASS_A == 1'b0 && BYPASS_B == 1'b0 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK == 1'b1 && MULT_HAS_REG == 1'b0) begin
     efpga_macc _TECHMAP_REPLACE_ (
-      .A(A),
-      .B(B),
-      .CLK(CLK),
-      .Y(P)
+      .a(A),
+      .b(B),
+      .clk(CLK),
+      .y(P)
     );
   end
   else 
