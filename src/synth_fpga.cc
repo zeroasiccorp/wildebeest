@@ -71,7 +71,7 @@ struct SynthFpgaPass : public ScriptPass
   string bram_tech;
 
   pool<string> opt_options  = {"fast", "area", "delay"};
-  pool<string> partnames  = {"Z1000", "Z1010", "Z1060"};
+  pool<string> partnames  = {"z1000", "z1010", "z1060"};
   pool<string> dsp_arch  = {"config", "zeroasic", "bare_mult"};
   pool<string> bram_arch  = {"config", "zeroasic"};
 
@@ -657,7 +657,7 @@ struct SynthFpgaPass : public ScriptPass
       ys_dff_models["sdffs"] = "+/plugins/yosys-syn/ff_models/sdffs.v";
 
       // Legal Flops for dfflegalize
-      if ((part_name == "Z1010") || (part_name == "Z1060")) {
+      if ((part_name == "z1010") || (part_name == "z1060")) {
         // Match legal flop types from config file exactly
         ys_legal_flops.push_back("$_DFFE_PP_");
         ys_legal_flops.push_back("$_SDFFE_PN1P_");
@@ -667,7 +667,7 @@ struct SynthFpgaPass : public ScriptPass
         ys_legal_flops.push_back("$_DFFE_PN0P_");
         ys_legal_flops.push_back("$_SDFF_PN0_");
         ys_legal_flops.push_back("$_SDFF_PN1_");
-      } else if (part_name == "Z1000") {
+      } else if (part_name == "z1000") {
         // Match legal flop types from config file exactly
         ys_legal_flops.push_back("$_DFF_P_");
         ys_legal_flops.push_back("$_DFF_PN0_");
@@ -695,7 +695,7 @@ struct SynthFpgaPass : public ScriptPass
       ys_brams_memory_libmap_parameters.clear();
       ys_brams_techmap.clear();
 
-      if ((part_name == "Z1010") || (part_name == "Z1060")) {
+      if ((part_name == "z1010") || (part_name == "z1060")) {
          // bram memory_libmap settings
 	 //
          string brams_memory_libmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/bram_memory_map.txt";
@@ -715,7 +715,7 @@ struct SynthFpgaPass : public ScriptPass
       ys_dsps_parameter_string.clear();
       ys_dsps_pack_command = "";
 
-      if (((part_name == "Z1010") || (part_name == "Z1060")) && (dsp_tech == "zeroasic")) {
+      if (((part_name == "z1010") || (part_name == "z1060")) && (dsp_tech == "zeroasic")) {
 
         ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/zeroasic_dsp_map.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
@@ -742,7 +742,7 @@ struct SynthFpgaPass : public ScriptPass
 
 	return;
 
-      } else if (((part_name == "Z1010") || (part_name == "Z1060")) && (dsp_tech == "bare_mult")) {
+      } else if (((part_name == "z1010") || (part_name == "z1060")) && (dsp_tech == "bare_mult")) {
 
         ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/tech_dsp.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
@@ -756,7 +756,7 @@ struct SynthFpgaPass : public ScriptPass
 	return;
       }
 
-      if ((part_name == "Z1010") || (part_name == "Z1060")) {
+      if ((part_name == "z1010") || (part_name == "z1060")) {
          log_warning("Could not find any specific DSP tech settings with 'dsp_tech' = '%s'\n", 
                      dsp_tech.c_str());
       }
@@ -2736,7 +2736,7 @@ struct SynthFpgaPass : public ScriptPass
         log("\n");
 
         log("    -partname\n");
-        log("        Specifies the Architecture partname used. 'Z1010' is used by default.\n");
+        log("        Specifies the Architecture partname used. 'z1010' is used by default.\n");
         log("\n");
 
         log("    -no_bram\n");
@@ -2865,7 +2865,7 @@ struct SynthFpgaPass : public ScriptPass
 	top_opt = "-auto-top";
 	opt = "area";
 
-	part_name = "Z1010";
+	part_name = "z1010";
 
 	no_flatten = false;
 	no_opt_sat_dff = false;
