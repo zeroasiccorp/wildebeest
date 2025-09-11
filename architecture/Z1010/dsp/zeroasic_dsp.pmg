@@ -18,7 +18,8 @@
 pattern zeroasic_dsp_pack
 
 state <SigBit> clock
-state <SigSpec> sigA sigB sigC sigP sigMultOut
+// A, B: * inputs. C: 3rd input (to adder). D: input to adder (could be same as C)
+state <SigSpec> sigA sigB sigC sigD sigP sigMultOut
 state <Cell*> ffA ffB ffC ffP
 state <Cell*> postAdderStatic
 state <bool> useFeedBack multHasReg
@@ -43,7 +44,7 @@ endmatch
 
 // detect existing signals connected to DSP
 // detect configuration ports
-code sigA sigB sigC clock sigP sigMultOut
+code sigA sigB sigC sigD clock sigP sigMultOut
 	//helper function to remove unused bits
 	auto unextend = [](const SigSpec &sig) {
 		int i;
@@ -104,16 +105,16 @@ code bypassA bypassB bypassC bypassP
 endcode
 
 //  post adder
-//
-code postAdderStatic sigP sigC
+// sigD will be aborbed.
+code postAdderStatic sigP sigD
 	u_postAdderStatic = nullptr;
 	subpattern(postAddMatching);
 	postAdderStatic = u_postAdderStatic;
 
 	if (postAdderStatic) {
-		//sigC will be whichever input to the postAdder that is NOT from the multiplier
+		//sigD will be whichever input to the postAdder that is NOT from the multiplier
 		// u_postAddAB is the input to the postAdder from the multiplier
-		sigC = port(postAdderStatic, u_postAddAB == \A ? \B : \A);
+		sigD = port(postAdderStatic, u_postAddAB == \A ? \B : \A);
 		sigP = port(postAdderStatic, \Y);
 	}
 endcode
@@ -170,7 +171,7 @@ endcode
 code useFeedBack
 	useFeedBack = false;
 	if (postAdderStatic)	{
-		if (sigC == sigP) {
+		if (sigD == sigP) {
 			useFeedBack = true;
 		}
 	}
@@ -194,8 +195,7 @@ endcode
 code
 	if (postAdderStatic)
 		accept;
-	// temporarily remove ffC because it causes issues with mac
-	if (ffA || ffB || ffP) { 
+	if (ffA || ffB || ffC || ffP) {
 		accept;
 	}
 endcode
