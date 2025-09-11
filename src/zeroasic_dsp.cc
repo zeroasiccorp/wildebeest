@@ -36,7 +36,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 {
 	auto &st = pm.st_zeroasic_dsp_pack;
 
-	log("Analysing %s.%s for ZeroAsic MAE packing.\n", log_id(pm.module), log_id(st.dsp));
+	log("Analysing %s.%s for ZeroAsic DSP packing.\n", log_id(pm.module), log_id(st.dsp));
 
 	Cell *cell = st.dsp;
 	// pack post-adder
