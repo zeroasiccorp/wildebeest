@@ -34,6 +34,7 @@ generate
     efpga_mult_regi _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),
+      .CLK(CLK),
       .Y(P)
     );
   end
@@ -41,6 +42,7 @@ generate
     efpga_mult_rego _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),
+      .CLK(CLK),
       .Y(P)
     );
   end
@@ -48,6 +50,7 @@ generate
     efpga_mult_regio _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),
+      .CLK(CLK),
       .Y(P)
     );
   end
@@ -63,6 +66,7 @@ generate
       .A(A),
       .B(B),
       .C(C),
+      .CLK(CLK),
       .Y(P)
     );
   end
@@ -79,6 +83,7 @@ generate
       .A(A),
       .B(B),
       .C(C),
+      .CLK(CLK),
       .Y(P)
     );
   end
@@ -94,6 +99,7 @@ generate
     efpga_macc_pipe _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),
+      .CLK(CLK),
       .Y(P)
     );
   end
@@ -101,6 +107,7 @@ generate
     efpga_macc_pipe_regi _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),
+      .CLK(CLK),
       .Y(P)
     );
   end
@@ -108,6 +115,7 @@ generate
     efpga_macc_regi _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),
+      .CLK(CLK),
       .Y(P)
     );
   end
@@ -115,6 +123,7 @@ generate
     efpga_macc _TECHMAP_REPLACE_ (
       .A(A),
       .B(B),
+      .CLK(CLK),
       .Y(P)
     );
   end
