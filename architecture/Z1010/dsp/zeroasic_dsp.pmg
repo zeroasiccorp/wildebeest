@@ -262,7 +262,7 @@ endcode
 match ff
 	// reg D has async rst
 	// reg A, B has sync rst
-	select ff->type.in($dff, $dffe, $sdff, $sdffe, $adff, $adffe, $dffr)
+	select ff->type.in($dff, $adff, $adffe, $dffr)
 	// does not support clock inversion
 	select param(ff, \CLK_POLARITY).as_bool()
 
@@ -310,7 +310,7 @@ code
 endcode
 
 match ff
-	select ff->type.in($dff, $dffe, $sdff, $sdffe, $adff, $adffe, $dffr)
+	select ff->type.in($dff, $adff, $adffe, $dffr)
 	// does not support clock inversion
 	select param(ff, \CLK_POLARITY).as_bool()
 
