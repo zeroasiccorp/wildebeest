@@ -279,6 +279,60 @@ struct ReportStatPass : public ScriptPass
              nb++;
              continue;
         }
+	
+	// ZeroAsic
+	//
+	// Make sure it is in sync. with file under :
+	//    yosys-syn/architecture/z1010/dsp/zeroasic_dsp_map_mode.v
+	//
+        if (cell->type.in(ID(efpga_mult_regi))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_mult_rego))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_mult_regio))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_mult))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_mult_addc_regi))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_mult_addc_rego))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_mult_addc_regio))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_mult_addc))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_macc_pipe))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_macc_pipe_regi))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_macc_regi))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_macc))) {
+             nb++;
+             continue;
+        }
     }
 
     return nb;
