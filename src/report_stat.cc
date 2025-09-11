@@ -391,7 +391,38 @@ struct ReportStatPass : public ScriptPass
 	
         // Zeroasic 
         //
-        if (cell->type.in(ID(spram_512x64),
+        if (cell->type.in(
+                          // New Peter's RAM
+			  //
+                          // sprams
+ 			  //
+                          ID(spram_512x32),
+                          ID(spram_1024x16),
+                          ID(spram_2048x8),
+                          ID(spram_4096x4),
+                          ID(spram_8192x2),
+                          ID(spram_16384x1),
+ 			  
+                          // sdprams
+ 			  //
+                          ID(sdpram_1024x16),
+                          ID(sdpram_2048x8),
+                          ID(sdpram_4096x4),
+                          ID(sdpram_8192x2),
+                          ID(sdpram_16384x1),
+                          ID(sdpram_16384x1),
+ 			  
+                          // tdprams
+ 			  //
+                          ID(tdpram_1024x16),
+                          ID(tdpram_2048x8),
+                          ID(tdpram_4096x4),
+                          ID(tdpram_8192x2),
+                          ID(tdpram_16384x1),
+
+			  // Old RAM names
+			  //
+                          ID(spram_512x64),
                           ID(spram_1024x32), 
                           ID(spram_2048x16), 
 			  ID(spram_4096x8), 
