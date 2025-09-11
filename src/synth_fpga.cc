@@ -58,7 +58,6 @@ struct SynthFpgaPass : public ScriptPass
   bool no_opt_const_dff;
   bool show_dff_init_value;
   bool continue_if_latch;
-  bool do_not_pack_dff_in_dsp;
   bool set_dff_init_value_to_zero;
   string sc_syn_lut_size;
   string sc_syn_fsm_encoding;
@@ -747,14 +746,7 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 8;
         ys_dsps_parameter_string["DSP_NAME"] = "$__MAE__";
 
-	if (!do_not_pack_dff_in_dsp) {
-
-          ys_dsps_pack_command = "zeroasic_dsp"; // pack DFF in DSP
-
-	} else {
-
-          ys_dsps_pack_command = "zeroasic_dsp_noff"; // do not pack DFF in DSP
-	}
+        ys_dsps_pack_command = "zeroasic_dsp"; // pack DFF in DSP
 
 	return;
 
@@ -2804,11 +2796,6 @@ struct SynthFpgaPass : public ScriptPass
         log("        overides -use_dsp_tech.\n");
         log("\n");
 
-        log("    -do_not_pack_dff_in_dsp\n");
-        log("        Specifies to not pack DFF in DSPs. This is off by default.\n");
-        log("\n");
-
-
         log("    -fsm_encoding [one-hot, binary]\n");
         log("        Specifies FSM encoding : by default a 'one-hot' encoding is performed.\n");
         log("\n");
@@ -2936,7 +2923,6 @@ struct SynthFpgaPass : public ScriptPass
 	show_dff_init_value = false;
 	set_dff_init_value_to_zero = false;
 	continue_if_latch = false;
-	do_not_pack_dff_in_dsp = false;
 
 	wait = false;
 
@@ -3059,11 +3045,6 @@ struct SynthFpgaPass : public ScriptPass
 
           if (args[argidx] == "-continue_if_latch") {
              continue_if_latch = true;
-             continue;
-          }
-
-          if (args[argidx] == "-do_not_pack_dff_in_dsp") {
-             do_not_pack_dff_in_dsp = true;
              continue;
           }
 
