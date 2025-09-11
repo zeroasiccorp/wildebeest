@@ -740,16 +740,12 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/zeroasic_dsp_map.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
-        ys_dsps_parameter_int["DSP_A_MAXWIDTH_PARTIAL"] = 18;  // Partial multipliers are intentionally
-                                                               // limited to 18x18 in order to take
-                                                               // advantage of the (PCOUT >> 17) -> PCIN
-                                                               // dedicated cascade chain capability
+        ys_dsps_parameter_int["DSP_A_MAXWIDTH_PARTIAL"] = 18;
 
         ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 8;
-        ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
-        ys_dsps_parameter_string["DSP_NAME"] = "$__MUL18X18";
+        ys_dsps_parameter_string["DSP_NAME"] = "$__MAE__";
 
 	if (!do_not_pack_dff_in_dsp) {
 
@@ -2517,6 +2513,16 @@ struct SynthFpgaPass : public ScriptPass
     run("dfflegalize" + legalize_list);
   }
 
+  bool has_cell_type(RTLIL::Design *design, const std::string &target_type) {
+    for (auto module : design->modules()) {
+        for (auto cell : module->cells()) {
+            if (cell->type.str() == target_type)
+                return true;
+        }
+    }
+    return false;
+  }
+
   string format_legal_flops()
   {
     string flop_list_string = "";
@@ -2636,7 +2642,6 @@ struct SynthFpgaPass : public ScriptPass
      run(sc_syn_dsps_techmap);
 
      run("stat");
-
      run("select a:mul2dsp");
      run("setattr -unset mul2dsp");
      run("opt_expr -fine");
@@ -2649,9 +2654,18 @@ struct SynthFpgaPass : public ScriptPass
         run(sc_syn_dsps_pack_command);
      }
 
+     std::string ys_dsps_techmap_modes = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/zeroasic_dsp_map_mode.v";
+
+     // after dsp packing, map to modes for compatibility with our vpr solution 
+     run("techmap -map " + ys_dsps_techmap_modes);
+
      run("chtype -set $mul t:$__soft_mul");
 
      run("stat");
+
+     if(has_cell_type(yosys_get_design(), "\\MAE")) {
+      log_error("Could not techmap DSP to a valid configuration.\n");
+   }
   }
 
   // -------------------------
