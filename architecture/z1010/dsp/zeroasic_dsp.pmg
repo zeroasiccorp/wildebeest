@@ -259,8 +259,7 @@ code
 endcode
 
 match ff
-	// reg D has async rst
-	// reg A, B has sync rst
+	// all regs must have async reset
 	select ff->type.in($dff, $adff, $adffe, $dffr)
 	// does not support clock inversion
 	select param(ff, \CLK_POLARITY).as_bool()
@@ -280,9 +279,8 @@ endmatch
 code argQ
 	// Check that reset value, if present, is fully 0.
 	bool noResetFlop = ff->type.in($dff, $dffe);
-	bool srstZero = ff->type.in($sdff, $sdffe) && param(ff, \SRST_VALUE).is_fully_zero();
 	bool arstZero = ff->type.in($adff, $adffe) && param(ff, \ARST_VALUE).is_fully_zero();
-	bool resetLegal = noResetFlop || srstZero || arstZero;
+	bool resetLegal = noResetFlop || arstZero;
 	if (resetLegal)
 	{
 		SigSpec Q = port(ff, \Q);

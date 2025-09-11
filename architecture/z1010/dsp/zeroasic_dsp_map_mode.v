@@ -11,22 +11,21 @@ module MAE #(
   input [17:0] A,
   input A_BYPASS,
   input A_EN,
-  input A_SRST_N,
+  input A_ARST_N,
   input [17:0] B,
   input B_BYPASS,
   input CDIN_FDBK_SEL,
   input B_EN,
-  input B_SRST_N,
+  input B_ARST_N,
   input [39:0] C,
   input CLK,
   input C_ARST_N,
   input C_BYPASS,
   input C_EN,
-  input C_SRST_N,
   input [39:0] P,
   input P_BYPASS,
   input P_EN,
-  input P_SRST_N
+  input P_ARST_N
 );
 
 generate

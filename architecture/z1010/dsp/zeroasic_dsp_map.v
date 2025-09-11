@@ -29,10 +29,10 @@ module \$__MAE__
 		.C(40'b0),
 		.P(Y),
 		.P_BYPASS(1'b1),
-		.A_SRST_N(1'b1),
-		.B_SRST_N(1'b1),
-		.C_SRST_N(1'b1),
-		.C_ARST_N(1'b1)
+		.A_ARST_N(1'b1),
+		.B_ARST_N(1'b1),
+		.C_ARST_N(1'b1),
+		.P_ARST_N(1'b1)
 
 	);
 endmodule
