@@ -11,22 +11,22 @@ module MAE #(
   input [17:0] A,
   input A_BYPASS,
   input A_EN,
-  input A_SRST_N,
+  input A_ARST_N,
   input [17:0] B,
   input B_BYPASS,
   input CDIN_FDBK_SEL,
   input B_EN,
-  input B_SRST_N,
+  input B_ARST_N,
   input [39:0] C,
   input CLK,
   input C_ARST_N,
   input C_BYPASS,
   input C_EN,
-  input C_SRST_N,
-  input [39:0] P,
+  output [39:0] P,
   input P_BYPASS,
   input P_EN,
-  input P_SRST_N
+  input P_ARST_N,
+  input resetn
 );
 
 generate
@@ -35,6 +35,7 @@ generate
       .a(A),
       .b(B),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -43,6 +44,7 @@ generate
       .a(A),
       .b(B),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -51,6 +53,7 @@ generate
       .a(A),
       .b(B),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -67,6 +70,7 @@ generate
       .b(B),
       .c(C),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -75,15 +79,18 @@ generate
       .a(A),
       .b(B),
       .c(C),
+      .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
-  else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_C==1'b0 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK==1'b0) begin
+  else if (BYPASS_A == 1'b1 && BYPASS_B == 1'b1 && BYPASS_P==1'b1 && POST_ADDER_STATIC==1'b1 && USE_FEEDBACK==1'b0) begin
     efpga_mult_addc_regio _TECHMAP_REPLACE_ (
       .a(A),
       .b(B),
       .c(C),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -100,6 +107,7 @@ generate
       .a(A),
       .b(B),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -108,6 +116,7 @@ generate
       .a(A),
       .b(B),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -116,6 +125,7 @@ generate
       .a(A),
       .b(B),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -123,7 +133,6 @@ generate
     efpga_macc _TECHMAP_REPLACE_ (
       .a(A),
       .b(B),
-      .clk(CLK),
       .y(P)
     );
   end

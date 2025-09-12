@@ -40,6 +40,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			cell->setPort(ID(CDIN_FDBK_SEL), {State::S0, State::S1});
 		} else {
 			cell->setParam(ID(USE_FEEDBACK), State::S0);
+			cell->setPort(ID::C, st.sigC);
 		}
 
 		pm.autoremove(st.postAdderStatic);
@@ -109,17 +110,20 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 		if (st.ffA && st.ffB) { // both A and B have to be registered
 			SigSpec A = cell->getPort(ID::A);
 			if (st.ffA) {
-				f(A, st.ffA, ID(A_EN), ID(A_SRST_N), ID(A_BYPASS), ID(BYPASS_A));
+				f(A, st.ffA, ID(A_EN), ID(A_ARST_N), ID(A_BYPASS), ID(BYPASS_A));
 			}
 			pm.add_siguser(A, cell);
 			cell->setPort(ID::A, A);
 
 			SigSpec B = cell->getPort(ID::B);
 			if (st.ffB) {
-				f(B, st.ffB, ID(B_EN), ID(B_SRST_N), ID(B_BYPASS), ID(BYPASS_B));
+				f(B, st.ffB, ID(B_EN), ID(B_ARST_N), ID(B_BYPASS), ID(BYPASS_B));
 			}
 			pm.add_siguser(B, cell);
 			cell->setPort(ID::B, B);
+
+			// set the reset port to the reset (which has to be shared by both)
+			cell->setPort(ID(resetn), st.ffA->getPort(ID::ARST));
 		}
 		else {
 			cell->setParam(ID(BYPASS_A), State::S0);
@@ -128,18 +132,14 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 
 		if (st.ffC) {
 			SigSpec C = cell->getPort(ID::C);
-			if (st.ffC->type.in(ID($adff), ID($adffe))) {
-				f(C, st.ffC, ID(C_EN), ID(C_ARST_N), ID(C_BYPASS), ID(BYPASS_C));
-			} else {
-				f(C, st.ffC, ID(C_EN), ID(C_SRST_N), ID(C_BYPASS), ID(BYPASS_C));
-			}
+			f(C, st.ffC, ID(C_EN), ID(C_ARST_N), ID(C_BYPASS), ID(BYPASS_C));
 
 			pm.add_siguser(C, cell);
 			cell->setPort(ID::C, C);
 		}
 		if (st.ffP){
 			SigSpec P; // unused
-			f(P, st.ffP, ID(P_EN), ID(P_SRST_N), ID(P_BYPASS), ID(BYPASS_P));
+			f(P, st.ffP, ID(P_EN), ID(P_ARST_N), ID(P_BYPASS), ID(BYPASS_P));
 			st.ffP->connections_.at(ID::Q).replace(st.sigP, pm.module->addWire(NEW_ID, GetSize(st.sigP)));
 		}
 
