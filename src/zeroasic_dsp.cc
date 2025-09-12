@@ -2,7 +2,6 @@
 ISC License
 
 Copyright (C) 2025  Frederick Tombs <fred@zeroasic.com>, Zero Asic Corp.
-Copyright (C) 2024 Microchip Technology Inc. and its subsidiaries
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -24,24 +23,16 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
 
-#if 0
-#include "techlibs/zeroasic/zeroasic_dsp_CREG_pm.h"
-#include "techlibs/zeroasic/zeroasic_dsp_cascade_pm.h"
-#include "techlibs/zeroasic/zeroasic_dsp_pm.h"
-#endif
-
 #include "zeroasic_dsp.h"
 
 void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 {
 	auto &st = pm.st_zeroasic_dsp_pack;
 
-	log("Analysing %s.%s for ZeroAsic DSP packing.\n", log_id(pm.module), log_id(st.dsp));
-
 	Cell *cell = st.dsp;
 	// pack post-adder
+	//
 	if (st.postAdderStatic) {
-		// subtraction not yet handled
 		
 		cell->setParam(ID(POST_ADDER_STATIC), State::S1);
 		if (st.useFeedBack) {
@@ -63,11 +54,13 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 
 	}
 	// pack registers
+	//
 	if (st.clock != SigBit()) {
 		cell->setPort(ID::CLK, st.clock);
 
 		// function to absorb a register
-		auto f = [&pm, cell](SigSpec &A, Cell *ff, IdString ceport, IdString rstport, IdString bypass, IdString bypass_param) {
+		auto f = [&pm, cell](SigSpec &A, Cell *ff, IdString ceport, IdString rstport, 
+				     IdString bypass, IdString bypass_param) {
 			// input/output ports
 			SigSpec D = ff->getPort(ID::D);
 			SigSpec Q = pm.sigmap(ff->getPort(ID::Q));
@@ -183,44 +176,14 @@ struct ZeroAsicDspPass : public Pass {
 		log("output register 'P' (with optional enable/reset), pre-adder and/or post-adder into\n");
 		log("ZeroAsic DSP resources.\n");
 		log("\n");
-		log("Multiply-accumulate operations using the post-adder with feedback on the 'C'\n");
-		log("input will be folded into the DSP. In this scenario only, the 'C' input can be\n");
-		log("used to override the current accumulation result with a new value. This will\n");
-		log("be added to the multiplier result to form the next accumulation result.\n");
-		log("\n");
-		log("Use of the dedicated 'PCOUT' -> 'PCIN' cascade path is detected for 'P' -> 'C'\n");
-		log("connections (optionally, where 'P' is right-shifted by 17-bits and used as an\n");
-		log("input to the post-adder. This pattern is common for summing partial products to\n");
-		log("implement wide multipliers). Cascade chains are limited to a mazimum length \n");
-		log("of 24 cells, corresponding to PolarFire (pf) devices.\n");
-		log("\n");
-		log("This pass is a no-op if the scratchpad variable 'zeroasic_dsp.multonly' is set\n");
-		log("to 1.\n");
-		log("\n");
-		log("\n");
-		log("    -family {polarfire}\n");
-		log("        select the family to target\n");
-		log("        default: polarfire\n");
-		log("\n");
 	}
-        // We have picked up Microchip DSP inference to give an indication of where
-        // we should be in case we support DSP inference with MULT and Post ADDER
-        // components with DFFs packing.
-        //
-	// This is a default DSP inference that will be overiden by our own DSP
-	// inference.
-	//
+
 	void execute(std::vector<std::string> args, RTLIL::Design *design) override
 	{
-		log_header(design, "Executing ZEROASIC_DSP pass (pack resources into DSPs).\n");
+		log_header(design, "Executing ZEROASIC_DSP pass (pack DFFs into DSPs).\n");
 
-		std::string family = "polarfire";
 		size_t argidx;
 		for (argidx = 1; argidx < args.size(); argidx++) {
-			if ((args[argidx] == "-family") && argidx + 1 < args.size()) {
-				family = args[++argidx];
-				continue;
-			}
 			break;
 		}
 		extra_args(args, argidx, design);
@@ -231,15 +194,6 @@ struct ZeroAsicDspPass : public Pass {
 				continue;
 
 			{
-				// For more details on PolarFire MACC_PA, consult
-				//   the "PolarFire FPGA Macro Library Guide"
-
-				// Main pattern matching step to capture a DSP cell.
-				//   Match for pre-adder, post-adder, as well as
-				//   registers 'A', 'B', 'D', and 'P'. Additionally,
-				//   check for an accumulator pattern based on whether
-				//   a post-adder and PREG are both present AND
-				//   if PREG feeds into this post-adder.
 				zeroasic_dsp_pm pm(module, module->selected_cells());
 				pm.run_zeroasic_dsp_pack(zeroasic_dsp_pack);
 			}
