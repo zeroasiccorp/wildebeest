@@ -698,9 +698,12 @@ struct SynthFpgaPass : public ScriptPass
       if ((part_name == "z1010") || (part_name == "z1060")) {
 
          // bram memory_libmap settings
-	       //
+	 //
          string brams_memory_libmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/bram_memory_map.txt";
 	 ys_brams_memory_libmap.push_back(brams_memory_libmap1);
+
+	 string brams_memory_libmap_param1 = "-logic-cost-rom 0.5";
+         ys_brams_memory_libmap_parameters.push_back(brams_memory_libmap_param1);
 
          // bram techmap settings
 	 //
