@@ -209,7 +209,6 @@ endcode
 subpattern postAddMatching
 arg sigP
 
-
 match postAdd
 
 	select postAdd->type.in($add)
