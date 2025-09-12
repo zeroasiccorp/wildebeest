@@ -49,12 +49,9 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			cell->setPort(ID(CDIN_FDBK_SEL), {State::S0, State::S1});
 		} else {
 			cell->setParam(ID(USE_FEEDBACK), State::S0);
-			log("set port C to sigC: %s\n", log_signal(st.sigC));
 			cell->setPort(ID::C, st.sigC);
 		}
-		// ADD C
 
-		log("going to remove post adder %s\n", st.postAdderStatic->name.c_str());
 		pm.autoremove(st.postAdderStatic);
 	}
 
@@ -141,7 +138,6 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 		}
 
 		if (st.ffC) {
-			log("ffC = 1!\n");
 			SigSpec C = cell->getPort(ID::C);
 			f(C, st.ffC, ID(C_EN), ID(C_ARST_N), ID(C_BYPASS), ID(BYPASS_C));
 

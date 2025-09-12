@@ -2642,16 +2642,14 @@ struct SynthFpgaPass : public ScriptPass
 
      // Call the DSP packer command
      //
-     run("write_verilog prepack.v");
+
      if (sc_syn_dsps_pack_command != "") {
         run(sc_syn_dsps_pack_command);
      }
-      run("write_verilog postpack.v");
      std::string ys_dsps_techmap_modes = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/zeroasic_dsp_map_mode.v";
-     
+
      // after dsp packing, map to modes for compatibility with our vpr solution 
      run("techmap -map " + ys_dsps_techmap_modes);
-     run("write_verilog postmode.v");
      run("chtype -set $mul t:$__soft_mul");
 
      run("stat");

@@ -62,7 +62,7 @@ code sigA sigB sigC sigD clock sigP sigMultOut
 
 	//update signals
 	sigC = port(dsp, \C, SigSpec());
-	sigD = SigSpec();
+
 
 	SigSpec P = port(dsp, \P);
 	// Only care about bits that are used
@@ -104,8 +104,8 @@ code bypassA bypassB bypassC bypassP
 endcode
 
 //  post adder
-// sigD will be absorbed.
-code postAdderStatic sigP sigD sigC
+// sigD will be aborbed.
+code postAdderStatic sigP sigD
 	u_postAdderStatic = nullptr;
 	subpattern(postAddMatching);
 	postAdderStatic = u_postAdderStatic;
@@ -114,7 +114,6 @@ code postAdderStatic sigP sigD sigC
 		//sigD will be whichever input to the postAdder that is NOT from the multiplier
 		// u_postAddAB is the input to the postAdder from the multiplier
 		sigD = port(postAdderStatic, u_postAddAB == \A ? \B : \A);
-		sigC = sigD;
 		sigP = port(postAdderStatic, \Y);
 	}
 endcode
@@ -209,7 +208,6 @@ endcode
 subpattern postAddMatching
 arg sigP
 
-
 match postAdd
 
 	select postAdd->type.in($add)
@@ -219,14 +217,6 @@ match postAdd
 	choice <IdString> AB {\A, \B}
 
 	select nusers(port(postAdd, AB)) == 2
-
-	index <SigBit> port(postAdd, AB)[0] === sigP[0]
-
-	filter GetSize(port(postAdd, AB)) >= GetSize(sigP)
-    filter port(postAdd, AB).extract(0, GetSize(sigP)) == sigP
-
-	// Check that remainder of AB is a sign- or zero-extension
-	filter port(postAdd, AB).extract_end(GetSize(sigP)) == SigSpec(sigP[GetSize(sigP)-1], GetSize(port(postAdd, AB))-GetSize(sigP)) || port(postAdd, AB).extract_end(GetSize(sigP)) == SigSpec(State::S0, GetSize(port(postAdd, AB))-GetSize(sigP))
 
 	set postAddAB AB
 	// optional
@@ -269,8 +259,9 @@ code
 endcode
 
 match ff
-	// all regs must have async reset. can't handle enables.
-	select ff->type.in($dff, $adff, $dffr)
+	// reg D has async rst
+	// reg A, B has sync rst
+	select ff->type.in($dff, $adff, $adffe, $dffr)
 	// does not support clock inversion
 	select param(ff, \CLK_POLARITY).as_bool()
 
@@ -289,8 +280,9 @@ endmatch
 code argQ
 	// Check that reset value, if present, is fully 0.
 	bool noResetFlop = ff->type.in($dff, $dffe);
+	bool srstZero = ff->type.in($sdff, $sdffe) && param(ff, \SRST_VALUE).is_fully_zero();
 	bool arstZero = ff->type.in($adff, $adffe) && param(ff, \ARST_VALUE).is_fully_zero();
-	bool resetLegal = noResetFlop || arstZero;
+	bool resetLegal = noResetFlop || srstZero || arstZero;
 	if (resetLegal)
 	{
 		SigSpec Q = port(ff, \Q);
@@ -317,7 +309,7 @@ code
 endcode
 
 match ff
-	select ff->type.in($dff, $adff, $dffr)
+	select ff->type.in($dff, $adff, $adffe, $dffr)
 	// does not support clock inversion
 	select param(ff, \CLK_POLARITY).as_bool()
 
