@@ -131,6 +131,9 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			}
 			pm.add_siguser(B, cell);
 			cell->setPort(ID::B, B);
+
+			// set the reset port to the reset (which has to be shared by both)
+			cell->setPort(ID(resetn), st.ffA->getPort(ID::ARST));
 		}
 		else {
 			cell->setParam(ID(BYPASS_A), State::S0);

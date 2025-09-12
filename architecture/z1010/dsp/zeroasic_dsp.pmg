@@ -232,15 +232,13 @@ match postAdd
 
 	select nusers(port(postAdd, AB)) == 2
 
-//	index <SigBit> port(postAdd, AB)[0] === sigP[0]
-	// aka 
+	index <SigBit> port(postAdd, AB)[0] === sigP[0]
 
-//	filter GetSize(port(postAdd, AB)) >= GetSize(sigP)
-// aka 40 >= 36 or 36 >= 36
-//	filter port(postAdd, AB).extract(0, GetSize(sigP)) == sigP
-// 
+	filter GetSize(port(postAdd, AB)) >= GetSize(sigP)
+    filter port(postAdd, AB).extract(0, GetSize(sigP)) == sigP
+
 	// Check that remainder of AB is a sign- or zero-extension
-//	filter port(postAdd, AB).extract_end(GetSize(sigP)) == SigSpec(sigP[GetSize(sigP)-1], GetSize(port(postAdd, AB))-GetSize(sigP)) || port(postAdd, AB).extract_end(GetSize(sigP)) == SigSpec(State::S0, GetSize(port(postAdd, AB))-GetSize(sigP))
+	filter port(postAdd, AB).extract_end(GetSize(sigP)) == SigSpec(sigP[GetSize(sigP)-1], GetSize(port(postAdd, AB))-GetSize(sigP)) || port(postAdd, AB).extract_end(GetSize(sigP)) == SigSpec(State::S0, GetSize(port(postAdd, AB))-GetSize(sigP))
 
 	set postAddAB AB
 	// optional
@@ -291,8 +289,8 @@ code
 endcode
 
 match ff
-	// all regs must have async reset
-	select ff->type.in($dff, $adff, $adffe, $dffr)
+	// all regs must have async reset. can't handle enables.
+	select ff->type.in($dff, $adff, $dffr)
 	// does not support clock inversion
 	select param(ff, \CLK_POLARITY).as_bool()
 
@@ -339,7 +337,7 @@ code
 endcode
 
 match ff
-	select ff->type.in($dff, $adff, $adffe, $dffr)
+	select ff->type.in($dff, $adff, $dffr)
 	// does not support clock inversion
 	select param(ff, \CLK_POLARITY).as_bool()
 

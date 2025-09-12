@@ -22,10 +22,11 @@ module MAE #(
   input C_ARST_N,
   input C_BYPASS,
   input C_EN,
-  input [39:0] P,
+  output [39:0] P,
   input P_BYPASS,
   input P_EN,
-  input P_ARST_N
+  input P_ARST_N,
+  input resetn
 );
 
 generate
@@ -34,6 +35,7 @@ generate
       .a(A),
       .b(B),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -42,6 +44,7 @@ generate
       .a(A),
       .b(B),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -50,6 +53,7 @@ generate
       .a(A),
       .b(B),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -66,6 +70,7 @@ generate
       .b(B),
       .c(C),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -74,6 +79,8 @@ generate
       .a(A),
       .b(B),
       .c(C),
+      .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -83,6 +90,7 @@ generate
       .b(B),
       .c(C),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -99,6 +107,7 @@ generate
       .a(A),
       .b(B),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -107,6 +116,7 @@ generate
       .a(A),
       .b(B),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -115,6 +125,7 @@ generate
       .a(A),
       .b(B),
       .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
@@ -122,7 +133,6 @@ generate
     efpga_macc _TECHMAP_REPLACE_ (
       .a(A),
       .b(B),
-      .clk(CLK),
       .y(P)
     );
   end
