@@ -40,4 +40,4 @@ echo "********************* "
 time
 
 echo " "
-echo "** Ending ABC FAST optimization !!!"
+echo "** Ending ABC FAST LUT6 optimization !!!"

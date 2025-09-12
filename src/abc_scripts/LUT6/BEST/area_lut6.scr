@@ -51,6 +51,4 @@ echo "** End ABC AREA LUT6 optimization and mapping !!!"
 
 &put
 
-write_blif out.blif
-
 time

@@ -206,8 +206,6 @@ echo "&shrink; &if -K 6 -a -C 32; &mfs -W 2 -C 600 -D 25; &satlut -C 32; &satlut
 
 &put
 
-write_blif out.blif
-
 echo " "
 echo "** ABC SMALL AREA LUT6 Optimization and Mapping done !!!"
 &put

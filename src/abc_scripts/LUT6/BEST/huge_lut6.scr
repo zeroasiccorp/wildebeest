@@ -36,4 +36,4 @@ echo "********************* "
 time
 
 echo " "
-echo "** Ending ABC HUGE optimization !!!"
+echo "** Ending ABC HUGE LUT6 optimization !!!"

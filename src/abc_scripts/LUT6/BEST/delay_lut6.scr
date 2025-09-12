@@ -141,7 +141,7 @@ echo "lutpack -S 1;"
 &load;
 
 echo " "
-echo "** ABC DELAY optimization done !!!"
+echo "** ABC DELAY LUT6 optimization done !!!"
 &put
 
 time
