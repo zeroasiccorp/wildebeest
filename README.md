@@ -187,7 +187,7 @@ yosys > synth_fpga -config <configuration file>
 
 The configuration format is still work in progress. An draft format specification is shown below.
 
-```json
+```
 {
         "version": <int, version of file schema, current version is 1>,
         "partname": <str, name of the fpga part>,
