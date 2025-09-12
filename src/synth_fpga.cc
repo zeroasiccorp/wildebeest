@@ -56,7 +56,7 @@ struct SynthFpgaPass : public ScriptPass
   bool no_opt_sat_dff, show_config, stop_if_undriven_nets;
   bool no_xor_tree_process;
   bool no_opt_const_dff;
-  bool no_dsp_pack;
+  bool dsp_pack;
   bool show_dff_init_value;
   bool continue_if_latch;
   bool set_dff_init_value_to_zero;
@@ -726,6 +726,14 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 8;
+
+	// Thierry: is MAE signed or unsigned ?
+	// If signed we need to specify the line below and may expect more
+	// logic for RTL MULT used with operands around 18 bit width.
+	//
+        // ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
+	//
+
         ys_dsps_parameter_string["DSP_NAME"] = "$__MAE__";
 
         ys_dsps_pack_command = "zeroasic_dsp"; // pack DFF in DSP
@@ -2604,7 +2612,7 @@ struct SynthFpgaPass : public ScriptPass
 
      // Call the DSP packer command
      //
-     if ((sc_syn_dsps_pack_command != "") && (!no_dsp_pack)) {
+     if ((sc_syn_dsps_pack_command != "") && (dsp_pack)) {
         run(sc_syn_dsps_pack_command);
      }
 
@@ -2758,8 +2766,8 @@ struct SynthFpgaPass : public ScriptPass
         log("        overides -use_dsp_tech.\n");
         log("\n");
 
-        log("    -no_dsp_pack\n");
-        log("        Disable DSP packing (DFFs packed into DSPs IOs).\n");
+        log("    -dsp_pack\n");
+        log("        Enable DSP packing (DFFs packed into DSPs IOs).\n");
         log("\n");
 
 
@@ -2887,7 +2895,7 @@ struct SynthFpgaPass : public ScriptPass
 
 	no_xor_tree_process = false;
 	no_opt_const_dff = false;
-	no_dsp_pack = false;
+	dsp_pack = false;
 	show_dff_init_value = false;
 	set_dff_init_value_to_zero = false;
 	continue_if_latch = false;
@@ -3006,8 +3014,8 @@ struct SynthFpgaPass : public ScriptPass
              continue;
           }
 
-          if (args[argidx] == "-no_dsp_pack") {
-             no_dsp_pack = true;
+          if (args[argidx] == "-dsp_pack") {
+             dsp_pack = true;
              continue;
           }
 
