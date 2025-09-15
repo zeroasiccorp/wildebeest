@@ -33,7 +33,6 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 	// pack post-adder
 	//
 	if (st.postAdderStatic) {
-		log("Packing post-adder\n");
 		cell->setParam(ID(POST_ADDER_STATIC), State::S1);
 		if (st.useFeedBack) {
 			cell->setParam(ID(USE_FEEDBACK), State::S1);
