@@ -97,9 +97,9 @@ endcode
 
 // capture static configuration ports
 code bypassA bypassB bypassC bypassP
-	bypassA = port(dsp, \A_BYPASS, SigSpec());
-	bypassB = port(dsp, \B_BYPASS, SigSpec());
-	bypassC = port(dsp, \C_BYPASS, SigSpec());
+	bypassA = port(dsp, \ALLOW_A_REG, SigSpec());
+	bypassB = port(dsp, \ALLOW_B_REG, SigSpec());
+	bypassC = port(dsp, \ALLOW_C_REG, SigSpec());
 	bypassP = port(dsp, \P_BYPASS, SigSpec());
 endcode
 

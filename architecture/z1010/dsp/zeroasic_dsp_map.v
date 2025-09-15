@@ -1,3 +1,4 @@
+// Map from $mult to $__MAE__
 module \$__MAE__
   #(
 	parameter A_SIGNED = 0,
@@ -12,27 +13,29 @@ module \$__MAE__
 		output [Y_WIDTH-1:0] Y
 	);
 
-	// Don't specify clock or reset.
+	// Don't specify clock or reset yet.
 	MAE #(
-		.BYPASS_A(1'b0),
-		.BYPASS_B(1'b0),
-		.BYPASS_C(1'b0),
+		.A_REG(1'b0),
+		.B_REG(1'b0),
+		.C_REG(1'b0),
 		.BYPASS_P(1'b0),
 		.POST_ADDER_STATIC(1'b0),
 		.USE_FEEDBACK(1'b0)
  	)
     _TECHMAP_REPLACE_ (
 		.A(A),
-		.A_BYPASS(1'b1),
 		.B(B),
-		.B_BYPASS(1'b1),
 		.C(40'b0),
 		.P(Y),
-		.P_BYPASS(1'b1),
 		.A_ARST_N(1'b1),
 		.B_ARST_N(1'b1),
 		.C_ARST_N(1'b1),
-		.P_ARST_N(1'b1)
+		.P_ARST_N(1'b1),
+		// allow packing each of these
+		.ALLOW_A_REG(1'b1),
+		.ALLOW_B_REG(1'b1),
+		.P_BYPASS(1'b1),
+
 
 	);
 endmodule
