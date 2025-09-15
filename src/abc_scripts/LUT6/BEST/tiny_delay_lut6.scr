@@ -9,29 +9,17 @@ write_blif tiny_delay_lut6.blif
 
 &ps
 
-&st; &lf -K 6 -e; &ps
-
-&st; &if -K 6; &save; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &sopb -C 8; &if -K 6 -a; &st; &lf -K 6 -e; &satlut -d ; &dch -C 600; &lf -K 6 -e; &mfs -W 2 -D 15 -M 600 ; &satlut -d ; &save; &load; &ps; &save
-
-&shrink; &sopb -C 8; &blut -K 6; &sopb -C 8; &synch2 -K 6 -W 2;  &lf -K 6 -e -C 32; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &lf -e -K 6 -C 32; &save; &load; &mfs -W 2 -D 15 -C 600; &satlut -N 16 -d ; &ps; &save
-
-&shrink; &blut -K 6; &sopb -C 8; &synch2 -W 2 -K 6; &lf -K 6 -e -C 32; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &lf -K 6 -e -C 32; &save; &load; &mfs -W 2 -D 15 -C 600 ; &satlut -N 16 -d ; &put; lutpack -S 1; &get -n -m; &ps; &save
-
-&shrink; &sopb -C 8; &blut -K 6; &sopb -C 8; &synch2 -K 6 -W 2;  &lf -K 6 -e -C 32; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &lf -e -K 6 -C 32; &save; &load; &mfs -W 2 -D 15 -C 600; &satlut -N 16 -d ; &ps; &save
-
-&shrink; &blut -K 6; &sopb -C 8; &synch2 -W 2 -K 6; &lf -K 6 -e -C 32; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &lf -K 6 -e -C 32; &save; &load; &mfs -W 2 -D 15 -C 600 ; &satlut -N 16 -d ; &put; lutpack -S 1; &get -n -m; &ps; &save
-
-&load;
-
-&shrink; &sopb -C 8; &blut -K 6; &sopb -C 8; &synch2 -K 6 -W 2;  &lf -K 6 -e -C 32; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &lf -e -K 6 -C 32; &save; &load; &mfs -W 2 -D 15 -C 600; &satlut -N 16 -d ; &ps; &save
-
-&load;
-
-&shrink; &sopb -C 8; &blut -K 6; &sopb -C 8; &synch2 -K 6 -W 2;  &lf -K 6 -e -C 32; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &lf -e -K 6 -C 32; &save; &load; &mfs -W 2 -D 15 -C 600; &satlut -N 16 -d ; &ps; &save
-
-&load;
-
-&shrink; &dch -C 300; &lf -K 6 -e -C 32; &mfs -D 15 -C 2500; &satlut -d; &put; lutpack -S 1; &get -n -m; &ps; &save
+&st; &lf -K 6 -e; &ps; &save 
+&st; &lf -K 6 -e; &satlut -C 100 -d; &ps; 
+&shrink; &blut -K 6; &sopb -C 8; &synch2 -K 6 -W 2; &if -K 6 -C 16; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &if -K 6 -C 16; &save; &load; &mfs -W 2 -D 15 -C 600 ; &satlut -N 16 -d ; &ps; 
+&shrink; &blut -K 6; &sopb -C 8; &synch2 -W 2 -K 6; &lf -K 6 -e -C 32; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &lf -K 6 -e -C 32; &save; &load; &mfs -W 2 -D 15 -C 600 ; &satlut -N 16 -d ; &put; lutpack -S 1; &get -n -m; &ps; 
+&shrink; &sopb -C 8; &blut -K 6; &sopb -C 8; &synch2 -K 6 -W 2;  &lf -K 6 -e -C 32; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &lf -e -K 6 -C 32; &save; &load; &mfs -W 2 -D 15 -C 600; &satlut -N 16 -d ; &ps; 
+&shrink; &blut -K 6; &sopb -C 8; &synch2 -W 2 -K 6; &lf -K 6 -e -C 32; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &lf -K 6 -e -C 32; &save; &load; &mfs -W 2 -D 15 -C 600 ; &satlut -N 16 -d ; &put; lutpack -S 1; &get -n -m; &ps; 
+&shrink; &sopb -C 8; &blut -K 6; &sopb -C 8; &synch2 -K 6 -W 2;  &lf -K 6 -e -C 32; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &lf -e -K 6 -C 32; &save; &load; &mfs -W 2 -D 15 -C 600; &satlut -N 16 -d ; &ps; 
+&shrink; &blut -K 6; &sopb -C 8; &synch2 -W 2 -K 6; &lf -K 6 -e -C 32; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &lf -K 6 -e -C 32; &save; &load; &mfs -W 2 -D 15 -C 600 ; &satlut -N 16 -d ; &put; lutpack -S 1; &get -n -m; &ps; 
+&shrink; &sopb -C 8; &blut -K 6; &sopb -C 8; &synch2 -K 6 -W 2;  &lf -K 6 -e -C 32; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &lf -e -K 6 -C 32; &save; &load; &mfs -W 2 -D 15 -C 600; &satlut -N 16 -d ; &ps; 
+&shrink; &blut -K 6; &sopb -C 8; &synch2 -W 2 -K 6; &lf -K 6 -e -C 32; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &lf -K 6 -e -C 32; &save; &load; &mfs -W 2 -D 15 -C 600 ; &satlut -N 16 -d ; &put; lutpack -S 1; &get -n -m; &ps; 
+&shrink; &sopb -C 8; &blut -K 6; &sopb -C 8; &synch2 -K 6 -W 2;  &lf -K 6 -e -C 32; &save; &shrink; &sopb -C 8; &blut -K 6; &synch2 -W 2  -K 6; &lf -e -K 6 -C 32; &save; &load; &mfs -W 2 -D 15 -C 600; &satlut -N 16 -d ; &ps; 
 
 &load; &ps
 
