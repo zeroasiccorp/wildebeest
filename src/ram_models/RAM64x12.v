@@ -11,7 +11,7 @@ module RAM64x12 (
 	input			R_ADDR_AD_N,
 	input			BLK_EN,
 	output [11:0]	R_DATA,
-	input			R_DATALLOW_A_REG,
+	input			R_DATA_BYPASS,
 	input	 		R_DATA_EN,
 	input	 		R_DATA_SL_N,
 	input	 		R_DATA_SD,
