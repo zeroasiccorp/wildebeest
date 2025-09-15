@@ -24,7 +24,7 @@ state <Cell*> postAdderStatic
 state <bool> useFeedBack multHasReg
 
 // static ports, used to detect dsp configuration
-state <SigSpec> bypassA bypassB bypassC bypassP
+state <SigSpec> allowAReg allowBReg allowCReg allowPReg
 
 // Variables used for subpatterns
 state <SigSpec> argQ argD
@@ -96,11 +96,11 @@ code argD sigMultOut multHasReg
 endcode
 
 // capture static configuration ports
-code bypassA bypassB bypassC bypassP
-	bypassA = port(dsp, \ALLOW_A_REG, SigSpec());
-	bypassB = port(dsp, \ALLOW_B_REG, SigSpec());
-	bypassC = port(dsp, \ALLOW_C_REG, SigSpec());
-	bypassP = port(dsp, \P_BYPASS, SigSpec());
+code allowAReg allowBReg allowCReg allowPReg
+	allowAReg = port(dsp, \ALLOW_A_REG, SigSpec());
+	allowBReg = port(dsp, \ALLOW_B_REG, SigSpec());
+	allowCReg = port(dsp, \ALLOW_C_REG, SigSpec());
+	allowPReg = port(dsp, \ALLOW_P_REG, SigSpec());
 endcode
 
 //  post adder
@@ -123,8 +123,8 @@ endcode
 // REG_A, B, P
 //
 // 'A' input for REG_A
-code argQ bypassA sigA clock ffA
-	if (bypassA.is_fully_ones()){
+code argQ allowAReg sigA clock ffA
+	if (allowAReg.is_fully_ones()){
 		argQ = sigA;
 		allowAsync = false;
 		subpattern(in_dffe);
@@ -137,8 +137,8 @@ code argQ bypassA sigA clock ffA
 endcode
 
 // 'B' input for REG_B
-code argQ bypassB sigB clock ffB
-	if (bypassB.is_fully_ones()){
+code argQ allowBReg sigB clock ffB
+	if (allowBReg.is_fully_ones()){
 		argQ = sigB;
 		allowAsync = false;
 		subpattern(in_dffe);
@@ -153,8 +153,8 @@ endcode
 
 
 // 'P' output for REG_P
-code argD ffP sigP clock bypassP
-	if (bypassP.is_fully_ones() && nusers(sigP) == 2) {
+code argD ffP sigP clock allowPReg
+	if (allowPReg.is_fully_ones() && nusers(sigP) == 2) {
 		argD = sigP;
 		allowAsync = false;
 		subpattern(out_dffe);
@@ -179,7 +179,7 @@ endcode
 
 // 'C' input for REG_C
 code argQ sigC clock ffC
-	if (bypassC.is_fully_ones() and not useFeedBack){
+	if (allowCReg.is_fully_ones() and not useFeedBack){
 		argQ = sigC;
 		allowAsync = true;
 		subpattern(in_dffe);

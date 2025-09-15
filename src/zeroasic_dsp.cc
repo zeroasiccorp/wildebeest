@@ -67,22 +67,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 
 			if (!A.empty())
 				A.replace(Q, D);
-			if (rstport != IdString()) {
-				if (ff->type.in(ID($sdff), ID($sdffe))) {
-					SigSpec srst = ff->getPort(ID::SRST);
-					bool rstpol_n = !ff->getParam(ID::SRST_POLARITY).as_bool();
-					// active low sync rst
-					cell->setPort(rstport, rstpol_n ? srst : pm.module->Not(NEW_ID, srst));
-				} else if (ff->type.in(ID($adff), ID($adffe))) {
-					SigSpec arst = ff->getPort(ID::ARST);
-					bool rstpol_n = !ff->getParam(ID::ARST_POLARITY).as_bool();
-					// active low async rst
-					cell->setPort(rstport, rstpol_n ? arst : pm.module->Not(NEW_ID, arst));
-				} else {
-					// active low async/sync rst
-					cell->setPort(rstport, State::S1);
-				}
-			}
+
 			if (ff->type.in(ID($dffe), ID($sdffe), ID($adffe))) {
 				SigSpec ce = ff->getPort(ID::EN);
 				bool cepol = ff->getParam(ID::EN_POLARITY).as_bool();
@@ -122,8 +107,19 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 			pm.add_siguser(B, cell);
 			cell->setPort(ID::B, B);
 
-			// set the reset port to the reset (which has to be shared by both)
-			cell->setPort(ID(resetn), st.ffA->getPort(ID::ARST));
+			// set the reset port to the reset (which has to be shared by both A and B)
+			if (st.ffA->type.in(ID($sdff), ID($sdffe))) {
+				log("Error: synchronous DSPs not packable on MAE\n");
+				log_assert(not st.ffA->type.in(ID($sdff), ID($sdffe)));
+			} else if (st.ffA->type.in(ID($adff), ID($adffe))) {
+				SigSpec arst = st.ffA->getPort(ID::ARST);
+				bool rstpol_n = !st.ffA->getParam(ID::ARST_POLARITY).as_bool();
+				// active low async rst
+				cell->setPort(ID(resetn), rstpol_n ? arst : pm.module->Not(NEW_ID, arst));
+			} else {
+				// active low async/sync rst
+				cell->setPort(ID(resetn), State::S1);
+			}
 		}
 		else {
 			cell->setParam(ID(A_REG), State::S0);
@@ -139,7 +135,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm)
 		}
 		if (st.ffP){
 			SigSpec P; // unused
-			f(P, st.ffP, ID(P_EN), ID(P_ARST_N), ID(P_BYPASS), ID(BYPASS_P));
+			f(P, st.ffP, ID(P_EN), ID(P_ARST_N), ID(ALLOW_P_REG), ID(P_REG));
 			st.ffP->connections_.at(ID::Q).replace(st.sigP, pm.module->addWire(NEW_ID, GetSize(st.sigP)));
 		}
 

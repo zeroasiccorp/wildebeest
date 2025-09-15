@@ -18,7 +18,7 @@ module \$__MAE__
 		.A_REG(1'b0),
 		.B_REG(1'b0),
 		.C_REG(1'b0),
-		.BYPASS_P(1'b0),
+		.P_REG(1'b0),
 		.POST_ADDER_STATIC(1'b0),
 		.USE_FEEDBACK(1'b0)
  	)
@@ -27,6 +27,7 @@ module \$__MAE__
 		.B(B),
 		.C(40'b0),
 		.P(Y),
+		// These must all be the same if the corresponding port is registered
 		.A_ARST_N(1'b1),
 		.B_ARST_N(1'b1),
 		.C_ARST_N(1'b1),
@@ -34,8 +35,6 @@ module \$__MAE__
 		// allow packing each of these
 		.ALLOW_A_REG(1'b1),
 		.ALLOW_B_REG(1'b1),
-		.P_BYPASS(1'b1),
-
-
+		.ALLOW_P_REG(1'b1)
 	);
 endmodule
