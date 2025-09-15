@@ -9,19 +9,19 @@ The `yosys-syn` synthesis recipes represent a significant improvement over exist
 
 | Architecture | Tool      | Synthesis Command      | LUTs   | Logic Depth |
 |--------------|-----------|------------------------|:------:|:-----------:|
-| ice40        | yosys     | synth_ice40            |        |             |
-| z1010        | yosys-syn | synth_fpga             |        |             |
-| z1010        | yosys-syn | synth_fpga -opt delay  |        |             |
+| ice40        | yosys     | synth_ice40            | 7329   |    39       |
+| z1010        | yosys-syn | synth_fpga             | 3573   |    35       |
+| z1010        | yosys-syn | synth_fpga -opt delay  | 3977   |     8       |
 
 ## LUT6 Architectures
 
 | Architecture | Tool      | Synthesis Command      | LUTs   | Logic Depth |
 |--------------|-----------|------------------------|:------:|:-----------:|
-| Vendor-1     | vendor    | (proprietary)          |        |             |
-| Vendor-2     | vendor    | (proprietary)          |        |             |
-| xc7          | yosys     | synth_xilinx           |        |             |
-| z1XXX        | yosys-syn | synth_fpga             |        |             |
-| z1XXX        | yosys-syn | synth_fpga -opt delay  |        |             |
+| Vendor-1     | vendor    | (proprietary)          | 2870   |     7       |
+| Vendor-2     | vendor    | (proprietary)          | 2947   |     8       |
+| xc7          | yosys     | synth_xilinx           | 3072   |    17       |
+| z1XXX        | yosys-syn | synth_fpga             | 2288   |    38       |
+| z1XXX        | yosys-syn | synth_fpga -opt delay  | 2692   |     6       |
 
 ## Prerequisites
 
