@@ -2629,12 +2629,8 @@ struct SynthFpgaPass : public ScriptPass
      run("stat");
 
      if(has_cell_type(yosys_get_design(), "\\MAE")) {
-       log_error("Could not techmap DSP to a valid configuration.\n");
-     }
-     
-     if(has_cell_type(yosys_get_design(), "$mul")) {
-       log_warning("Signed multiplies getting mapped to soft logic.\n");
-     }
+      log_error("Could not techmap DSP to a valid configuration.\n");
+   }
   }
 
   // -------------------------
