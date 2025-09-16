@@ -1,3 +1,4 @@
+// Map from $mult to $__MAE__
 module \$__MAE__
   #(
     parameter A_SIGNED = 0,
@@ -42,4 +43,5 @@ module \$__MAE__
       soft_mult_inst (.A(A), .B(B), .Y(Y));
     end
     endgenerate
+
 endmodule
