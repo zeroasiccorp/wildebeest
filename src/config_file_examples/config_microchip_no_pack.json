@@ -2,7 +2,7 @@
   "version": 3,
   "partname": "Z1010",
   "lut_size": 6,
-  "root_path" : "/home/thierry/YOSYS_DYN/yosys/yosys-syn/",
+  "root_path" : "/home/thierry/YOSYS_DYN/yosys/wildebeest/",
   "flipflops": {
                 "features": ["async_reset", "async_set", "flop_enable"]
                 "models": {

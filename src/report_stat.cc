@@ -283,7 +283,7 @@ struct ReportStatPass : public ScriptPass
 	// ZeroAsic
 	//
 	// Make sure it is in sync. with file under :
-	//    yosys-syn/architecture/z1010/dsp/zeroasic_dsp_map_mode.v
+	//    wildebeest/architecture/z1010/dsp/zeroasic_dsp_map_mode.v
 	//
         if (cell->type.in(ID(efpga_mult_regi))) {
              nb++;

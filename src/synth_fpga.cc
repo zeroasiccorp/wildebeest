@@ -78,7 +78,7 @@ struct SynthFpgaPass : public ScriptPass
   typedef enum e_dff_init_value {S0, S1, SX, SK} dff_init_value;
 
   // ----------------------------
-  // Key 'yosys-syn' parameters
+  // Key 'wildebeest' parameters
   //
   string                  ys_root_path = "";
 
@@ -511,7 +511,7 @@ struct SynthFpgaPass : public ScriptPass
   void setup_options()
   {
     // If there is a config file with successful analysis then we set up
-    // all the yosys-syn parameters with it.
+    // all the wildebeest parameters with it.
     //
     if (config_file_success) {
 
@@ -621,40 +621,40 @@ struct SynthFpgaPass : public ScriptPass
     
       // DFF setting
       //
-      ys_dff_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/techlib/tech_flops.v";
+      ys_dff_techmap = "+/plugins/wildebeest/architecture/" + part_name + "/techlib/tech_flops.v";
       ys_dff_features.insert("async_reset");
       ys_dff_features.insert("async_set");
       ys_dff_features.insert("flop_enable");
 
       // Async. set/reset DFFs
       //
-      ys_dff_models["dffenrs"] = "+/plugins/yosys-syn/ff_models/dffenrs.v";
-      ys_dff_models["dffenr"] = "+/plugins/yosys-syn/ff_models/dffenr.v";
-      ys_dff_models["dffens"] = "+/plugins/yosys-syn/ff_models/dffens.v";
-      ys_dff_models["dffen"] = "+/plugins/yosys-syn/ff_models/dffen.v";
-      ys_dff_models["dffers"] = "+/plugins/yosys-syn/ff_models/dffers.v";
-      ys_dff_models["dffer"] = "+/plugins/yosys-syn/ff_models/dffer.v";
-      ys_dff_models["dffes"] = "+/plugins/yosys-syn/ff_models/dffes.v";
-      ys_dff_models["dffe"] = "+/plugins/yosys-syn/ff_models/dffe.v";
-      ys_dff_models["dffnrs"] = "+/plugins/yosys-syn/ff_models/dffnrs.v";
-      ys_dff_models["dffnr"] = "+/plugins/yosys-syn/ff_models/dffnr.v";
-      ys_dff_models["dffns"] = "+/plugins/yosys-syn/ff_models/dffns.v";
-      ys_dff_models["dffn"] = "+/plugins/yosys-syn/ff_models/dffn.v";
-      ys_dff_models["dffrs"] = "+/plugins/yosys-syn/ff_models/dffrs.v";
-      ys_dff_models["dffr"] = "+/plugins/yosys-syn/ff_models/dffr.v";
-      ys_dff_models["dffs"] = "+/plugins/yosys-syn/ff_models/dffs.v";
-      ys_dff_models["dff"] = "+/plugins/yosys-syn/ff_models/dff.v";
+      ys_dff_models["dffenrs"] = "+/plugins/wildebeest/ff_models/dffenrs.v";
+      ys_dff_models["dffenr"] = "+/plugins/wildebeest/ff_models/dffenr.v";
+      ys_dff_models["dffens"] = "+/plugins/wildebeest/ff_models/dffens.v";
+      ys_dff_models["dffen"] = "+/plugins/wildebeest/ff_models/dffen.v";
+      ys_dff_models["dffers"] = "+/plugins/wildebeest/ff_models/dffers.v";
+      ys_dff_models["dffer"] = "+/plugins/wildebeest/ff_models/dffer.v";
+      ys_dff_models["dffes"] = "+/plugins/wildebeest/ff_models/dffes.v";
+      ys_dff_models["dffe"] = "+/plugins/wildebeest/ff_models/dffe.v";
+      ys_dff_models["dffnrs"] = "+/plugins/wildebeest/ff_models/dffnrs.v";
+      ys_dff_models["dffnr"] = "+/plugins/wildebeest/ff_models/dffnr.v";
+      ys_dff_models["dffns"] = "+/plugins/wildebeest/ff_models/dffns.v";
+      ys_dff_models["dffn"] = "+/plugins/wildebeest/ff_models/dffn.v";
+      ys_dff_models["dffrs"] = "+/plugins/wildebeest/ff_models/dffrs.v";
+      ys_dff_models["dffr"] = "+/plugins/wildebeest/ff_models/dffr.v";
+      ys_dff_models["dffs"] = "+/plugins/wildebeest/ff_models/dffs.v";
+      ys_dff_models["dff"] = "+/plugins/wildebeest/ff_models/dff.v";
 
       // Sync. set/reset DFFs
       //
-      ys_dff_models["sdffenr"] = "+/plugins/yosys-syn/ff_models/sdffenr.v";
-      ys_dff_models["sdffens"] = "+/plugins/yosys-syn/ff_models/sdffens.v";
-      ys_dff_models["sdffer"] = "+/plugins/yosys-syn/ff_models/sdffer.v";
-      ys_dff_models["sdffes"] = "+/plugins/yosys-syn/ff_models/sdffes.v";
-      ys_dff_models["sdffnr"] = "+/plugins/yosys-syn/ff_models/sdffnr.v";
-      ys_dff_models["sdffns"] = "+/plugins/yosys-syn/ff_models/sdffns.v";
-      ys_dff_models["sdffr"] = "+/plugins/yosys-syn/ff_models/sdffr.v";
-      ys_dff_models["sdffs"] = "+/plugins/yosys-syn/ff_models/sdffs.v";
+      ys_dff_models["sdffenr"] = "+/plugins/wildebeest/ff_models/sdffenr.v";
+      ys_dff_models["sdffens"] = "+/plugins/wildebeest/ff_models/sdffens.v";
+      ys_dff_models["sdffer"] = "+/plugins/wildebeest/ff_models/sdffer.v";
+      ys_dff_models["sdffes"] = "+/plugins/wildebeest/ff_models/sdffes.v";
+      ys_dff_models["sdffnr"] = "+/plugins/wildebeest/ff_models/sdffnr.v";
+      ys_dff_models["sdffns"] = "+/plugins/wildebeest/ff_models/sdffns.v";
+      ys_dff_models["sdffr"] = "+/plugins/wildebeest/ff_models/sdffr.v";
+      ys_dff_models["sdffs"] = "+/plugins/wildebeest/ff_models/sdffs.v";
 
       // Legal Flops for dfflegalize
       if ((part_name == "z1010") || (part_name == "z1060")) {
@@ -699,7 +699,7 @@ struct SynthFpgaPass : public ScriptPass
 
          // bram memory_libmap settings
 	 //
-         string brams_memory_libmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/bram_memory_map.txt";
+         string brams_memory_libmap1 = "+/plugins/wildebeest/architecture/" + part_name + "/bram/bram_memory_map.txt";
 	 ys_brams_memory_libmap.push_back(brams_memory_libmap1);
 
 	 string brams_memory_libmap_param1 = "-logic-cost-rom 0.5";
@@ -707,7 +707,7 @@ struct SynthFpgaPass : public ScriptPass
 
          // bram techmap settings
 	 //
-         string brams_techmap1 = "+/plugins/yosys-syn/architecture/" + part_name + "/bram/tech_bram.v";
+         string brams_techmap1 = "+/plugins/wildebeest/architecture/" + part_name + "/bram/tech_bram.v";
 	 ys_brams_techmap.push_back(brams_techmap1);
       }
   
@@ -721,7 +721,7 @@ struct SynthFpgaPass : public ScriptPass
 
       if (((part_name == "z1010") || (part_name == "z1060")) && (dsp_tech == "zeroasic")) {
 
-        ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/zeroasic_dsp_map.v ";
+        ys_dsps_techmap = "+/plugins/wildebeest/architecture/" + part_name + "/dsp/zeroasic_dsp_map.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_A_MAXWIDTH_PARTIAL"] = 18;
@@ -745,7 +745,7 @@ struct SynthFpgaPass : public ScriptPass
 
       } else if (((part_name == "z1010") || (part_name == "z1060")) && (dsp_tech == "bare_mult")) {
 
-        ys_dsps_techmap = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/tech_dsp.v ";
+        ys_dsps_techmap = "+/plugins/wildebeest/architecture/" + part_name + "/dsp/tech_dsp.v ";
         ys_dsps_parameter_int["DSP_A_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_B_MAXWIDTH"] = 18;
         ys_dsps_parameter_int["DSP_A_MINWIDTH"] = 2;
@@ -2272,31 +2272,31 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void load_cells_models()
   {
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffenrs.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffenr.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffens.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffen.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffers.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffer.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffes.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffe.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffnrs.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffnr.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffns.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffn.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffrs.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffr.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffs.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dff.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffenrs.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffenr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffens.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffen.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffers.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffes.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffe.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffnrs.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffnr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffns.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffn.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffrs.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffs.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dff.v");
 
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffenr.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffens.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffer.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffes.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffnr.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffns.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffr.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffs.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffenr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffens.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffer.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffes.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffnr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffns.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffs.v");
 
   }
 
@@ -2305,31 +2305,31 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void load_bb_cells_models()
   {
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffenrs.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffenr.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffens.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffen.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffers.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffer.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffes.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffe.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffnrs.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffnr.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffns.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffn.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffrs.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffr.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dffs.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/dff.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffenrs.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffenr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffens.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffen.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffers.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffes.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffe.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffnrs.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffnr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffns.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffn.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffrs.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffs.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dff.v");
 
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffenr.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffens.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffer.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffes.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffnr.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffns.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffr.v");
-     run("read_verilog +/plugins/yosys-syn/ff_models/sdffs.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffenr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffens.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffer.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffes.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffnr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffns.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/sdffs.v");
 
      // Black box them all
      //
@@ -2453,7 +2453,7 @@ struct SynthFpgaPass : public ScriptPass
 
     // Otherwise specific ABC script based flow
     //
-    string abc_script = "+/plugins/yosys-syn/abc_scripts/LUT" + sc_syn_lut_size +
+    string abc_script = "+/plugins/wildebeest/abc_scripts/LUT" + sc_syn_lut_size +
 	                "/" + abc_script_version + "/" + mode + "_lut" + 
 			sc_syn_lut_size + ".scr";
 
@@ -2619,7 +2619,7 @@ struct SynthFpgaPass : public ScriptPass
         run(sc_syn_dsps_pack_command);
      }
 
-     std::string ys_dsps_techmap_modes = "+/plugins/yosys-syn/architecture/" + part_name + "/dsp/zeroasic_dsp_map_mode.v";
+     std::string ys_dsps_techmap_modes = "+/plugins/wildebeest/architecture/" + part_name + "/dsp/zeroasic_dsp_map_mode.v";
 
      // after dsp packing, map to modes for compatibility with our vpr solution 
      run("techmap -map " + ys_dsps_techmap_modes);

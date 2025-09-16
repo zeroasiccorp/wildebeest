@@ -576,7 +576,7 @@ struct MaxLvlWorker
    // -------------------------
    void load_LUT_models()
    {
-     run("read_verilog +/plugins/yosys-syn/lut_models/LUTs.v");
+     run("read_verilog +/plugins/wildebeest/lut_models/LUTs.v");
 
      run("hierarchy -auto-top");
    }

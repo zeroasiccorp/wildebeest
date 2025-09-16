@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-project(yosys-syn CXX)
+project(wildebeest CXX)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 if (APPLE)
@@ -17,7 +17,7 @@ if (APPLE)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup")
 endif()
 
-set(OUTPUT_NAME "yosys-syn")
+set(OUTPUT_NAME "wildebeest")
 
 find_package(Yosys)
 

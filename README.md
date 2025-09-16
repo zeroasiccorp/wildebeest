@@ -1,8 +1,8 @@
-# yosys-syn
+# wildebeest
 
-The `yosys-syn` project is an open source synthesis plugin for [Yosys](https://github.com/YosysHQ/yosys) with support for the [Zero ASIC Platypus FPGAs](https://www.zeroasic.com/platypus). The plugin also includes experimental configuration support that enables synthesis for hardware targets beyond the Platypus FPGAs.
+The `wildebeest` project is an open source synthesis plugin for [Yosys](https://github.com/YosysHQ/yosys) with support for the [Zero ASIC Platypus FPGAs](https://www.zeroasic.com/platypus). The plugin also includes experimental configuration support that enables synthesis for hardware targets beyond the Platypus FPGAs.
 
-The `yosys-syn` synthesis recipes represent a significant improvement over existing open source synthesis tools and even compares favorably with state-of-the-art commercial proprietary FPGA tools. The tables below illustrate the synthesis results for various architectures for the [picorv32 CPU](https://raw.githubusercontent.com/zeroasiccorp/logikbench/refs/heads/main/logikbench/blocks/picorv32/rtl/picorv32.v). For a complete set of RTL benchmarks, see the [LogikBench project](https://github.com/zeroasiccorp/logikbench).
+The `wildebeest` synthesis recipes represent a significant improvement over existing open source synthesis tools and even compares favorably with state-of-the-art commercial proprietary FPGA tools. The tables below illustrate the synthesis results for various architectures for the [picorv32 CPU](https://raw.githubusercontent.com/zeroasiccorp/logikbench/refs/heads/main/logikbench/blocks/picorv32/rtl/picorv32.v). For a complete set of RTL benchmarks, see the [LogikBench project](https://github.com/zeroasiccorp/logikbench).
 
 
 ## LUT4 Architectures
@@ -10,8 +10,8 @@ The `yosys-syn` synthesis recipes represent a significant improvement over exist
 | Architecture | Tool      | Synthesis Command      | LUTs   | Logic Depth |
 |--------------|-----------|------------------------|:------:|:-----------:|
 | ice40        | yosys     | synth_ice40            |        |             |
-| z1010        | yosys-syn | synth_fpga             |        |             |
-| z1010        | yosys-syn | synth_fpga -opt delay  |        |             |
+| z1010        | wildebeest | synth_fpga             |        |             |
+| z1010        | wildebeest | synth_fpga -opt delay  |        |             |
 
 ## LUT6 Architectures
 
@@ -20,8 +20,8 @@ The `yosys-syn` synthesis recipes represent a significant improvement over exist
 | Vendor-1     | vendor    | (proprietary)          |        |             |
 | Vendor-2     | vendor    | (proprietary)          |        |             |
 | xc7          | yosys     | synth_xilinx           |        |             |
-| z1XXX        | yosys-syn | synth_fpga             |        |             |
-| z1XXX        | yosys-syn | synth_fpga -opt delay  |        |             |
+| z1XXX        | wildebeest | synth_fpga             |        |             |
+| z1XXX        | wildebeest | synth_fpga -opt delay  |        |             |
 
 ## Prerequisites
 
@@ -32,28 +32,28 @@ The `yosys-syn` synthesis recipes represent a significant improvement over exist
 ## Building
 
 ```bash
-git clone git@github.com:zeroasiccorp/yosys-syn.git
-cd yosys-syn
+git clone git@github.com:zeroasiccorp/wildebeest.git
+cd wildebeest
 cmake -S . -B build
 cmake --build build
 sudo cmake --install build
 ```
 
-> **NOTE:** The `cmake` flow builds the plugin and copies all files to the yosys executable share directory. As an example, if the `yosys` executable is located at /usr/local/bin/yosys, then the `yosys-syn` plugin will be copied to /usr/local/share/yosys/plugins/yosys-syn.so.
+> **NOTE:** The `cmake` flow builds the plugin and copies all files to the yosys executable share directory. As an example, if the `yosys` executable is located at /usr/local/bin/yosys, then the `wildebeest` plugin will be copied to /usr/local/share/yosys/plugins/wildebeest.so.
 
 ## Quickstart
 
-You can load the `yosys-syn` plugin into Yosys on startup using the -m argument:
+You can load the `wildebeest` plugin into Yosys on startup using the -m argument:
 
 ```bash
-yosys -m yosys-syn
+yosys -m wildebeest
 ```
 
 Alternatively you can load the plugin at runtime via the `plugin` command:
 
 
 ```
-yosys> plugin -i yosys-syn
+yosys> plugin -i wildebeest
 ```
 
 Once the plugin is loaded, you are ready to run synthesis.
@@ -287,7 +287,7 @@ Sections version, partname, lut_size, flip-flops, are required. Sections root_pa
   "version": 2,
   "partname": "z1010",
   "lut_size": 4,
-  "root_path" : "/home/user/YOSYS_DYN/yosys/yosys-syn/",
+  "root_path" : "/home/user/YOSYS_DYN/yosys/wildebeest/",
   "flipflops": {
                 "features": ["async_reset", "async_set", "flop_enable"],
                 "models": {

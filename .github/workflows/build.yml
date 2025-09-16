@@ -94,7 +94,7 @@ jobs:
         run: |
           cd yosys
           make install PREFIX=$HOME/.local
-      - name: Build yosys-syn
+      - name: Build wildebeest
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           cmake -S . -B build -D YOSYS_PATH="$HOME/.local"

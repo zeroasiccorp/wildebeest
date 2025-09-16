@@ -12,6 +12,6 @@ foreach(test_script ${ALL_TESTS})
         NAME ${test_script}
         WORKING_DIRECTORY ${test_dir}
         COMMAND
-            ${YOSYS_BINDIR}/yosys -m $<TARGET_FILE:yosys-syn> ${test_fullpath}
+            ${YOSYS_BINDIR}/yosys -m $<TARGET_FILE:wildebeest> ${test_fullpath}
     )
 endforeach()
