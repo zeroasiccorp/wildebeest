@@ -734,7 +734,7 @@ struct SynthFpgaPass : public ScriptPass
 	// If signed we need to specify the line below and may expect more
 	// logic for RTL MULT used with operands around 18 bit width.
 	//
-        // ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
+        ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
 	//
 
         ys_dsps_parameter_string["DSP_NAME"] = "$__MAE__";
