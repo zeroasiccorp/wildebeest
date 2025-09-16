@@ -7,11 +7,12 @@ The `wildebeest` synthesis recipes represent a significant improvement over exis
 
 ## LUT4 Architectures
 
-| Architecture |  Tool      | Synthesis Command      | LUTs   | Max Logic Depth |
-|--------------|------------|------------------------|:------:|:---------------:|
-| ice40        | yosys      | synth_ice40            | 4378   |        33       |
-| z1010        | wildebeest | synth_fpga             | 3577   |        37       |
-| z1010        | wildebeest | synth_fpga -opt delay  | 4017   |         8       |
+| Architecture |  Tool      | Synthesis Command      | LUTs   | Carry cells  |  Max Logic Depth |
+|--------------|------------|------------------------|:------:|:------------:|:----------------:|
+| ice40        | yosys      | synth_ice40            | 4253   |     672      |         65       |
+| ice40        | yosys      | synth_ice40 -nocarry   | 4378   |       0      |         33       |
+| z1010        | wildebeest | synth_fpga             | 3601   |       0      |         38       |
+| z1010        | wildebeest | synth_fpga -opt delay  | 4097   |       0      |          8       |
 
 All runs infer 4 DSPs and no BRams nor DRams.
 
@@ -22,8 +23,8 @@ All runs infer 4 DSPs and no BRams nor DRams.
 | Vendor-1     | vendor     | (proprietary)          | 2870   |         7       |
 | Vendor-2     | vendor     | (proprietary)          | 2947   |         8       |
 | xc7          | yosys      | synth_xilinx           | 3072   |        17       |
-| z1XXX        | wildebeest | synth_fpga             | 2303   |        36       |
-| z1XXX        | wildebeest | synth_fpga -opt delay  | 2725   |         6       |
+| z1XXX        | wildebeest | synth_fpga             | 2300   |        40       |
+| z1XXX        | wildebeest | synth_fpga -opt delay  | 2696   |         6       |
 
 All runs infer 4 DSPs and no BRams nor DRams.
 
