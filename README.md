@@ -9,9 +9,11 @@ The `yosys-syn` synthesis recipes represent a significant improvement over exist
 
 | Architecture | Tool      | Synthesis Command      | LUTs   | Max Logic Depth |
 |--------------|-----------|------------------------|:------:|:---------------:|
-| ice40        | yosys     | synth_ice40            | 7329   |        39       |
+| ice40        | yosys     | synth_ice40            | 4378   |        33       |
 | z1010        | yosys-syn | synth_fpga             | 3573   |        35       |
 | z1010        | yosys-syn | synth_fpga -opt delay  | 3977   |         8       |
+
+All runs infer 4 DSPs and no BRams nor DRams.
 
 ## LUT6 Architectures
 
@@ -22,6 +24,8 @@ The `yosys-syn` synthesis recipes represent a significant improvement over exist
 | xc7          | yosys     | synth_xilinx           | 3072   |        17       |
 | z1XXX        | yosys-syn | synth_fpga             | 2288   |        38       |
 | z1XXX        | yosys-syn | synth_fpga -opt delay  | 2692   |         6       |
+
+All runs infer 4 DSPs and no BRams nor DRams.
 
 ## Prerequisites
 
