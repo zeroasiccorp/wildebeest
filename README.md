@@ -18,13 +18,14 @@ All runs infer 4 DSPs and no BRams nor DRams.
 
 ## LUT6 Architectures
 
-| Architecture |  Tool      | Synthesis Command      | LUTs   | Max Logic Depth |
-|--------------|------------|------------------------|:------:|:---------------:|
-| Vendor-1     | vendor     | (proprietary)          | 2870   |         7       |
-| Vendor-2     | vendor     | (proprietary)          | 2947   |         8       |
-| xc7          | yosys      | synth_xilinx           | 3072   |        17       |
-| z1XXX        | wildebeest | synth_fpga             | 2300   |        40       |
-| z1XXX        | wildebeest | synth_fpga -opt delay  | 2696   |         6       |
+| Architecture |  Tool      | Synthesis Command         | LUTs   |  Carry cells   | Max Logic Depth |
+|--------------|------------|---------------------------|:------:|:--------------:|:---------------:|
+| Vendor-1     | vendor     | (proprietary)             | 2870   |       0        |         7       |
+| Vendor-2     | vendor     | (proprietary)             | 2947   |       0        |         8       |
+| xc7          | yosys      | synth_xilinx              | 2892   |     143        |        13       |
+| xc7          | yosys      | synth_xilinx -nocarry     | 3072   |       0        |        17       |
+| z1XXX        | wildebeest | synth_fpga                | 2300   |       0        |        40       |
+| z1XXX        | wildebeest | synth_fpga -opt delay     | 2696   |       0        |         6       |
 
 All runs infer 4 DSPs and no BRams nor DRams.
 
