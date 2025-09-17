@@ -26,7 +26,7 @@ The table below shows how Wildebeest compares against both open-source and propr
 
 * Compiler: >=GCC 11 or >=clang 17
 * CMake: 3.20 ... 3.29
-* Yosys: 0.47 ... 0.56 (Warning: 0.57 is not supported ye)
+* Yosys: 0.47 ... 0.56 (Warning: 0.57 is not supported yet)
 
 ## Building
 
@@ -40,7 +40,7 @@ sudo cmake --install build
 
 > **NOTE:** The `cmake` flow builds the plugin and copies all files to the yosys executable share directory. As an example, if the `yosys` executable is located at /usr/local/bin/yosys, then the `wildebeest` plugin will be copied to /usr/local/share/yosys/plugins/wildebeest.so.
 
-## Quickstart
+## Quick start
 
 The following "hello world" example runs synthesis on the [picorv32 CPU](https://raw.githubusercontent.com/zeroasiccorp/logikbench/refs/heads/main/logikbench/blocks/picorv32/rtl/picorv32.v). We encourage you to try your own RTL and report back results.
 
