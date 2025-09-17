@@ -1,33 +1,31 @@
-# wildebeest
+# Wildebeest
 
-The `wildebeest` project is an open source synthesis plugin for [Yosys](https://github.com/YosysHQ/yosys) with support for the [Zero ASIC Platypus FPGAs](https://www.zeroasic.com/platypus). The plugin also includes experimental configuration support that enables synthesis for hardware targets beyond the Platypus FPGAs.
+The Wildebeest project is an open-source RTL synthesis tool that builds on the mature [Yosys](https://github.com/YosysHQ/yosys) platform and extends it with advanced logic synthesis algorithms for state-of-the-art quality of results (QoR).
 
-The `wildebeest` synthesis recipes represent a significant improvement over existing open source synthesis tools and even compares favorably with state-of-the-art commercial proprietary FPGA tools. The tables below illustrate the synthesis results for various architectures for the [picorv32 CPU](https://raw.githubusercontent.com/zeroasiccorp/logikbench/refs/heads/main/logikbench/blocks/picorv32/rtl/picorv32.v). For a complete set of RTL benchmarks, see the [LogikBench project](https://github.com/zeroasiccorp/logikbench).
+The project is initially focused on supporting [Platypus FPGAs](https://www.zeroasic.com/platypus). However, most of the Platypus-specific optimization passes are general-purpose and can be easily adapted for other targets. The long-term goal of Wildebeest is to serve as a common hierarchical synthesis engine, providing a library of high-performance optimization passes that can be shared between targets. The groundwork for this effort has already begun with the introduction of the `-config` option.
+
+The table below shows how Wildebeest compares against both open-source and proprietary synthesis tools on the [picorv32 CPU design](https://raw.githubusercontent.com/zeroasiccorp/logikbench/refs/heads/main/logikbench/blocks/picorv32/rtl/picorv32.v). To run Wildebeest across a broader set of benchmarks, see [LogikBench](https://github.com/zeroasiccorp/logikbench).
 
 
-## LUT4 Architectures
+| Device   | Arch   |  Tool       |    Synthesis Command      | LUTs  | Logic Depth |
+|----------|--------|-------------|---------------------------|:-----:|:-----------:|
+| z1060    |  LUT6  | wildebeest  | synth_fpga                | 2300  |     40      |
+| z1060    |  LUT6  | wildebeest  | synth_fpga -opt delay     | 2696  |     6       |
+| Vendor-1 |  LUT6  | vendor      | (proprietary)             | 2870  |     7       |
+| Vendor-2 |  LUT6  | vendor      | (proprietary)             | 2947  |     8       |
+| z1010    |  LUT4  | wildebeest  | synth_fpga                | 3601  |     38      |
+| xc7      |  LUT6  | yosys (0.56)| synth_xilinx -nocarry     | 3072  |     17      |
+| z1010    |  LUT4  | wildebeest  | synth_fpga -opt delay     | 4097  |     8       |
+| ice40    |  LUT4  | yosys (0.56)| synth_ice40 -dsp -nocarry | 4378  |     33      |
 
-| Architecture | Tool      | Synthesis Command      | LUTs   | Logic Depth |
-|--------------|-----------|------------------------|:------:|:-----------:|
-| ice40        | yosys     | synth_ice40            |        |             |
-| z1010        | wildebeest | synth_fpga             |        |             |
-| z1010        | wildebeest | synth_fpga -opt delay  |        |             |
 
-## LUT6 Architectures
-
-| Architecture | Tool      | Synthesis Command      | LUTs   | Logic Depth |
-|--------------|-----------|------------------------|:------:|:-----------:|
-| Vendor-1     | vendor    | (proprietary)          |        |             |
-| Vendor-2     | vendor    | (proprietary)          |        |             |
-| xc7          | yosys     | synth_xilinx           |        |             |
-| z1XXX        | wildebeest | synth_fpga             |        |             |
-| z1XXX        | wildebeest | synth_fpga -opt delay  |        |             |
+> **NOTE:** In the comparison table above, we made a best effort to isolate synthesis QoR from hardware-specific details (e.g., LUT4 vs. LUT6, presence or absence of carry cells). For Yosys, this required disabling carry cells to match the Platypus architecture, which does not yet support them.
 
 ## Prerequisites
 
 * Compiler: >=GCC 11 or >=clang 17
 * CMake: 3.20 ... 3.29
-* Yosys: >=0.47
+* Yosys: 0.47 ... 0.56
 
 ## Building
 
