@@ -2723,7 +2723,7 @@ struct SynthFpgaPass : public ScriptPass
 
         log("    -use_bram_tech [zeroasic]\n");
         log("        Invoke architecture specific DSP inference. It is off by default. -no_bram \n");
-        log("        overides -use_BRAM_TECH.\n");
+        log("        overides -use_bram_tech.\n");
         log("\n");
 
         log("    -no_dsp\n");
