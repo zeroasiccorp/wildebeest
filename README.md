@@ -48,7 +48,7 @@ The following "hello world" example runs synthesis on the [picorv32 CPU](https:/
 plugin -i wildebeest
 read_verilog picorv32.v
 hierarchy -check -top picorv32
-synth_fpga -partname Z1010
+synth_fpga -partname z1010
 ```
 
 ## Limitations
@@ -62,103 +62,120 @@ synth_fpga -partname Z1010
 To get a listing of all `synth_fpga` options, use the yosys built-in `help` command.
 
 ```
+yosys> plugin -i wildebeest
 yosys> help synth_fpga
 
-synth_fpga [options]
+    synth_fpga [options]
 
-This command runs Zero ASIC FPGA synthesis flow.
+This command runs Zero Asic FPGA synthesis flow.
 
     -top <module>
-        Use the specified module as top module, in case more than one exists.
-
-    -opt <mode>
-        Specifies optimization mode [area, delay] (default=area).
-
-    -partname <name>
-        Specifies architecture partname [Z1000, Z1010]. (default=Z1000).
+        use the specified module as top module
 
     -config <file name>
-        Specifies config file containing FPGA architecture target parameters.
-        If not specified, the -partname value is used to set synthesis target.
+        Specifies the config file setting main 'synth_fpga' parameters.
+
+    -show_config
+        Show the parameters set by the config file.
 
     -no_flatten
-        Disable design flattening.
+        skip flatening. By default, design is flatened.
+
+    -opt
+        specifies the optimization target : 'area', 'delay', 'fast'. 
+        Target 'area' is used by default
+
+    -partname
+        Specifies the Architecture partname used. 'z1010' is used by default.
 
     -no_bram
-        Disable BRAM inference.
+        Bypass BRAM inference. It is off by default.
+
+    -use_bram_tech [zeroasic]
+        Invoke architecture specific DSP inference. It is off by default. -no_bram 
+        overides -use_BRAM_TECH.
 
     -no_dsp
         Bypass DSP inference. It is off by default.
 
-    -no_dff_in_dsp
-        Specifies to not pack DFF in DSPs. This is off by default.
+    -use_dsp_tech [zeroasic, bare_mult]
+        Invoke architecture specific DSP inference. It is off by default. -no_dsp 
+        overides -use_dsp_tech.
 
-    -no_xor_tree_process
-        Disable xor trees depth reduction in DELAY optimization mode.
-
-    -no_dff_enable
-        Disables mapping to DFF with enable.
-
-    -no_dff_async_set
-        Disable mapping to DFF with asynchronous set.
-
-    -no_dff_async_reset
-        Disable mapping to DFF with asynchronous reset.
-
-    -no_opt_sat_dff
-        Disable SAT-based DFF optimizations.
-
-    -no_opt_const_dff
-        Disable constant driven DFF optimization.
-
-    -no_sdff
-        Disable synchronous set/reset DFF mapping.
+    -no_dsp_pack
+        Disable DSP packing.
 
     -fsm_encoding [one-hot, binary]
         Specifies FSM encoding : by default a 'one-hot' encoding is performed.
 
     -resynthesis
-        Runs in resynthesis mode which means a lighter touch flow.
-        It can be used only after performing a first 'synth_fpga' synthesis pass
+        switch synthesis flow to resynthesis mode which means a lighter flow.
+        It can be used only after performing a first 'synth_fpga' synthesis pass 
+
+    -insbuf
+        performs buffers insertion (Off by default).
+
+    -no_xor_tree_process
+        Disable xor trees depth reduction for DELAY mode (Off by default).
 
     -autoname
-        Generate wire and cells names that mimic RTL (instead of generic
-        $abc names). Possibly significant runtime impact. (default=off)
+        Generate, if possible, better wire and cells names close to RTL names rather than
+        $abc generic names. This is off by default. Be careful because it may blow up runtime.
+
+    -no_dff_enable
+        specifies that DFF with enable feature is not supported. By default,
+        DFF with enable is supported.
+
+    -no_dff_async_set
+        specifies that DFF with asynchronous set feature is not supported. By default,
+        DFF with asynchronous set is supported.
+
+    -no_dff_async_reset
+        specifies that DFF with asynchronous reset feature is not supported. By default,
+        DFF with asynchronous reset is supported.
+
+    -no_opt_sat_dff
+        Disable SAT-based DFF optimizations. This is off by default.
+
+    -no_opt_const_dff
+        Disable constant driven DFF optimization as it can create simulation differences (since it may ignore DFF init values in some cases). This is off by default.
 
     -set_dff_init_value_to_zero
-        Set un-initialized DFF to initial value 0. Insert double inverters for DFF
-        with initial value 1 and switch its initial value to 0 and modify its
-        clear/set/reset functionalities if any.
+        Set un-initialized DFF to initial value 0. Insert double inverters for DFF with initial value 1 and switch its initial value to 0 and modify its clear/set/reset functionalities if any. This is off by default.
 
     -show_dff_init_value
-        Show DFF initial values in RTL.
+        Show all DFF initial values coming from the original RTL. This is off by default.
 
     -continue_if_latch
-        Keep running even if latches are inferred.
+        Keep running Synthesis even if some Latch inference is involved. The final netlist will not be valid but it can be usefull to get the final netlist stats. This is off by default.
+
+    -no_sdff
+        Disable synchronous set/reset DFF mapping. It is off by default.
 
     -stop_if_undriven_nets
-        Stop synthesis if the final netlist has undriven nets.
+        Stop Synthesis if the final netlist has undriven nets. This is off by default.
 
     -obs_clean
-        Overrides built-in Yosys 'opt_clean' function.
+        specifies to use 'obs_clean' cleanup function instead of regular 
+        'opt_clean'. This is off by default.
 
     -lut_size
-        Specifies lut size. (default=4).
+        specifies lut size. By default lut size is 4.
 
     -verilog <file>
-        Writes out design to the specified file.
+        write the design to the specified Verilog netlist file. writing of an
+        output file is omitted if this parameter is not specified.
 
     -show_max_level
-        Show longest paths.
+        Show longest paths. This is off by default except if we are in delay mode.
 
-    -csv <file>
-        Dump synthesis statistics to file.
+    -csv
+        Dump a 'stat.csv' file. This is off by default.
 
     -wait
-        Wait after each 'stat' for user to press <enter> key.
+        wait after each 'stat' report for user to touch <enter> key. Help for 
+        flow analysis/debug.
 
-    -show_config
-        Show the parameters set by the config file.
 
 ```
 
@@ -276,14 +293,14 @@ Sections version, partname, lut_size, flip-flops, are required. Sections root_pa
   "flipflops": {
                 "features": ["async_reset", "async_set", "flop_enable"],
                 "models": {
-                        "dffers": "SRC/ff_models/dffers.v",
-                        "dffer": "SRC/ff_models/dffer.v",
-                        "dffes": "SRC/ff_models/dffes.v",
-                        "dffe": "SRC/ff_models/dffe.v",
-                        "dffrs": "SRC/ff_models/dffrs.v",
-                        "dffr": "SRC/ff_models/dffr.v",
-                        "dffs": "SRC/ff_models/dffs.v",
-                        "dff": "SRC/ff_models/dff.v"
+                        "dffers": "src/ff_models/dffers.v",
+                        "dffer": "src/ff_models/dffer.v",
+                        "dffes": "src/ff_models/dffes.v",
+                        "dffe": "src/ff_models/dffe.v",
+                        "dffrs": "src/ff_models/dffrs.v",
+                        "dffr": "src/ff_models/dffr.v",
+                        "dffs": "src/ff_models/dffs.v",
+                        "dff": "src/ff_models/dff.v"
                 },
                 "techmap": "architecture/z1010/techlib/tech_flops.v"
         },
