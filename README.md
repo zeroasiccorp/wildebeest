@@ -19,7 +19,7 @@ The table below shows how Wildebeest compares against both open-source and propr
 | ice40    |  LUT4  | yosys (0.56)| synth_ice40 -dsp -nocarry | 4378  |     33      |
 
 
-> **NOTE:** In the comparison table above, we made a best effort to isolate synthesis QoR from hardware-specific details (e.g., LUT4 vs. LUT6, presence or absence of carry cells). For Yosys, this required disabling carry cells to match the Platypus architecture, which does not yet support them.
+> **NOTE:** We made a best effort to isolate synthesis QoR from hardware-specific details (e.g., LUT4 vs. LUT6, presence or absence of carry cells). For Yosys, this required disabling carry cells to match the Platypus architecture, which does not yet support them.
 
 ## Prerequisites
 
