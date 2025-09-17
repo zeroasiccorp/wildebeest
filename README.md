@@ -103,7 +103,7 @@ This command runs Zero Asic FPGA synthesis flow.
 
     -use_bram_tech [zeroasic]
         Invoke architecture specific DSP inference. It is off by default. -no_bram 
-        overides -use_BRAM_TECH.
+        overides -use_bram_tech.
 
     -no_dsp
         Bypass DSP inference. It is off by default.
