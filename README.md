@@ -268,7 +268,7 @@ Sections version, partname, lut_size, flip-flops, are required. Sections root_pa
 ### Third Party Example: With BRAM and DSPs
 ```json
 {
-  "version": 2,
+  "version": 1,
   "partname": "z1010",
   "lut_size": 4,
   "root_path" : "/home/user/YOSYS_DYN/yosys/wildebeest/",
