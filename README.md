@@ -57,6 +57,10 @@ synth_fpga -partname z1010
 * No tri-state circuit inference
 * No latch inference
 
+## License
+
+The Wildebeest project is licensed under [Apache 2.0 license](LICENSE). Yosys derived code is licensed under the ISC license.
+
 ## Command Options
 
 To get a listing of all `synth_fpga` options, use the yosys built-in `help` command.
@@ -70,7 +74,13 @@ yosys> help synth_fpga
 This command runs Zero Asic FPGA synthesis flow.
 
     -top <module>
-        use the specified module as top module
+        Use the specified module as top module, in case more than one exists.
+
+    -opt <mode>
+        Specifies optimization mode [area, delay] (default=area).
+
+    -partname <name>
+        Specifies architecture partname [z1000, z1010]. (default=z1010).
 
     -config <file name>
         Specifies the config file setting main 'synth_fpga' parameters.
