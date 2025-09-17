@@ -2,6 +2,7 @@
  *  yosys -- Yosys Open SYnthesis Suite
  *
  *  Copyright (C) 2021  Marcelina Kościelnicka <mwk@0x04.net>
+ *  Copyright (C) 2025  Thierry Besson <thierry@zeroasic.com>, Zero Asic Corp.
  *
  *  Permission to use, copy, modify, and/or distribute this software for any
  *  purpose with or without fee is hereby granted, provided that the above

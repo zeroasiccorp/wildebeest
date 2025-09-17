@@ -1,6 +1,7 @@
 time
 echo " "
-echo "** Starting ABC DELAY LUT6 optimization and mapping !!!"
+echo "** Starting ABC DELAY LUT6 optimization and mapping (Zero Asic Corp.)"
+echo ""
 
 write_blif delay_lut6.blif
 

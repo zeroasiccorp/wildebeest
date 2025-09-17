@@ -1,7 +1,8 @@
 time
 
 echo " "
-echo "** Starting ABC SMALL AREA LUT4 optimization and mapping !!!"
+echo "** Starting ABC SMALL AREA LUT4 optimization and mapping (Zero Asic Corp.)"
+echo ""
 
 write_blif small_area.blif
 

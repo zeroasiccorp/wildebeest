@@ -1,6 +1,7 @@
 time
 echo " "
-echo "** Starting ABC TINY DELAY LUT4 optimization and mapping !!!"
+echo "** Starting ABC TINY DELAY LUT4 optimization and mapping (Zero Asic Corp.)"
+echo ""
 
 write_blif tiny_delay_lut4.blif
 

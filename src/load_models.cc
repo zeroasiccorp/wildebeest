@@ -1,8 +1,7 @@
+//
+//  Copyright (C) 2025  Thierry Besson <thierry@zeroasic.com>, Zero Asic Corp.
+//
 /*
- *  yosys -- Yosys Open SYnthesis Suite
- *
- *  Copyright (C) 2012  Claire Xenia Wolf <claire@yosyshq.com>
- *
  *  Permission to use, copy, modify, and/or distribute this software for any
  *  purpose with or without fee is hereby granted, provided that the above
  *  copyright notice and this permission notice appear in all copies.
@@ -74,18 +73,20 @@ struct LoadModelsPass : public ScriptPass
   // load_models 
   // ---------------------------------------------------------------------------
   //
+  // Obsolete since file names have changed. Needs to be revisited. (Thierry)
+  //
   void script() override
   {
-     run("read_verilog +/plugins/wildebeest/FF_MODELS/dff.v");
-     run("read_verilog +/plugins/wildebeest/FF_MODELS/dffe.v");
-     run("read_verilog +/plugins/wildebeest/FF_MODELS/dffr.v");
-     run("read_verilog +/plugins/wildebeest/FF_MODELS/dffs.v");
-     run("read_verilog +/plugins/wildebeest/FF_MODELS/dffrs.v");
-     run("read_verilog +/plugins/wildebeest/FF_MODELS/dffer.v");
-     run("read_verilog +/plugins/wildebeest/FF_MODELS/dffes.v");
-     run("read_verilog +/plugins/wildebeest/FF_MODELS/dffers.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dff.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffe.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffs.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffrs.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffes.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffers.v");
 
-     run("read_verilog +/plugins/wildebeest/RAM_MODELS/RAM64x12.v");
+     run("read_verilog +/plugins/wildebeest/ram_models/RAM64x12.v");
 
   } // end script()
 

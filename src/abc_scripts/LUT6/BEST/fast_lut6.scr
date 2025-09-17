@@ -1,7 +1,8 @@
 time
 
 echo " "
-echo "** Starting ABC FAST LUT6 optimization and mapping !!!"
+echo "** Starting ABC FAST LUT6 optimization and mapping (Zero Asic Corp.)"
+echo ""
 
 write_blif fast_lut6.blif 
 

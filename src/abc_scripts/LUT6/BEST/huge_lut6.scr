@@ -1,7 +1,8 @@
 time
 
 echo " "
-echo "** Starting ABC HUGE LUT6 optimization and mapping !!!"
+echo "** Starting ABC HUGE LUT6 optimization and mapping (Zero Asic Corp.)"
+echo ""
 
 write_blif huge_lut6.blif
 
