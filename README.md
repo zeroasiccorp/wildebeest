@@ -41,24 +41,10 @@ sudo cmake --install build
 
 ## Quickstart
 
-You can load the `wildebeest` plugin into Yosys on startup using the -m argument:
-
-```bash
-yosys -m wildebeest
-```
-
-Alternatively you can load the plugin at runtime via the `plugin` command:
-
-
-```
-yosys> plugin -i wildebeest
-```
-
-Once the plugin is loaded, you are ready to run synthesis.
-
 The following "hello world" example runs synthesis on the [picorv32 CPU](https://raw.githubusercontent.com/zeroasiccorp/logikbench/refs/heads/main/logikbench/blocks/picorv32/rtl/picorv32.v). We encourage you to try your own RTL and report back results.
 
 ```
+plugin -i wildebeest
 read_verilog picorv32.v
 hierarchy -check -top picorv32
 synth_fpga -partname Z1010
