@@ -1567,8 +1567,8 @@ void assign_cell_connection_ports(RTLIL::Module *module, const std::vector<std::
 	}
 }
 
-struct AbcPass : public Pass {
-	AbcPass() : Pass("zabc", "use ABC for technology mapping") { }
+struct ZAbcPass : public Pass {
+	ZAbcPass() : Pass("zabc", "use ABC for technology mapping") { }
 	void help() override
 	{
 		//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
@@ -2341,6 +2341,6 @@ struct AbcPass : public Pass {
 
 		log_pop();
 	}
-} AbcPass;
+} ZAbcPass;
 
 PRIVATE_NAMESPACE_END
