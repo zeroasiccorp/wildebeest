@@ -14,6 +14,7 @@ The table below shows how Wildebeest compares against both open-source and propr
 | Vendor-1 |  LUT6  | vendor      | (proprietary)             | 2870  |     7       |
 | Vendor-2 |  LUT6  | vendor      | (proprietary)             | 2947  |     8       |
 | xc7      |  LUT6  | yosys (0.56)| synth_xilinx -nocarry     | 3072  |     17      |
+|----------|--------|-------------|---------------------------|:-----:|:-----------:|
 | z1010    |  LUT4  | wildebeest  | synth_fpga                | 3601  |     38      |
 | z1010    |  LUT4  | wildebeest  | synth_fpga -opt delay     | 4097  |     8       |
 | ice40    |  LUT4  | yosys (0.56)| synth_ice40 -dsp -nocarry | 4378  |     33      |
@@ -25,7 +26,7 @@ The table below shows how Wildebeest compares against both open-source and propr
 
 * Compiler: >=GCC 11 or >=clang 17
 * CMake: 3.20 ... 3.29
-* Yosys: 0.47 ... 0.56
+* Yosys: 0.47 ... 0.56 (Warning: 0.57 is not supported ye)
 
 ## Building
 
