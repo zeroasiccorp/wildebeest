@@ -6,13 +6,9 @@ write_blif tiny_delay_lut4.blif
 
 &get -n -m;
 
-echo " "
-echo "&st; &if -K 4; &save; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &if -K 4 -a;"
 &st; &lf -K 4 -e; &satlut -d -N 31 ; &dch -C 600; &lf -K 4 -e; &mfs -W 2 -D 15 -M 600 ; &satlut -d -N 31; &save; &load 
 &st; &if -K 4; &save; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &if -K 4 -a; &st; &lf -K 4 -e; &satlut -d -N 31 ; &dch -C 600; &lf -K 4 -e; &mfs -W 2 -D 15 -M 600 ; &satlut -d -N 31 ; &save; &ps; time
 
-echo " "
-echo "&st; &if -K 4; &save; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &if -K 4 -a;"
  &st; &lf -K 4 -e; &satlut -d -N 31 ; &dch -C 600; &lf -K 4 -e; &mfs -W 2 -D 15 -M 600 ; &satlut -d -N 31 
 &st; &if -K 4; &save; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &if -K 4 -a; &st; &lf -K 4 -e; &satlut -d -N 31 ; &dch -C 600; &lf -K 4 -e; &mfs -W 2 -D 15 -M 600 ; &satlut -d -N 31 ; &save; &ps; time
 
@@ -20,155 +16,83 @@ read_blif tiny_delay_lut4.blif
 
 &get -n -m;
 
-echo " "
-echo "&st; &lf -K 4 -e -C 32; &save; &ps; time"
 &st; &lf -K 4 -e -C 32; &save; &ps; time
 
-echo " "
-echo "&st; &if -K 4; &save;"
 &st; &if -K 4; &ps; &save; time
 
-echo " "
-echo "&sopb -C 5;"
 &sopb -C 5; &ps; time
 
-echo " "
-echo "&sopb -C 5;"
 &sopb -C 5; &ps; time
 
-echo " "
-echo "&sopb -C 5;"
 &sopb -C 5; &ps;  time
 
-echo " "
-echo "&sopb -C 5;"
 &sopb -C 5; &ps;  time
 
-echo " "
-echo "&sopb -C 5;"
 &sopb -C 5; &ps;  time
 
-echo " "
-echo "&sopb -C 5;"
 &sopb -C 5; &ps;  time
 
-echo " "
-echo "&sopb -C 5;"
 &sopb -C 5; &ps;  time
 
-echo " "
-echo "&if -K 4 -a;"
 &if -K 4 -a; &ps; time
 
-echo " "
-echo "&st; &lf -K 4 -e -C 32;"
 &st; &lf -K 4 -e -C 32; &ps; time
 
-echo " "
-echo "&dch -C 600; &lf -K 4 -e;"
 &dch -C 600; &lf -K 4 -e; &ps; time
 
-echo " "
-echo "&mfs -W 2 -D 15 -M 600"
 &mfs -W 2 -D 15 -M 600 ; &save; &ps; time
 
-echo ""
-echo "&load; &ps;"
 &load; &ps; time
 
-echo " "
-echo "&shrink; &blut -K 4"
 &shrink; &blut -K 4; &ps; time
 
-echo " "
-echo "&sopb -C 5;"
 &sopb -C 5; &ps; time
 
-echo " "
-echo "&synch2 -W 2 -K 4;"
 &synch2 -W 2 -K 4; &ps; time
 
-echo " "
-echo "&if -sz -C 6 -K 7 -S 44"
 &if -sz -C 6 -K 7 -S 44 ; &ps; &save; time
 
-echo ""
-echo "&load; &ps;"
 &load; &ps; time
 
-echo " "
-echo "&shrink; &blut -K 4;"
 &shrink; &blut -K 4; &ps; time
 
-echo " "
-echo "&sopb -C 5;"
 &sopb -C 5; &ps; time
 
-echo " "
-echo "&synch2 -W 2 -K 4; &lf -K 4 -e -C 32;"
 &synch2 -W 2 -K 4; &lf -K 4 -e -C 32; &ps; &save; time
 
-echo " "
-echo "&shrink; &sopb -C 5; &blut -K 4;"
 &shrink; &sopb -C 5; &blut -K 4; &ps; time
 
-echo " "
-echo "&synch2 -W 2  -K 4; &lf -K 4 -e -C 32;"
 &synch2 -W 2  -K 4; &lf -K 4 -e -C 32; &ps; &save; time
 
-echo " "
-echo "&load; &ps"
 &load; &ps; time
 
-echo " "
-echo "&mfs -W 2 -D 15 -C 600 ;"
 &mfs -W 2 -D 15 -C 600 ; &ps; time
 
-echo " "
-echo "lutpack -S 1;"
 &put; lutpack -S 1; &get -n -m; &ps; &save; time
 
-echo " "
-echo "&load; &ps"
 &load; &ps; time
 
-echo " "
-echo "&shrink; &blut -K 4; &sopb -C 5;"
 &shrink; &blut -K 4; &sopb -C 5; &ps; time
 
-echo " "
-echo "&synch2 -W 2 -K 4; &if -sz -C 6 -K 7 -S 44"
 &synch2 -W 2 -K 4; &if -sz -C 6 -K 7 -S 44 ; &ps; &save; time
 
 read_blif tiny_delay_lut4.blif
 
 &get -n -m;
 
-echo " "
 &st; &if -K 4; &save; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &sopb -C 5; &if -K 4 -a; &st; &lf -K 4 -e; &satlut -d -N 31 ; &dch -C 600; &lf -K 4 -e; &mfs -W 2 -D 15 -M 600 ; &satlut -d -N 31 ; &save; &ps
 
-echo " "
-echo "&load; &ps"
 &load; &ps; time
 
-echo "&satlut -d -N 31; "
 &satlut -d -N 31; &ps; &save; time
 
-echo ""
-echo "&shrink; &blut -K 4; &sopb -C 5; &synch2 -W 2 -K 4; &if -K 4 -C 32; &save; &shrink; &sopb -C 5; &blut -K 4; &synch2 -W 2  -K 4; &if -K 4 -C 32; &save; &load; &mfs -W 2 -D 15 -C 600 ; &satlut -N 15 -d ; &put; lutpack -S 1"
 &shrink; &blut -K 4; &sopb -C 5; &synch2 -W 2 -K 4; &if -K 4 -C 32; &save; &shrink; &sopb -C 5; &blut -K 4; &synch2 -W 2  -K 4; &if -K 4 -C 32; &save; &load; &mfs -W 2 -D 15 -C 600 ; &satlut -N 15 -d ; &put; lutpack -S 1; &get -n -m; &save; time; &ps
 
 &shrink; &dch -C 300; &lf -K 4 -e -C 32; &mfs -D 15 -C 2500; &satlut -d -N 31; &put; lutpack -S 1; &get -n -m; &save; &ps ; time
 
-echo " "
-echo "Final stat: "
-echo " "
 &load; &ps; time
  
-echo " "
-echo "&st; &lf -K 4 -e; &satlut -C 100 -d -N 31;"
 &st; &lf -K 4 -e; &satlut -C 100 -d -N 31; &ps; &save; 
-
 
 &load;
 
