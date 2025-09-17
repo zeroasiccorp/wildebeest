@@ -18,7 +18,6 @@ add_library(wildebeest SHARED
     zopt_const_dff.cc
     zqcsat.cc
     zsimplemap.cc
-    zabc.cc
     ${CMAKE_CURRENT_BINARY_DIR}/version.h
 )
 target_include_directories(wildebeest

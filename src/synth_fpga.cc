@@ -2361,7 +2361,7 @@ struct SynthFpgaPass : public ScriptPass
 
     if (opt == "") {
        log_header(yosys_get_design(), "Performing OFFICIAL PLATYPUS optimization\n");
-       run("zabc -lut " + sc_syn_lut_size);
+       run("abc -lut " + sc_syn_lut_size);
        return;
     }
 
@@ -2425,7 +2425,7 @@ struct SynthFpgaPass : public ScriptPass
 
     log_header(yosys_get_design(), "Calling ABC script in '%s' mode\n", mode.c_str());
 
-    run("zabc -script " + abc_script);
+    run("abc -script " + abc_script);
   }
 
   // -------------------------
