@@ -77,7 +77,7 @@ This command runs Zero Asic FPGA synthesis flow.
         Use the specified module as top module, in case more than one exists.
 
     -opt <mode>
-        Specifies optimization mode [area, delay] (default=area).
+        Specifies optimization mode [area, delay, fast] (default=area).
 
     -partname <name>
         Specifies architecture partname [z1000, z1010]. (default=z1010).
@@ -90,13 +90,6 @@ This command runs Zero Asic FPGA synthesis flow.
 
     -no_flatten
         skip flatening. By default, design is flatened.
-
-    -opt
-        specifies the optimization target : 'area', 'delay', 'fast'. 
-        Target 'area' is used by default
-
-    -partname
-        Specifies the Architecture partname used. 'z1010' is used by default.
 
     -no_bram
         Bypass BRAM inference. It is off by default.
