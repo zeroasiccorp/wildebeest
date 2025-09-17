@@ -13,8 +13,8 @@ The table below shows how Wildebeest compares against both open-source and propr
 | z1060    |  LUT6  | wildebeest  | synth_fpga -opt delay     | 2696  |     6       |
 | Vendor-1 |  LUT6  | vendor      | (proprietary)             | 2870  |     7       |
 | Vendor-2 |  LUT6  | vendor      | (proprietary)             | 2947  |     8       |
-| z1010    |  LUT4  | wildebeest  | synth_fpga                | 3601  |     38      |
 | xc7      |  LUT6  | yosys (0.56)| synth_xilinx -nocarry     | 3072  |     17      |
+| z1010    |  LUT4  | wildebeest  | synth_fpga                | 3601  |     38      |
 | z1010    |  LUT4  | wildebeest  | synth_fpga -opt delay     | 4097  |     8       |
 | ice40    |  LUT4  | yosys (0.56)| synth_ice40 -dsp -nocarry | 4378  |     33      |
 
