@@ -623,35 +623,21 @@ struct SynthFpgaPass : public ScriptPass
       ys_dff_features.insert("async_set");
       ys_dff_features.insert("flop_enable");
 
-      // Async. set/reset DFFs
+      // Async. reset DFFs
       //
-      ys_dff_models["dffenrs"] = "+/plugins/wildebeest/ff_models/dffenrs.v";
-      ys_dff_models["dffenr"] = "+/plugins/wildebeest/ff_models/dffenr.v";
-      ys_dff_models["dffens"] = "+/plugins/wildebeest/ff_models/dffens.v";
-      ys_dff_models["dffen"] = "+/plugins/wildebeest/ff_models/dffen.v";
-      ys_dff_models["dffers"] = "+/plugins/wildebeest/ff_models/dffers.v";
-      ys_dff_models["dffer"] = "+/plugins/wildebeest/ff_models/dffer.v";
-      ys_dff_models["dffes"] = "+/plugins/wildebeest/ff_models/dffes.v";
-      ys_dff_models["dffe"] = "+/plugins/wildebeest/ff_models/dffe.v";
-      ys_dff_models["dffnrs"] = "+/plugins/wildebeest/ff_models/dffnrs.v";
-      ys_dff_models["dffnr"] = "+/plugins/wildebeest/ff_models/dffnr.v";
-      ys_dff_models["dffns"] = "+/plugins/wildebeest/ff_models/dffns.v";
-      ys_dff_models["dffn"] = "+/plugins/wildebeest/ff_models/dffn.v";
-      ys_dff_models["dffrs"] = "+/plugins/wildebeest/ff_models/dffrs.v";
-      ys_dff_models["dffr"] = "+/plugins/wildebeest/ff_models/dffr.v";
-      ys_dff_models["dffs"] = "+/plugins/wildebeest/ff_models/dffs.v";
       ys_dff_models["dff"] = "+/plugins/wildebeest/ff_models/dff.v";
+      ys_dff_models["dffr"] = "+/plugins/wildebeest/ff_models/dffr.v";
+      ys_dff_models["dffe"] = "+/plugins/wildebeest/ff_models/dffe.v";
+      ys_dff_models["dffer"] = "+/plugins/wildebeest/ff_models/dffer.v";
 
       // Sync. set/reset DFFs
       //
-      ys_dff_models["sdffenr"] = "+/plugins/wildebeest/ff_models/sdffenr.v";
-      ys_dff_models["sdffens"] = "+/plugins/wildebeest/ff_models/sdffens.v";
-      ys_dff_models["sdffer"] = "+/plugins/wildebeest/ff_models/sdffer.v";
-      ys_dff_models["sdffes"] = "+/plugins/wildebeest/ff_models/sdffes.v";
-      ys_dff_models["sdffnr"] = "+/plugins/wildebeest/ff_models/sdffnr.v";
-      ys_dff_models["sdffns"] = "+/plugins/wildebeest/ff_models/sdffns.v";
-      ys_dff_models["sdffr"] = "+/plugins/wildebeest/ff_models/sdffr.v";
-      ys_dff_models["sdffs"] = "+/plugins/wildebeest/ff_models/sdffs.v";
+      ys_dff_models["dffh"] = "+/plugins/wildebeest/ff_models/dffh.v";
+      ys_dff_models["dffeh"] = "+/plugins/wildebeest/ff_models/dffeh.v";
+      ys_dff_models["dffl"] = "+/plugins/wildebeest/ff_models/dffl.v";
+      ys_dff_models["dffel"] = "+/plugins/wildebeest/ff_models/dffel.v";
+      ys_dff_models["dffhl"] = "+/plugins/wildebeest/ff_models/dffhl.v";
+      ys_dff_models["dffehl"] = "+/plugins/wildebeest/ff_models/dffehl.v";
 
       // Legal Flops for dfflegalize
       if ((part_name == "z1010") || (part_name == "z1060")) {
@@ -2196,14 +2182,13 @@ struct SynthFpgaPass : public ScriptPass
      }
 
      for (auto cell : yosys_get_design()->top_module()->cells()) {
-         if (cell->type.in(ID(dffenrs), ID(dffenr), ID(dffens), ID(dffen),
-                           ID(dffers), ID(dffer), ID(dffes), ID(dffe),
-			   ID(dffnrs), ID(dffnr), ID(dffns), ID(dffn),
-			   ID(dffrs), ID(dffr), ID(dffs), ID(dff))) {
+
+         if (cell->type.in(ID(dffer), ID(dffe), ID(dffr), ID(dff))) {
            nb++;
          }
-         if (cell->type.in(ID(sdffenr), ID(sdffens), ID(sdffer), ID(sdffes),
-                           ID(sdffnr), ID(sdffns), ID(sdffr), ID(sdffs))) {
+
+         if (cell->type.in(ID(dffh), ID(dffeh), ID(dffl), ID(dffel),
+                           ID(dffhl), ID(dffehl))) {
            nb++;
          }
      }
@@ -2269,31 +2254,21 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void load_cells_models()
   {
-     run("read_verilog +/plugins/wildebeest/ff_models/dffenrs.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffenr.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffens.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffen.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffers.v");
      run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffes.v");
      run("read_verilog +/plugins/wildebeest/ff_models/dffe.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffnrs.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffnr.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffns.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffn.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffrs.v");
      run("read_verilog +/plugins/wildebeest/ff_models/dffr.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffs.v");
      run("read_verilog +/plugins/wildebeest/ff_models/dff.v");
 
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffenr.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffens.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffer.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffes.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffnr.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffns.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffr.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffs.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffh.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffeh.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffl.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffel.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffhl.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffehl.v");
+
+     if (part_name == "z1010") {
+       run("read_verilog +/plugins/wildebeest/architecture/z1010/models/tech_mae.v");
+     }
 
   }
 
@@ -2302,35 +2277,29 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   void load_bb_cells_models()
   {
-     run("read_verilog +/plugins/wildebeest/ff_models/dffenrs.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffenr.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffens.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffen.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffers.v");
      run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffes.v");
      run("read_verilog +/plugins/wildebeest/ff_models/dffe.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffnrs.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffnr.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffns.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffn.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffrs.v");
      run("read_verilog +/plugins/wildebeest/ff_models/dffr.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffs.v");
      run("read_verilog +/plugins/wildebeest/ff_models/dff.v");
 
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffenr.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffens.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffer.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffes.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffnr.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffns.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffr.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/sdffs.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffh.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffeh.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffl.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffel.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffhl.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffehl.v");
+
+     if (part_name == "z1010") {
+       run("read_verilog +/plugins/wildebeest/architecture/z1010/models/tech_mae.v");
+     }
 
      // Black box them all
      //
-     run("blackbox dffenrs dffenr dffens dffen dffers dffer dffes dffe dffnrs dffnr dffns dffn dffrs dffr dffs dff sdffenr sdffens sdffer sdffes sdffnr sdffns sdffr sdffs MACC_PA RAM1K20 RAM64x12");
+     run("blackbox dffer dffe dffr dff dffh dffeh dffl dffel dffhl dffehl");
+
+     if (part_name == "z1010") {
+       run("blackbox ");
+     }
   }
 
   // -------------------------
