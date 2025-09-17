@@ -1,9 +1,8 @@
-module dffl(D,clk,L,Q,QN);
+module dffl(D,clk,L,Q);
 input D;      
 input clk;   
 input L;      
 output reg Q;     
-output reg QN; 
 
 always @(posedge clk) 
 
@@ -15,7 +14,5 @@ begin
             Q <= D; 
         end
 end 
-
-assign QN = !Q;
 
 endmodule 

@@ -1,10 +1,9 @@
-module dffel(D,clk,E,L,Q,QN);
+module dffel(D,clk,E,L,Q);
 input D;      
 input clk;   
 input E;     
 input L;      
 output reg Q;     
-output reg QN; 
 
 always @(posedge clk) 
 
@@ -16,7 +15,5 @@ begin
             Q <= D; 
         end
 end 
-
-assign QN = !Q;
 
 endmodule 
