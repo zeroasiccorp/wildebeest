@@ -48,7 +48,7 @@ The following "hello world" example runs synthesis on the [picorv32 CPU](https:/
 plugin -i wildebeest
 read_verilog picorv32.v
 hierarchy -check -top picorv32
-synth_fpga -partname Z1010
+synth_fpga -partname z1010
 ```
 
 ## Limitations
@@ -56,6 +56,10 @@ synth_fpga -partname Z1010
 * No carry chain inference
 * No tri-state circuit inference
 * No latch inference
+
+## License
+
+The Wildebeest project is licensed under [Apache 2.0 license](LICENSE). Yosys derived code is licensed under the ISC license.
 
 ## Command Options
 
@@ -75,7 +79,7 @@ This command runs Zero ASIC FPGA synthesis flow.
         Specifies optimization mode [area, delay] (default=area).
 
     -partname <name>
-        Specifies architecture partname [Z1000, Z1010]. (default=Z1000).
+        Specifies architecture partname [z1000, z1010]. (default=z1010).
 
     -config <file name>
         Specifies config file containing FPGA architecture target parameters.
