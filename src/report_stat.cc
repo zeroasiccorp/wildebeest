@@ -143,25 +143,13 @@ struct ReportStatPass : public ScriptPass
 
         // Zero Asic Z1000/Z1010 DFFs
         //
-        if (cell->type.in(ID(dff), ID(dffe), ID(dffr), ID(dffer),
-                          ID(dffs), ID(dffrs), ID(dffes), ID(dffers))) {
-             nb++;
-	     continue;
+        if (cell->type.in(ID(dffer), ID(dffe), ID(dffr), ID(dff))) {
+          nb++;
         }
-        if (cell->type.in(ID(sdffr), ID(sdffer),
-                          ID(sdffs), ID(sdffes))) {
-             nb++;
-	     continue;
-        }
-        if (cell->type.in(ID(dffn), ID(dffen), ID(dffnr), ID(dffenr),
-                          ID(dffns), ID(dffnrs), ID(dffens), ID(dffenrs))) {
-             nb++;
-	     continue;
-        }
-        if (cell->type.in(ID(sdffnr), ID(sdffenr),
-                          ID(sdffns), ID(sdffens))) {
-             nb++;
-	     continue;
+
+        if (cell->type.in(ID(dffh), ID(dffeh), ID(dffl), ID(dffel),
+                           ID(dffhl), ID(dffehl))) {
+          nb++;
         }
 
         // Xilinx 'xc4v' DFFs, 'xc7'
