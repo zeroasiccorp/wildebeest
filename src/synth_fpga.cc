@@ -63,6 +63,7 @@ struct SynthFpgaPass : public ScriptPass
   bool config_file_success = false;
   bool no_dsp;
   bool no_bram;
+  bool bram_with_init;
   bool no_sdff;
   string dsp_tech;
   string bram_tech;
@@ -106,8 +107,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // Json reader
   // -------------------------
-  // Json node that stores section corresponding to 'config' file for 
-  // synthesis
+  // Json node that stores sections of the synthesis 'config' file.
   //
   struct JsonNode
   {
@@ -381,6 +381,7 @@ struct SynthFpgaPass : public ScriptPass
   // ----------------------------------------------
   // Structure to store all config file sections
   // ----------------------------------------------
+  //
   typedef struct {
 	  string config_file;
 	  int    version;
@@ -419,6 +420,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // show_config_file
   // -------------------------
+  //
   void show_config_file() 
   {
 
@@ -680,17 +682,35 @@ struct SynthFpgaPass : public ScriptPass
 
       if ((part_name == "z1010") || (part_name == "z1060")) {
 
+	 // ----------------------------
          // bram memory_libmap settings
 	 //
-         string brams_memory_libmap1 = "+/plugins/wildebeest/architecture/" + part_name + "/bram/bram_memory_map.txt";
+         string brams_memory_libmap1 = "";
+
+         if (bram_with_init) {
+           brams_memory_libmap1 = "+/plugins/wildebeest/architecture/" + part_name + 
+		                  "/bram/bram_memory_map_with_init.txt";
+         } else {
+           brams_memory_libmap1 = "+/plugins/wildebeest/architecture/" + part_name + 
+		                  "/bram/bram_memory_map.txt";
+	 }
 	 ys_brams_memory_libmap.push_back(brams_memory_libmap1);
 
 	 string brams_memory_libmap_param1 = "-logic-cost-rom 0.5";
          ys_brams_memory_libmap_parameters.push_back(brams_memory_libmap_param1);
 
+	 // ----------------------------
          // bram techmap settings
 	 //
-         string brams_techmap1 = "+/plugins/wildebeest/architecture/" + part_name + "/bram/tech_bram.v";
+	 string brams_techmap1 = "";
+
+         if (bram_with_init) {
+           brams_techmap1 = "+/plugins/wildebeest/architecture/" + part_name + 
+		            "/bram/tech_bram_with_init.v";
+         } else {
+           brams_techmap1 = "+/plugins/wildebeest/architecture/" + part_name + 
+		            "/bram/tech_bram.v";
+	 }
 	 ys_brams_techmap.push_back(brams_techmap1);
       }
   
@@ -713,16 +733,11 @@ struct SynthFpgaPass : public ScriptPass
         ys_dsps_parameter_int["DSP_B_MINWIDTH"] = 2;
         ys_dsps_parameter_int["DSP_Y_MINWIDTH"] = 8;
 
-	// Thierry: is MAE signed or unsigned ?
-	// If signed we need to specify the line below and may expect more
-	// logic for RTL MULT used with operands around 18 bit width.
-	//
         ys_dsps_parameter_int["DSP_SIGNEDONLY"] = 1;
-	//
 
         ys_dsps_parameter_string["DSP_NAME"] = "$__MAE__";
 
-        ys_dsps_pack_command = "zeroasic_dsp"; // pack DFF in DSP
+        ys_dsps_pack_command = "zeroasic_dsp"; // pack DFF in DSP and use post-adder
 
 	return;
 
@@ -752,6 +767,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // check_options
   // -------------------------
+  //
   void check_options()
   {
      if (!config_file_success) {
@@ -1184,6 +1200,7 @@ struct SynthFpgaPass : public ScriptPass
   // ---------------------------------------
   // General object for XOR trees analysis
   // ---------------------------------------
+  //
   int sigspec_id = 0;
   dict<RTLIL::SigSpec, int> sigspec_ids;
   dict<RTLIL::SigSpec, int> y2height;
@@ -1250,6 +1267,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // getLeavesIds
   // -------------------------
+  //
   void getLeavesIds(RTLIL::SigSpec y, dict<RTLIL::SigSpec, Cell*>& y2xor, xor_head* xh)
   {
     // If 'y' is not a XOR Y output it is a XOR tree leaf
@@ -1343,6 +1361,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // build_binary_xor_tree_rec
   // -------------------------
+  //
   void build_binary_xor_tree_rec (Module* top_mod, RTLIL::SigSpec& y, 
 		             dict<RTLIL::SigSpec, Cell*>& y2xor, 
 			     RTLIL::SigSpec& new_y, 
@@ -1490,6 +1509,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // build_binary_xor_tree
   // -------------------------
+  //
   void build_binary_xor_tree (Module* top_mod, RTLIL::SigSpec& y, 
 		             dict<RTLIL::SigSpec, Cell*>& y2xor, 
 			     vector<RTLIL::SigSpec>& leaves)
@@ -1538,6 +1558,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // cmpHeight
   // -------------------------
+  //
   static bool cmpHeight (xor_head* a, xor_head* b)
   {
     if (a->height > b->height) {
@@ -1550,6 +1571,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // cmpInvHeight
   // -------------------------
+  //
   static bool cmpInvHeight (xor_head* a, xor_head* b)
   {
     if (a->height < b->height) {
@@ -1562,6 +1584,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // cmpId
   // -------------------------
+  //
   static bool cmpId (leaf_info* a, leaf_info* b)
   {
     if (a->Id < b->Id) {
@@ -1574,6 +1597,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // id
   // -------------------------
+  //
   static std::string id(RTLIL::IdString internal_id)
   {
         const char *str = internal_id.c_str();
@@ -1594,6 +1618,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // show_sigchunk
   // -------------------------
+  //
   static void show_sigchunk(const RTLIL::SigChunk &chunk, bool no_decimal = false)
   {
      if (chunk.wire == NULL) {
@@ -1629,6 +1654,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // show_sig
   // -------------------------
+  //
   static void show_sig(const RTLIL::SigSpec &sig)
   {
      if (GetSize(sig) == 0) {
@@ -1900,6 +1926,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // analyze_undriven_nets
   // -------------------------
+  //
   void analyze_undriven_nets(Module* top_mod, bool connect_to_undef) 
   {
     pool<SigBit> undriven_bits;
@@ -1979,7 +2006,8 @@ struct SynthFpgaPass : public ScriptPass
   // Check presence of Latch and either error out or continue with 
   // warning.
   //
-  void checkDLatch() {
+  void checkDLatch() 
+  {
 
      int foundLatch = 0;
 
@@ -2014,7 +2042,8 @@ struct SynthFpgaPass : public ScriptPass
   // Try to detect stuck-at DFF either through SAT solver or constant 
   // detection at DFF inputs.
   //
-  void optimize_DFFs() {
+  void optimize_DFFs() 
+  {
 
     // Call the zero asic version of 'opt_dff', e.g 'zopt_dff', especially
     // taking care of the -sat option.
@@ -2047,7 +2076,8 @@ struct SynthFpgaPass : public ScriptPass
   // Show dff init values if requested and when 'zeroInit' is 1 then set init 
   // values to 0 for both DFF with un-initialized Values and DFF with init value 1.
   //
-  void processDffInitValues(int zeroInit) {
+  void processDffInitValues(int zeroInit) 
+  {
 
      if (!yosys_get_design()) {
        log_warning("Design seems empty ! (did you define the -top or use 'hierarchy -auto-top' before)\n");
@@ -2151,7 +2181,9 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // getNumberOfLuts
   // -------------------------
-  int getNumberOfLuts() {
+  //
+  int getNumberOfLuts() 
+  {
 
      int nb = 0;
 
@@ -2172,7 +2204,9 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // getNumberOfDffs
   // -------------------------
-  int getNumberOfDffs() {
+  //
+  int getNumberOfDffs() 
+  {
 
      int nb = 0;
 
@@ -2199,6 +2233,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // dump_csv_file 
   // -------------------------
+  //
   void dump_csv_file(string fileName, int runTime)
   {
      if (!yosys_get_design()) {
@@ -2206,7 +2241,7 @@ struct SynthFpgaPass : public ScriptPass
        return;
      }
 
-     // -----
+     // -------------------
      // Get all the stats 
      //
 
@@ -2252,6 +2287,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // load_cells_models 
   // -------------------------
+  //
   void load_cells_models()
   {
      run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
@@ -2275,6 +2311,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // load_bb_cells_models 
   // -------------------------
+  //
   void load_bb_cells_models()
   {
      run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
@@ -2305,6 +2342,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // dbg_wait 
   // -------------------------
+  //
   void dbg_wait ()
   {  
      if (wait) {
@@ -2315,6 +2353,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // getNumberOfCells
   // -------------------------
+  //
   int getNumberOfCells() {
      return ((yosys_get_design()->top_module()->cells()).size());
   }
@@ -2322,6 +2361,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // clean_design 
   // -------------------------
+  //
   void clean_design()
   {
      if (obs_clean) {
@@ -2350,6 +2390,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // abc_synthesize 
   // -------------------------
+  //
   void abc_synthesize()
   {
     if (!yosys_get_design()) {
@@ -2454,6 +2495,10 @@ struct SynthFpgaPass : public ScriptPass
     return false;
   }
 
+  // -------------------------
+  // format_legal_flops
+  // -------------------------
+  //
   string format_legal_flops()
   {
     string flop_list_string = "";
@@ -2538,6 +2583,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // infer_DSPs
   // -------------------------
+  //
   void infer_DSPs()
   {
      if (no_dsp) {
@@ -2594,9 +2640,11 @@ struct SynthFpgaPass : public ScriptPass
 
      run("stat");
 
-     if(has_cell_type(yosys_get_design(), "\\MAE")) {
+     // We may need to parametrize this in the config file with a new section
+     //
+     if (has_cell_type(yosys_get_design(), "\\MAE")) {
       log_error("Could not techmap DSP to a valid configuration.\n");
-   }
+     }
   }
 
   // -------------------------
@@ -2662,6 +2710,7 @@ struct SynthFpgaPass : public ScriptPass
   // -------------------------
   // coarse_synthesis
   // -------------------------
+  //
   void coarse_synthesis()
   {
     run("opt_expr");
@@ -2725,6 +2774,11 @@ struct SynthFpgaPass : public ScriptPass
         log("        Invoke architecture specific DSP inference. It is off by default. -no_bram \n");
         log("        overides -use_bram_tech.\n");
         log("\n");
+
+        log("    -bram_with_init\n");
+        log("        Use BRAM with init feature. By default BRAM has no init feature.\n");
+        log("\n");
+
 
         log("    -no_dsp\n");
         log("        Bypass DSP inference. It is off by default.\n");
@@ -2854,6 +2908,7 @@ struct SynthFpgaPass : public ScriptPass
 
 	bram_tech = "zeroasic";
 	no_bram = false;
+	bram_with_init = false;
 	no_sdff = false;
 
 	resynthesis = false;
@@ -2945,6 +3000,11 @@ struct SynthFpgaPass : public ScriptPass
 
           if (args[argidx] == "-no_bram") {
              no_bram = true;
+             continue;
+          }
+
+          if (args[argidx] == "-bram_with_init") {
+             bram_with_init = true;
              continue;
           }
 
@@ -3100,15 +3160,6 @@ struct SynthFpgaPass : public ScriptPass
   // script (synth_fpga flow) 
   // ---------------------------------------------------------------------------
   //
-  // VERSION 1.0 (05/13/2025, Thierry): 
-  //
-  //        - as a starter, we mimic what is done in : 
-  //          '.../siliconcompiler/tools/yosys/sc_synth_fpga.tcl' 
-  //
-  //        - we try to handle DFF legalization by taking care of DFF features
-  //        support like handling DFF with 'enable', 'async_set', 'async_reset'.
-  //
-  // ---------------------------------------------------------------------------
   void script() override
   {
 
