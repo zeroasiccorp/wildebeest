@@ -509,6 +509,19 @@ struct SynthFpgaPass : public ScriptPass
   //
   void setup_options()
   {
+     if (!config_file_success) {
+
+       // Converting 'partname' to lower case only if part name is
+       // used as 'synth_fpga' option and not through config file.
+       // If we do that also for partname set from config file, we may
+       // have trouble since we may lower case 3rd party partnames and
+       // we would have no way to refer to the exact partname name,
+       // set from config file, therefore the check on 'config_file_success'.
+       //
+       std::transform (part_name.begin(), part_name.end(),
+                       part_name.begin(), ::tolower);
+     }
+
     // If there is a config file with successful analysis then we set up
     // all the wildebeest parameters with it.
     //
@@ -770,19 +783,6 @@ struct SynthFpgaPass : public ScriptPass
   //
   void check_options()
   {
-     if (!config_file_success) {
-
-       // Converting 'partname' to lower case only if part name is 
-       // used as 'synth_fpga' option and not through config file. 
-       // If we do that also for partname set from config file, we may 
-       // have trouble since we may lower case 3rd party partnames and
-       // we would have no way to refer to the exact partname name,
-       // set from config file, therefore the check on 'config_file_success'.
-       //
-       std::transform (part_name.begin(), part_name.end(), 
-		       part_name.begin(), ::tolower);
-     }
-
      if (partnames.count(part_name) == 0) {
         log("ERROR: -partname '%s' is unknown.\n", part_name.c_str());
         log("       Available partnames are :\n");
@@ -2764,6 +2764,7 @@ struct SynthFpgaPass : public ScriptPass
 
         log("    -partname\n");
         log("        Specifies the Architecture partname used. 'z1010' is used by default.\n");
+        log("        partname is not case sensitive.\n");
         log("\n");
 
         log("    -no_bram\n");
