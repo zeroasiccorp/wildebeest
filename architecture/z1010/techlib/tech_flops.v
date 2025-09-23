@@ -96,6 +96,26 @@ module tech__DFF_PN0_
 
 endmodule
 
+// _DFF_PN1_ covered by dffs
+(* techmap_celltype = "$_DFF_PN1_" *)
+module tech__DFF_PN1_
+  (
+    C,
+    D,
+    R,
+    Q
+   );
+
+   input C;
+   input D;
+   input R;
+   input Q;
+
+   dffs _TECHMAP_REPLACE_
+      (  .clk(C), .D(D), .S(R), .Q(Q) );
+
+endmodule
+
 // _SDFFE_PN1P_ covered by dffeh
 (* techmap_celltype = "$_SDFFE_PN1P_" *)
 module tech__SDFFE_PN1P_

@@ -607,18 +607,18 @@ struct SynthFpgaPass : public ScriptPass
        // Processing cases where 'config' file overides user command options.
        //
        if (ys_dff_features.count("flop_enable") == 0) {
-         log_warning("Config file will switch on '-no_dff_enable' option.\n");
-         dff_enable = false;
+         log_warning("Config file will switch off '-no_dff_enable' option.\n");
+         dff_enable = true;
        }
 
        if (ys_dff_features.count("async_reset") == 0) {
-         log_warning("Config file will switch on '-no_dff_async_reset' option.\n");
-         dff_async_reset = false;
+         log_warning("Config file will switch off '-no_dff_async_reset' option.\n");
+         dff_async_reset = true;
        }
 
        if (ys_dff_features.count("async_set") == 0) {
-         log_warning("Config file will switch on '-no_dff_async_set' option.\n");
-         dff_async_set = false;
+         log_warning("Config file will switch on '-dff_async_set' option.\n");
+         dff_async_set = true;
        }
        
        if (std::to_string(G_config.lut_size) != sc_syn_lut_size) {
@@ -642,8 +642,10 @@ struct SynthFpgaPass : public ScriptPass
       //
       ys_dff_models["dff"] = "+/plugins/wildebeest/ff_models/dff.v";
       ys_dff_models["dffr"] = "+/plugins/wildebeest/ff_models/dffr.v";
+      ys_dff_models["dffs"] = "+/plugins/wildebeest/ff_models/dffs.v";
       ys_dff_models["dffe"] = "+/plugins/wildebeest/ff_models/dffe.v";
       ys_dff_models["dffer"] = "+/plugins/wildebeest/ff_models/dffer.v";
+      ys_dff_models["dffes"] = "+/plugins/wildebeest/ff_models/dffes.v";
 
       // Sync. set/reset DFFs
       //
@@ -655,31 +657,51 @@ struct SynthFpgaPass : public ScriptPass
       ys_dff_models["dffehl"] = "+/plugins/wildebeest/ff_models/dffehl.v";
 
       // Legal Flops for dfflegalize
+      //
       if ((part_name == "z1010") || (part_name == "z1060")) {
+
         // Match legal flop types from config file exactly
-        ys_legal_flops.push_back("$_DFFE_PP_");
-        ys_legal_flops.push_back("$_SDFFE_PN1P_");
+	//
         ys_legal_flops.push_back("$_DFF_P_");
-        ys_legal_flops.push_back("$_DFF_PN0_");
-        ys_legal_flops.push_back("$_SDFFE_PN0P_");
-        ys_legal_flops.push_back("$_DFFE_PN0P_");
         ys_legal_flops.push_back("$_SDFF_PN0_");
         ys_legal_flops.push_back("$_SDFF_PN1_");
+
+        if (dff_enable) {
+          ys_legal_flops.push_back("$_DFFE_PP_");
+          ys_legal_flops.push_back("$_SDFFE_PN1P_");
+          ys_legal_flops.push_back("$_SDFFE_PN0P_");
+          ys_legal_flops.push_back("$_DFFE_PN0P_");
+	}
+
+        if (dff_async_reset) {
+          ys_legal_flops.push_back("$_DFF_PN0_");
+	}
+
+        if (dff_async_set) {
+          ys_legal_flops.push_back("$_DFF_PN1_");
+	}
+
       } else if (part_name == "z1000") {
+
         // Match legal flop types from config file exactly
+	//
         ys_legal_flops.push_back("$_DFF_P_");
         ys_legal_flops.push_back("$_DFF_PN0_");
         ys_legal_flops.push_back("$_DFFE_PP_");
         ys_legal_flops.push_back("$_DFFE_PN0P_");
+
       } else {
+
         // When no part name is specified provide a generic setup
-        // for legalization
+        // for legalization.
+	//
         ys_legal_flops.push_back("$_DFF_P_");
         ys_legal_flops.push_back("$_DFF_PN?_");
         ys_legal_flops.push_back("$_DFFE_PP_");
         ys_legal_flops.push_back("$_DFFE_PN?P_");
         ys_legal_flops.push_back("$_DFFSR_PNN_");
         ys_legal_flops.push_back("$_DFFSRE_PNNP_");
+
         if (!no_sdff) {
           ys_legal_flops.push_back("$_SDFF_P??_");
           ys_legal_flops.push_back("$_SDFFE_P???_");
@@ -2217,7 +2239,7 @@ struct SynthFpgaPass : public ScriptPass
 
      for (auto cell : yosys_get_design()->top_module()->cells()) {
 
-         if (cell->type.in(ID(dffer), ID(dffe), ID(dffr), ID(dff))) {
+         if (cell->type.in(ID(dffer), ID(dffes), ID(dffe), ID(dffr), ID(dffs), ID(dff))) {
            nb++;
          }
 
@@ -2291,8 +2313,10 @@ struct SynthFpgaPass : public ScriptPass
   void load_cells_models()
   {
      run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffes.v");
      run("read_verilog +/plugins/wildebeest/ff_models/dffe.v");
      run("read_verilog +/plugins/wildebeest/ff_models/dffr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffs.v");
      run("read_verilog +/plugins/wildebeest/ff_models/dff.v");
 
      run("read_verilog +/plugins/wildebeest/ff_models/dffh.v");
@@ -2315,8 +2339,10 @@ struct SynthFpgaPass : public ScriptPass
   void load_bb_cells_models()
   {
      run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffes.v");
      run("read_verilog +/plugins/wildebeest/ff_models/dffe.v");
      run("read_verilog +/plugins/wildebeest/ff_models/dffr.v");
+     run("read_verilog +/plugins/wildebeest/ff_models/dffs.v");
      run("read_verilog +/plugins/wildebeest/ff_models/dff.v");
 
      run("read_verilog +/plugins/wildebeest/ff_models/dffh.v");
@@ -2332,7 +2358,7 @@ struct SynthFpgaPass : public ScriptPass
 
      // Black box them all
      //
-     run("blackbox dffer dffe dffr dff dffh dffeh dffl dffel dffhl dffehl");
+     run("blackbox dffer dffes dffe dffr dffs dff dffh dffeh dffl dffel dffhl dffehl");
 
      if (part_name == "z1010") {
        run("blackbox ");
@@ -2823,13 +2849,13 @@ struct SynthFpgaPass : public ScriptPass
         log("        specifies that DFF with enable feature is not supported. By default,\n");
         log("        DFF with enable is supported.\n");
         log("\n");
-        log("    -no_dff_async_set\n");
-        log("        specifies that DFF with asynchronous set feature is not supported. By default,\n");
-        log("        DFF with asynchronous set is supported.\n");
-        log("\n");
         log("    -no_dff_async_reset\n");
         log("        specifies that DFF with asynchronous reset feature is not supported. By default,\n");
         log("        DFF with asynchronous reset is supported.\n");
+        log("\n");
+        log("    -dff_async_set\n");
+        log("        specifies that DFF with asynchronous set feature is supported. By default,\n");
+        log("        DFF with asynchronous set is not supported.\n");
         log("\n");
         log("    -no_opt_sat_dff\n");
         log("        Disable SAT-based DFF optimizations. This is off by default.\n");
@@ -2854,7 +2880,6 @@ struct SynthFpgaPass : public ScriptPass
         log("    -no_sdff\n");
         log("        Disable synchronous set/reset DFF mapping. It is off by default.\n");
         log("\n");
-
 
         log("    -stop_if_undriven_nets\n");
         log("        Stop Synthesis if the final netlist has undriven nets. This is off by default.\n");
@@ -2928,8 +2953,8 @@ struct SynthFpgaPass : public ScriptPass
 	wait = false;
 
 	dff_enable = true;
-	dff_async_set = true;
 	dff_async_reset = true;
+	dff_async_set = false; // not supported by default
 
 	obs_clean = false;
 
@@ -3114,13 +3139,13 @@ struct SynthFpgaPass : public ScriptPass
              continue;
           }
 
-          if (args[argidx] == "-no_dff_async_set") {
-             dff_async_set = false;
+          if (args[argidx] == "-no_dff_async_reset") {
+             dff_async_reset = false;
              continue;
           }
 
-          if (args[argidx] == "-no_dff_async_reset") {
-             dff_async_reset = false;
+          if (args[argidx] == "-dff_async_set") {
+             dff_async_set = true;
              continue;
           }
 

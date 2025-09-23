@@ -45,40 +45,44 @@ struct MaxLvlWorker
 
    pool<SigBit> visited_bits;
 
-   // ------------------------------------
-   // setup_internals_zeroasic_ff_Z1000
-   // ------------------------------------
-   void setup_internals_zeroasic_ff_Z1000(CellTypes& ff_celltypes)
+   // ---------------------------------------
+   // setup_internals_zeroasic_clocked_cells
+   // ---------------------------------------
+   void setup_internals_zeroasic_clocked_cells(CellTypes& ff_celltypes)
    {
      // Simply list the DFF cells names is enough as cut points
      //
-     ff_celltypes.setup_type(ID(dff), {}, {});
-     ff_celltypes.setup_type(ID(dffe), {}, {});
-     ff_celltypes.setup_type(ID(dffr), {}, {});
+     ff_celltypes.setup_type(ID(dffehl), {}, {});
+     ff_celltypes.setup_type(ID(dffeh), {}, {});
+     ff_celltypes.setup_type(ID(dffel), {}, {});
      ff_celltypes.setup_type(ID(dffer), {}, {});
-     ff_celltypes.setup_type(ID(dffs), {}, {});
-     ff_celltypes.setup_type(ID(dffrs), {}, {});
      ff_celltypes.setup_type(ID(dffes), {}, {});
-     ff_celltypes.setup_type(ID(dffers), {}, {});
+     ff_celltypes.setup_type(ID(dffe), {}, {});
+     ff_celltypes.setup_type(ID(dffhl), {}, {});
+     ff_celltypes.setup_type(ID(dffh), {}, {});
+     ff_celltypes.setup_type(ID(dffl), {}, {});
+     ff_celltypes.setup_type(ID(dffr), {}, {});
+     ff_celltypes.setup_type(ID(dffs), {}, {});
+     ff_celltypes.setup_type(ID(dff), {}, {});
 
-     ff_celltypes.setup_type(ID(dffn), {}, {});
-     ff_celltypes.setup_type(ID(dffen), {}, {});
-     ff_celltypes.setup_type(ID(dffnr), {}, {});
-     ff_celltypes.setup_type(ID(dffenr), {}, {});
-     ff_celltypes.setup_type(ID(dffns), {}, {});
-     ff_celltypes.setup_type(ID(dffnrs), {}, {});
-     ff_celltypes.setup_type(ID(dffens), {}, {});
-     ff_celltypes.setup_type(ID(dffenrs), {}, {});
+     // Clocked DSPs
+     //
+     ff_celltypes.setup_type(ID(efpga_adder_regi), {}, {});
+     ff_celltypes.setup_type(ID(efpga_adder_rego), {}, {});
+     ff_celltypes.setup_type(ID(efpga_adder_regio), {}, {});
 
-     ff_celltypes.setup_type(ID(sdffr), {}, {});
-     ff_celltypes.setup_type(ID(sdffer), {}, {});
-     ff_celltypes.setup_type(ID(sdffs), {}, {});
-     ff_celltypes.setup_type(ID(sdffes), {}, {});
+     ff_celltypes.setup_type(ID(efpga_acc_regi), {}, {});
 
-     ff_celltypes.setup_type(ID(sdffnr), {}, {});
-     ff_celltypes.setup_type(ID(sdffenr), {}, {});
-     ff_celltypes.setup_type(ID(sdffns), {}, {});
-     ff_celltypes.setup_type(ID(sdffens), {}, {});
+     ff_celltypes.setup_type(ID(efpga_mult_regi), {}, {});
+     ff_celltypes.setup_type(ID(efpga_mult_rego), {}, {});
+     ff_celltypes.setup_type(ID(efpga_mult_regio), {}, {});
+
+     ff_celltypes.setup_type(ID(efpga_macc_regi), {}, {});
+     ff_celltypes.setup_type(ID(efpga_macc_pipe_regi), {}, {});
+
+     ff_celltypes.setup_type(ID(efpga_mult_addc_regio), {}, {});
+     ff_celltypes.setup_type(ID(efpga_mult_addc_regi), {}, {});
+     ff_celltypes.setup_type(ID(efpga_mult_addc_rego), {}, {});
    }
 
    // ------------------------------------
@@ -208,7 +212,7 @@ struct MaxLvlWorker
 
          // Specify technology related DFF cutpoints for -clk2clk option
          //
-         setup_internals_zeroasic_ff_Z1000(ff_celltypes);
+         setup_internals_zeroasic_clocked_cells(ff_celltypes);
 
 	 // Xilinx
 	 //
@@ -581,8 +585,6 @@ struct MaxLvlWorker
      run("hierarchy -auto-top");
    }
 
-   // ------------------------------------
-   // setup_internals_zeroasic_ff_Z1000
    // ---------------------
    // help
    // ---------------------

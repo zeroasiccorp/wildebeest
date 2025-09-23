@@ -143,7 +143,7 @@ struct ReportStatPass : public ScriptPass
 
         // Zero Asic Z1000/Z1010 DFFs
         //
-        if (cell->type.in(ID(dffer), ID(dffe), ID(dffr), ID(dff))) {
+        if (cell->type.in(ID(dffer), ID(dffes), ID(dffe), ID(dffr), ID(dffs), ID(dff))) {
           nb++;
         }
 
@@ -272,6 +272,38 @@ struct ReportStatPass : public ScriptPass
 	// Make sure it is in sync. with file under :
 	//    wildebeest/architecture/z1010/dsp/zeroasic_dsp_map_mode.v
 	//
+	// OR for instance
+	//
+	//    architecture/z1010/models/tech_mae.v
+	//
+        if (cell->type.in(ID(efpga_adder))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_adder_regi))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_adder_rego))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_adder_regio))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_acc_regi))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_acc))) {
+             nb++;
+             continue;
+        }
+        if (cell->type.in(ID(efpga_mult))) {
+             nb++;
+             continue;
+        }
         if (cell->type.in(ID(efpga_mult_regi))) {
              nb++;
              continue;
@@ -281,10 +313,6 @@ struct ReportStatPass : public ScriptPass
              continue;
         }
         if (cell->type.in(ID(efpga_mult_regio))) {
-             nb++;
-             continue;
-        }
-        if (cell->type.in(ID(efpga_mult))) {
              nb++;
              continue;
         }
@@ -379,7 +407,8 @@ struct ReportStatPass : public ScriptPass
         // Zeroasic 
         //
         if (cell->type.in(
-                          // New Peter's RAM
+                          // New Peter's RAM coming from : 
+			  //      architecture/z1010/bram/techmap.v
 			  //
                           // sprams
  			  //
