@@ -2752,7 +2752,10 @@ struct SynthFpgaPass : public ScriptPass
     run("techmap -map +/cmp2lut.v -D LUT_WIDTH=" + sc_syn_lut_size);
     run("opt_expr");
     run("opt_clean");
-
+    
+    run("opt -full"); // improves drastically RC_tpu_16x16 because it does cst
+                      // propagation before infering BB primitives (ex: DFF) that 
+		      // can block cst propagation. 
   }
 
   // -------------------------
@@ -3360,6 +3363,16 @@ struct SynthFpgaPass : public ScriptPass
     // Transform Yosys generic DFF into target technology supported ones.
     //
     legalize_flops (); 
+
+    if (getNumberOfCells() <= HUGE_NB_CELLS) {
+
+       run("opt -full");
+
+    } else {
+
+       run("opt_expr");
+       run("opt_clean");
+    }
 
     // Map on the DFF of the architecture (partname)
     //
