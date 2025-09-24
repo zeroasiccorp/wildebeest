@@ -2756,6 +2756,8 @@ struct SynthFpgaPass : public ScriptPass
     run("opt -full"); // improves drastically RC_tpu_16x16 because it does cst
                       // propagation before infering BB primitives (ex: DFF) that 
 		      // can block cst propagation. 
+		      // Note : this call strongly degrades max level solutions 
+		      // for 'ct_vfpu_top', 'ct_vfdsu_top', 
   }
 
   // -------------------------
