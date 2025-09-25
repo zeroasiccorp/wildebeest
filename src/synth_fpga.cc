@@ -711,6 +711,8 @@ struct SynthFpgaPass : public ScriptPass {
         }
       }
 
+      ys_legal_flops.push_back("$_DLATCH_N_");
+
       // -------------------------
       // BRAM setting
       //
