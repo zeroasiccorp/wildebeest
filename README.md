@@ -3,7 +3,7 @@
 The Wildebeest project is an open-source RTL synthesis tool that builds on the mature [Yosys](https://github.com/YosysHQ/yosys) platform and extends it with advanced logic synthesis algorithms for state-of-the-art quality of results (QoR).
 
 The project is initially focused on supporting [Platypus FPGAs](https://www.zeroasic.com/platypus). However, most of the Platypus-specific optimization passes are general-purpose and can be easily adapted for other targets. The long-term goal of Wildebeest is to serve as a common hierarchical synthesis engine, providing a library of high-performance optimization passes that can be shared between targets. The groundwork for this effort has already begun with the introduction of the `-config` option.
-
+ 
 The table below shows how Wildebeest compares against both open-source and proprietary synthesis tools on the [picorv32 CPU design](https://raw.githubusercontent.com/zeroasiccorp/logikbench/refs/heads/main/logikbench/blocks/picorv32/rtl/picorv32.v). To run Wildebeest across a broader set of benchmarks, see [LogikBench](https://github.com/zeroasiccorp/logikbench).
 
 
