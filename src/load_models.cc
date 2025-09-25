@@ -16,77 +16,69 @@
  *
  */
 
-#include "kernel/register.h"
 #include "kernel/celltypes.h"
-#include "kernel/rtlil.h"
 #include "kernel/log.h"
+#include "kernel/register.h"
+#include "kernel/rtlil.h"
 #include <chrono>
-
 
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
 
-struct LoadModelsPass : public ScriptPass
-{
+struct LoadModelsPass : public ScriptPass {
   // Global data
   //
 
   // Methods
   //
-  LoadModelsPass() : ScriptPass("load_models", "Load Zero  Asic RTL models") { }
+  LoadModelsPass() : ScriptPass("load_models", "Load Zero  Asic RTL models") {}
 
-  void help() override
-  {
-	//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
-	log("\n");
-	log("    load_models\n");
-	log("\n");
+  void help() override {
+    //   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
+    log("\n");
+    log("    load_models\n");
+    log("\n");
 
-	help_script();
-	log("\n");
+    help_script();
+    log("\n");
   }
 
-  void clear_flags() override
-  {
-  }
+  void clear_flags() override {}
 
-  void execute(std::vector<std::string> args, RTLIL::Design *design) override
-  {
-	string run_from, run_to;
-	clear_flags();
+  void execute(std::vector<std::string> args, RTLIL::Design *design) override {
+    string run_from, run_to;
+    clear_flags();
 
-	size_t argidx;
-	for (argidx = 1; argidx < args.size(); argidx++)
-	{
-	}
-	extra_args(args, argidx, design);
+    size_t argidx;
+    for (argidx = 1; argidx < args.size(); argidx++) {
+    }
+    extra_args(args, argidx, design);
 
-	log_header(design, "Executing Zero Asic load models.\n");
-	log_push();
+    log_header(design, "Executing Zero Asic load models.\n");
+    log_push();
 
-	run_script(design, run_from, run_to);
+    run_script(design, run_from, run_to);
 
-	log_pop();
+    log_pop();
   }
 
   // ---------------------------------------------------------------------------
-  // load_models 
+  // load_models
   // ---------------------------------------------------------------------------
   //
   // Obsolete since file names have changed. Needs to be revisited. (Thierry)
   //
-  void script() override
-  {
-     run("read_verilog +/plugins/wildebeest/ff_models/dff.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffe.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffr.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffs.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffrs.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffes.v");
-     run("read_verilog +/plugins/wildebeest/ff_models/dffers.v");
+  void script() override {
+    run("read_verilog +/plugins/wildebeest/ff_models/dff.v");
+    run("read_verilog +/plugins/wildebeest/ff_models/dffe.v");
+    run("read_verilog +/plugins/wildebeest/ff_models/dffr.v");
+    run("read_verilog +/plugins/wildebeest/ff_models/dffs.v");
+    run("read_verilog +/plugins/wildebeest/ff_models/dffrs.v");
+    run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
+    run("read_verilog +/plugins/wildebeest/ff_models/dffes.v");
+    run("read_verilog +/plugins/wildebeest/ff_models/dffers.v");
 
-     run("read_verilog +/plugins/wildebeest/ram_models/RAM64x12.v");
+    run("read_verilog +/plugins/wildebeest/ram_models/RAM64x12.v");
 
   } // end script()
 
