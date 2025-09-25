@@ -16,10 +16,10 @@
  *
  */
 
-#include "kernel/register.h"
 #include "kernel/celltypes.h"
-#include "kernel/rtlil.h"
 #include "kernel/log.h"
+#include "kernel/register.h"
+#include "kernel/rtlil.h"
 #include <ctime>
 
 #define SYNTH_FPGA_VERSION "1.0"
@@ -27,89 +27,86 @@
 USING_YOSYS_NAMESPACE
 PRIVATE_NAMESPACE_BEGIN
 
-struct TimeChronoPass : public ScriptPass
-{
+struct TimeChronoPass : public ScriptPass {
   // Global data
   //
-  RTLIL::Design *G_design = NULL; 
+  RTLIL::Design *G_design = NULL;
   bool start, end;
 
   // Methods
   //
-  TimeChronoPass() : ScriptPass("time_chrono", "stores current time") { }
+  TimeChronoPass() : ScriptPass("time_chrono", "stores current time") {}
 
-  void help() override
-  {
-	//   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
-	log("\n");
-	log("    time_chrono\n");
-	log("\n");
-	log("This command stores time in order to use it afterward in 'report_stat'\n");
-	log("command.\n");
-	log("\n");
+  void help() override {
+    //   |---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|---v---|
+    log("\n");
+    log("    time_chrono\n");
+    log("\n");
+    log("This command stores time in order to use it afterward in "
+        "'report_stat'\n");
+    log("command.\n");
+    log("\n");
   }
 
-  void clear_flags() override
-  {
+  void clear_flags() override {
     start = false;
     end = false;
   }
 
-  void execute(std::vector<std::string> args, RTLIL::Design *design) override
-  {
-	string run_from, run_to;
-	clear_flags();
+  void execute(std::vector<std::string> args, RTLIL::Design *design) override {
+    string run_from, run_to;
+    clear_flags();
 
-	G_design = design;
+    G_design = design;
 
-	size_t argidx;
-	for (argidx = 1; argidx < args.size(); argidx++)
-	{
-	        if (args[argidx] == "-start") {
-                        start = true;
-                        continue;
-                }
-	        if (args[argidx] == "-end") {
-                        end = true;
-                        continue;
-                }
-	}
-	extra_args(args, argidx, design);
+    size_t argidx;
+    for (argidx = 1; argidx < args.size(); argidx++) {
+      if (args[argidx] == "-start") {
+        start = true;
+        continue;
+      }
+      if (args[argidx] == "-end") {
+        end = true;
+        continue;
+      }
+    }
+    extra_args(args, argidx, design);
 
-	if (!design->full_selection()) {
-           log_cmd_error("This command only operates on fully selected designs!\n");
-	}
+    if (!design->full_selection()) {
+      log_cmd_error("This command only operates on fully selected designs!\n");
+    }
 
-	log_header(design, "Executing 'time_chrono'.\n");
-	log_push();
+    log_header(design, "Executing 'time_chrono'.\n");
+    log_push();
 
-	run_script(design, run_from, run_to);
+    run_script(design, run_from, run_to);
 
-	log_pop();
+    log_pop();
   }
 
   // ---------------------------------------------------------------------------
-  // time_chrono 
+  // time_chrono
   // ---------------------------------------------------------------------------
-  void script() override
-  {
+  void script() override {
     if (!G_design) {
-       log_warning("Design seems empty ! (did you define the -top or use 'hierarchy -auto-top' before)\n");
-       return;
+      log_warning("Design seems empty ! (did you define the -top or use "
+                  "'hierarchy -auto-top' before)\n");
+      return;
     }
 
-    Module* topModule = G_design->top_module();
+    Module *topModule = G_design->top_module();
 
     if (!topModule) {
-       log_warning("Design seems empty ! (did you define the -top or use 'hierarchy -auto-top' before)\n");
-       return;
+      log_warning("Design seems empty ! (did you define the -top or use "
+                  "'hierarchy -auto-top' before)\n");
+      return;
     }
 
     time_t timestamp;
     time(&timestamp);
 
     char output[100];
-    struct tm * datetime;
+    struct tm *datetime;
 
     string ftime = ctime(&timestamp);
 

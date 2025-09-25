@@ -21,8 +21,8 @@
 #ifndef QCSAT_H
 #define QCSAT_H
 
-#include "kernel/satgen.h"
 #include "kernel/modtools.h"
+#include "kernel/satgen.h"
 
 YOSYS_NAMESPACE_BEGIN
 
@@ -35,43 +35,44 @@ YOSYS_NAMESPACE_BEGIN
 // cannot exist in reality due to skipped constraints (ie. only UNSAT results
 // from this class should be considered binding).
 struct ZQuickConeSat {
-	ModWalker &modwalker;
-	ezSatPtr ez;
-	SatGen satgen;
+  ModWalker &modwalker;
+  ezSatPtr ez;
+  SatGen satgen;
 
-	// The effort level knobs.
+  // The effort level knobs.
 
-	// The maximum "complexity level" of cells that will be imported.
-	// - 1: bitwise operations, muxes, equality comparisons, lut, sop, fa
-	// - 2: addition, subtraction, greater/less than comparisons, lcu
-	// - 3: shifts
-	// - 4: multiplication, division, power
-	int max_cell_complexity = 2;
-	// The maximum number of cells to import, or 0 for no limit.
-	int max_cell_count = 0;
-	// If non-0, skip importing cells with more than this number of output bits.
-	int max_cell_outs = 0;
+  // The maximum "complexity level" of cells that will be imported.
+  // - 1: bitwise operations, muxes, equality comparisons, lut, sop, fa
+  // - 2: addition, subtraction, greater/less than comparisons, lcu
+  // - 3: shifts
+  // - 4: multiplication, division, power
+  int max_cell_complexity = 2;
+  // The maximum number of cells to import, or 0 for no limit.
+  int max_cell_count = 0;
+  // If non-0, skip importing cells with more than this number of output bits.
+  int max_cell_outs = 0;
 
-	// Internal state.
-	pool<RTLIL::Cell*> imported_cells;
-	pool<RTLIL::Wire*> imported_onehot;
-	pool<RTLIL::SigBit> bits_queue;
+  // Internal state.
+  pool<RTLIL::Cell *> imported_cells;
+  pool<RTLIL::Wire *> imported_onehot;
+  pool<RTLIL::SigBit> bits_queue;
 
-	ZQuickConeSat(ModWalker &modwalker) : modwalker(modwalker), ez(), satgen(ez.get(), &modwalker.sigmap) {}
+  ZQuickConeSat(ModWalker &modwalker)
+      : modwalker(modwalker), ez(), satgen(ez.get(), &modwalker.sigmap) {}
 
-	// Imports a signal into the SAT solver, queues its input cone to be
-	// imported in the next prepare() call.
-	std::vector<int> importSig(SigSpec sig);
-	int importSigBit(SigBit bit);
+  // Imports a signal into the SAT solver, queues its input cone to be
+  // imported in the next prepare() call.
+  std::vector<int> importSig(SigSpec sig);
+  int importSigBit(SigBit bit);
 
-	// Imports the input cones of all previously importSig'd signals into
-	// the SAT solver.
-	void prepare();
+  // Imports the input cones of all previously importSig'd signals into
+  // the SAT solver.
+  void prepare();
 
-	// Returns the "complexity level" of a given cell.
-	static int cell_complexity(RTLIL::Cell *cell);
+  // Returns the "complexity level" of a given cell.
+  static int cell_complexity(RTLIL::Cell *cell);
 
-	int nbImportedCells();
+  int nbImportedCells();
 };
 
 YOSYS_NAMESPACE_END
