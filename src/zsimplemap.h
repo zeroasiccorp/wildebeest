@@ -38,7 +38,8 @@ extern void zsimplemap_concat(RTLIL::Module *module, RTLIL::Cell *cell);
 extern void zsimplemap_ff(RTLIL::Module *module, RTLIL::Cell *cell);
 extern void zsimplemap(RTLIL::Module *module, RTLIL::Cell *cell);
 
-extern void zsimplemap_get_mappers(dict<RTLIL::IdString, void(*)(RTLIL::Module*, RTLIL::Cell*)> &mappers);
+extern void zsimplemap_get_mappers(
+    dict<RTLIL::IdString, void (*)(RTLIL::Module *, RTLIL::Cell *)> &mappers);
 
 YOSYS_NAMESPACE_END
 
