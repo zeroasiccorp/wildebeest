@@ -494,6 +494,28 @@ module tech__DFFE_PN0P_
 
 endmodule
 
+// _DFFE_NN0P_ covered by dffer
+(* techmap_celltype = "$_DFFE_NN0P_" *)
+module tech__DFFE_NN0P_
+  (
+    C,
+    D,
+    E,
+    R,
+    Q
+   );
+
+   input C;
+   input D;
+   input E;
+   input R;
+   input Q;
+
+   dffer _TECHMAP_REPLACE_
+      (  .clk(!C), .D(D), .E(E), .R(R), .Q(Q) );
+
+endmodule
+
 // _DFFE_PN0N_ covered by dffer
 (* techmap_celltype = "$_DFFE_PN0N_" *)
 module tech__DFFE_PN0N_
