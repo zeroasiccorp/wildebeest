@@ -1,9 +1,9 @@
 time
 echo " "
-echo "** Starting ABC DELAY LUT4 optimization and mapping (Zero Asic Corp.)"
+echo "** Starting ABC SMALL DELAY LUT4 optimization and mapping (Zero Asic Corp.)"
 echo ""
 
-write_blif delay_lut4.blif
+write_blif small_delay_lut4.blif
 
 &get -n -m;
 
@@ -74,7 +74,7 @@ write_blif delay_lut4.blif
 &load; &ps; time
  
 echo " "
-echo "** ABC DELAY LUT4 optimization and mapping done !!!"
+echo "** ABC SMALL DELAY LUT4 optimization and mapping done !!!"
 &put
 
 time
