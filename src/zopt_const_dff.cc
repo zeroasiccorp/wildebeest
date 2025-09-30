@@ -93,7 +93,11 @@ struct ZOptConstDffWorker {
       }
 
       if (module->design->selected(module, cell) &&
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
           RTLIL::builtin_ff_cell_types().count(cell->type)) {
+#else
+          cell->is_builtin_ff()) {
+#endif
 
         dff_cells.push_back(cell);
       }
@@ -122,7 +126,11 @@ struct ZOptConstDffWorker {
         continue;
       }
 
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
       if (!RTLIL::builtin_ff_cell_types().count(cell->type)) {
+#else
+      if (!cell->is_builtin_ff()) {
+#endif
         continue;
       }
 
