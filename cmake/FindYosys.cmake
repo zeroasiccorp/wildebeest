@@ -27,9 +27,9 @@ else()
     elseif(DEFINED YOSYS_PATH)
             message(STATUS "Using yosys path: ${YOSYS_PATH}")
 
-            set(YOSYS_CONFIG "${YOSYS_PATH}bin/yosys-config")
-            set(YOSYS_BINDIR "${YOSYS_PATH}bin")
-            set(YOSYS_DATDIR "${YOSYS_PATH}share/yosys")
+            set(YOSYS_CONFIG "${YOSYS_PATH}/bin/yosys-config")
+            set(YOSYS_BINDIR "${YOSYS_PATH}/bin")
+            set(YOSYS_DATDIR "${YOSYS_PATH}/share/yosys")
 
         message(STATUS "yosys-config --bindir (override): ${YOSYS_BINDIR}")
         message(STATUS "yosys-config --datdir (override): ${YOSYS_DATDIR}")
