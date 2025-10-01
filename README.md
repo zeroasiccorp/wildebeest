@@ -26,8 +26,11 @@ The table below shows how Wildebeest compares against both open-source and propr
 
 * Compiler: >=GCC 11 or >=clang 17
 * CMake: 3.20 ... 3.29
-* Yosys: 0.47 ... 0.56 are supported.
-* Yosys: 0.57 and above are now supported.
+* Yosys: 0.47+0 ... 0.56+0 are supported.
+* Yosys: 0.57+0 and above are now supported. 
+
+**Important:** Please note that the Yosys version you use must not be in between official versions.
+For instance, make sure you use 0.57+0 (with +0 new commit since the official version) and not for example 0.57+100 (official Yosys 0.57 + 100 commits after). 
 
 ## Building
 
