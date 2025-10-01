@@ -79,6 +79,14 @@ else()
         set(YOSYS_DATDIR ${YOSYS_DATDIR})
     endif()
 
+    # Extract version
+    set(YOSYS_DFLAGS ${YOSYS_CXXFLAGS})
+    list(FILTER YOSYS_DFLAGS INCLUDE REGEX "^-DYOSYS_VER=")
+    list(GET YOSYS_DFLAGS 0 YOSYS_VERSION_D)
+    string(REGEX MATCH "\"(.*)\"" YOSYS_VERSION_MATCH ${YOSYS_VERSION_D})
+    set(YOSYS_VERSION ${CMAKE_MATCH_1})
+    message(STATUS "yosys version: ${YOSYS_VERSION}")
+
     add_library(yosys::yosys INTERFACE IMPORTED)
     target_compile_options(yosys::yosys INTERFACE ${YOSYS_CXXFLAGS})
 

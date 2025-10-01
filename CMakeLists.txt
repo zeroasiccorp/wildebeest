@@ -21,6 +21,12 @@ set(OUTPUT_NAME "wildebeest")
 
 find_package(Yosys)
 
+string(FIND ${YOSYS_VERSION} "+" YOSYS_CHECK)
+if (${YOSYS_CHECK} EQUAL "-1")
+else()
+    message(WARNING "Only official yosys versions are supported")
+endif()
+
 set(YOSYS_SHARE_DIR ${YOSYS_DATDIR}/plugins/${OUTPUT_NAME})
 
 add_subdirectory(src)
