@@ -89,7 +89,7 @@ struct ZOptDffWorker {
       }
 
       if (module->design->selected(module, cell) &&
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
           RTLIL::builtin_ff_cell_types().count(cell->type))
 #else
           cell->is_builtin_ff()) 
@@ -360,7 +360,7 @@ struct ZOptDffWorker {
         } else if (ff.pol_clr == ff.pol_set) {
           // Try a more complex conversion to plain async reset.
           State val_neutral = ff.pol_set ? State::S0 : State::S1;
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
           Const val_arst;
 #endif
           SigBit sig_arst;
@@ -369,18 +369,18 @@ struct ZOptDffWorker {
           else
             sig_arst = ff.sig_clr[0];
           bool failed = false;
-#if YOSYS_MAJOR > 0 || YOSYS_MINOR > 56
+#if YOSYS_MAJOR > 0 || YOSYS_MINOR > 57
 	  Const::Builder val_arst_builder(ff.width);
 #endif
           for (int i = 0; i < ff.width; i++) {
             if (ff.sig_clr[i] == sig_arst && ff.sig_set[i] == val_neutral)
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
               val_arst.bits().push_back(State::S0);
 #else
 	      val_arst_builder.push_back(State::S0);
 #endif
             else if (ff.sig_set[i] == sig_arst && ff.sig_clr[i] == val_neutral)
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
               val_arst.bits().push_back(State::S1);
 #else
 	      val_arst_builder.push_back(State::S1);
@@ -393,7 +393,7 @@ struct ZOptDffWorker {
                 log_id(cell), log_id(cell->type), log_id(module));
             ff.has_sr = false;
             ff.has_arst = true;
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
             ff.val_arst = val_arst;
 #else
 	    ff.val_arst = val_arst_builder.build();
@@ -636,7 +636,7 @@ struct ZOptDffWorker {
           // Try to merge sync resets.
           std::map<ctrls_t, std::vector<int>> groups;
           std::vector<int> remaining_indices;
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
           Const val_srst;
 #else
 	  Const::Builder val_srst_builder(ff.width);
@@ -685,32 +685,32 @@ struct ZOptDffWorker {
               groups[resets].push_back(i);
             } else
               remaining_indices.push_back(i);
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
             val_srst.bits().push_back(reset_val);
 #else
 	    val_srst_builder.push_back(reset_val);
 #endif
           }
-#if YOSYS_MAJOR > 0 || YOSYS_MINOR > 56
+#if YOSYS_MAJOR > 0 || YOSYS_MINOR > 57
 	  Const val_srst = val_srst_builder.build();
 #endif
 
           for (auto &it : groups) {
             FfData new_ff = ff.slice(it.second);
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
             new_ff.val_srst = Const();
 #else
 	    Const::Builder new_val_srst_builder(new_ff.width);
 #endif
             for (int i = 0; i < new_ff.width; i++) {
               int j = it.second[i];
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
               new_ff.val_srst.bits().push_back(val_srst[j]);
 #else
 	      new_val_srst_builder.push_back(val_srst[j]);
 #endif
             }
-#if YOSYS_MAJOR > 0 || YOSYS_MINOR > 56
+#if YOSYS_MAJOR > 0 || YOSYS_MINOR > 57
 	    new_ff.val_srst = new_val_srst_builder.build();
 #endif
             ctrl_t srst = combine_resets(it.first, ff.is_fine);
@@ -828,7 +828,7 @@ struct ZOptDffWorker {
     int nbFF = 0;
     for (auto cell : module->selected_cells()) {
 
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
       if (!RTLIL::builtin_ff_cell_types().count(cell->type))
 #else
       if (!cell->is_builtin_ff()) 
@@ -858,7 +858,7 @@ struct ZOptDffWorker {
 
     for (auto cell : module->selected_cells()) {
 
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
       if (!RTLIL::builtin_ff_cell_types().count(cell->type))
 #else
       if (!cell->is_builtin_ff()) 

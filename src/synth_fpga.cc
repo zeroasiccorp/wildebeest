@@ -2166,7 +2166,7 @@ struct SynthFpgaPass : public ScriptPass {
       FfInitVals initvals(&sigmap, module);
 
       for (auto cell : module->selected_cells()) {
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57 
         if (!RTLIL::builtin_ff_cell_types().count(cell->type)) {
 #else
         if (!cell->is_builtin_ff()) {
@@ -2193,7 +2193,7 @@ struct SynthFpgaPass : public ScriptPass {
       FfInitVals initvals(&sigmap, module);
 
       for (auto cell : module->selected_cells()) {
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
         if (!RTLIL::builtin_ff_cell_types().count(cell->type)) {
 #else
         if (!cell->is_builtin_ff()) {
@@ -2221,7 +2221,7 @@ struct SynthFpgaPass : public ScriptPass {
       FfInitVals initvals(&sigmap, module);
 
       for (auto cell : module->selected_cells()) {
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
         if (!RTLIL::builtin_ff_cell_types().count(cell->type)) {
 #else
         if (!cell->is_builtin_ff()) {
