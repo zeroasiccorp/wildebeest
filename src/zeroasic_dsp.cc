@@ -84,7 +84,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm) {
           continue;
         for (int i = c.offset; i < c.offset + c.width; i++) {
           log_assert(it->second[i] == State::S0 || it->second[i] == State::Sx);
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 56
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
           it->second.bits()[i] = State::Sx;
 #else
 	  it->second.set(i, State::Sx);
