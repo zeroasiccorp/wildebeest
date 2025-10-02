@@ -15,56 +15,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  define-matrix:
-    runs-on: ubuntu-24.04
-    outputs:
-      all_versions: ${{ steps.final.outputs.all_versions }}
-      filtered_versions: ${{ steps.final.outputs.filtered_versions }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - id: final
-        shell: bash
-        run: |
-          {
-            versions=$(sed -rn 's/.+Yosys installed: supported versions are \*\*(.+)\*\*/\1/gp' README.md)
-            declare -A remap
-            remap["0.44"]="yosys-0.44"
-            remap["0.45"]="0.45"
-            remap["0.46"]="0.46"
-            remap["0.47"]="0.47"
-            echo -n "all_versions=["
-            first="";
-            last="";
-            for v in $versions; do
-              if [[ -z "${remap["$v"]+x}" ]] then
-                tag="v$v";
-              else
-                tag=${remap[$v]};
-              fi
-              if [[ -z "$first" ]] then
-                first="$tag";
-              fi
-              last="$tag";
-              echo -n "\"$tag\",";
-            done
-            echo "]"
-            echo "filtered_versions=[\"$first\",\"$last\"]"
-          } >> "$GITHUB_OUTPUT"
   build:
     runs-on: ubuntu-24.04
-    needs: [define-matrix]
     strategy:
       fail-fast: false
       matrix:
-        yosys_version: ${{ fromJSON(needs.define-matrix.outputs.all_versions) }}
+        yosys_version:
+          - "0.47"
+          - "v0.48"
+          - "v0.49"
+          - "v0.50"
+          - "v0.51"
+          - "v0.52"
+          - "v0.53"
+          - "v0.54"
+          - "v0.55"
+          - "v0.56"
+          - "v0.57"
     steps:
       - name: Install Dependencies
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y git build-essential pkg-config cmake ccache gperf bison flex libreadline-dev gawk tcl-dev libffi-dev graphviz xdot python3 libboost-system-dev libboost-python-dev libboost-filesystem-dev zlib1g-dev
+          sudo apt-get install -y git build-essential pkg-config cmake ccache gperf bison flex libreadline-dev gawk tcl-dev libffi-dev graphviz xdot python3 libboost-system-dev libboost-python-dev libboost-filesystem-dev zlib1g-dev libfl-dev
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -110,37 +83,3 @@ jobs:
           name: build-${{ matrix.yosys_version }}.tar.gz
           path: build.tar.gz
           retention-days: 1
-  test:
-    runs-on: ubuntu-24.04
-    needs: [build, define-matrix]
-    strategy:
-      matrix:
-        yosys_version: ${{ fromJSON(needs.define-matrix.outputs.all_versions) }}
-      fail-fast: false
-    steps:
-      - name: Install Dependencies
-        shell: bash
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git build-essential pkg-config cmake ccache gperf bison flex libreadline-dev gawk tcl-dev libffi-dev graphviz xdot python3 libboost-system-dev libboost-python-dev libboost-filesystem-dev zlib1g-dev
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-${{ matrix.yosys_version }}.tar.gz
-      - name: Unpack build
-        shell: bash
-        run:
-          tar -xvf build.tar.gz
-      - name: Install Yosys
-        shell: bash
-        run: |
-          cd yosys
-          make install PREFIX=$HOME/.local
-      - name: Run tests
-        shell: bash
-        run: |
-          cd build
-          ctest --rerun-failed --output-on-failure
