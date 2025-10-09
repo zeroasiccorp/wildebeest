@@ -908,7 +908,7 @@ struct SynthFpgaPass : public ScriptPass {
     //
     JsonNode *root_path = NULL;
     if (root.data_dict.count("root_path") == 0) {
-      log("NOTE: no 'root_path' section found in the config file : %s.\n",
+      log("NOTE: no 'root_path' section found in the config file: %s.\n",
           config_file.c_str());
     } else {
       root_path = root.data_dict.at("root_path");
@@ -1036,7 +1036,7 @@ struct SynthFpgaPass : public ScriptPass {
     }
     JsonNode *dff_models = flipflops->data_dict.at("models");
     if (dff_models->type != 'D') {
-      log_error("'models' associated to 'flipflops' must be a dictionnary.\n");
+      log_error("'models' associated to 'flipflops' must be a dictionary.\n");
     }
 
     for (auto it : dff_models->data_dict) {
@@ -1064,7 +1064,7 @@ struct SynthFpgaPass : public ScriptPass {
     for (auto it : dff_legalize_list->data_array) {
       JsonNode *legal_flop = it;
       if (legal_flop->type != 'S') {
-        log_error("Array associated to DFF 'legalize_list' must be contain "
+        log_error("Array associated to DFF 'legalize_list' must contain "
                   "only strings.\n");
       }
       string legal_flop_str = legal_flop->data_string;
