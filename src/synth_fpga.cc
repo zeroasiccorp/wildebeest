@@ -3452,6 +3452,7 @@ struct SynthFpgaPass : public ScriptPass {
     if (getNumberOfCells() <= HUGE_NB_CELLS) {
 
       run("opt -full");
+      legalize_flops(); // run dfflegalize again in case opt -full introduces unsupported FF types 
 
     } else {
 
