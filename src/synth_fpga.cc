@@ -82,7 +82,6 @@ struct SynthFpgaPass : public ScriptPass {
   // DFFs
   //
   pool<string> ys_dff_features;
-  dict<string, string> ys_dff_models;
   string ys_dff_techmap = "";
   vector<string> ys_legal_flops;
   // BRAMs
@@ -358,7 +357,6 @@ struct SynthFpgaPass : public ScriptPass {
         "lut_size": 4,
         "flipflops": {
                 "features": ["async_reset", "sync_reset", "sync_set", "flop_enable"],
-                "models": {"dffr": "cad/techlib_custom_plugin/dffr.v", "dff": "cad/techlib_custom_plugin/dff.v", "dffe": "cad/techlib_custom_plugin/dffe.v", "dffer": "cad/techlib_custom_plugin/dffer.v"},
                 "legalize_list": ["\$_DFFE_PP_", "\$_SDFF_PN1_", "\$_DFFE_PN0P_", "\$_DFF_PN0_", "\$_SDFF_PN0_", "\$_SDFFE_PN0P_", "\$_SDFFE_PN1P_", "\$_DFF_P_"],
                 "techmap": "tech_flops.v"
         },
@@ -395,7 +393,7 @@ struct SynthFpgaPass : public ScriptPass {
     // DFF related
     //
     pool<string> dff_features;
-    dict<string, string> dff_models;
+
     string dff_techmap;
     vector<string> legal_flops;
 
@@ -446,12 +444,6 @@ struct SynthFpgaPass : public ScriptPass {
       log("                       %s\n", it.c_str());
     }
 
-    log("  DFF MODELS         : \n");
-    for (auto it : G_config.dff_models) {
-      log("                       %s %s\n", (it.first).c_str(),
-          (it.second).c_str());
-    }
-
     log("  DFF Legal Flop Types : \n");
     for (auto it : G_config.legal_flops) {
       log("                       %s\n", (it).c_str());
@@ -499,10 +491,6 @@ struct SynthFpgaPass : public ScriptPass {
 
     log(" ====================================================================="
         "=====\n");
-
-    // Wait a bit to see the config file data on the screen
-    //
-    usleep(5000000);
   }
 
   // -------------------------
@@ -539,9 +527,7 @@ struct SynthFpgaPass : public ScriptPass {
       for (auto it : G_config.dff_features) {
         ys_dff_features.insert(it);
       }
-      for (auto it : G_config.dff_models) {
-        ys_dff_models[it.first] = it.second;
-      }
+
       for (auto it : G_config.legal_flops) {
         ys_legal_flops.push_back(it);
       }
@@ -640,24 +626,6 @@ struct SynthFpgaPass : public ScriptPass {
       ys_dff_features.insert("async_reset");
       ys_dff_features.insert("async_set");
       ys_dff_features.insert("flop_enable");
-
-      // Async. reset DFFs
-      //
-      ys_dff_models["dff"] = "+/plugins/wildebeest/ff_models/dff.v";
-      ys_dff_models["dffr"] = "+/plugins/wildebeest/ff_models/dffr.v";
-      ys_dff_models["dffs"] = "+/plugins/wildebeest/ff_models/dffs.v";
-      ys_dff_models["dffe"] = "+/plugins/wildebeest/ff_models/dffe.v";
-      ys_dff_models["dffer"] = "+/plugins/wildebeest/ff_models/dffer.v";
-      ys_dff_models["dffes"] = "+/plugins/wildebeest/ff_models/dffes.v";
-
-      // Sync. set/reset DFFs
-      //
-      ys_dff_models["dffh"] = "+/plugins/wildebeest/ff_models/dffh.v";
-      ys_dff_models["dffeh"] = "+/plugins/wildebeest/ff_models/dffeh.v";
-      ys_dff_models["dffl"] = "+/plugins/wildebeest/ff_models/dffl.v";
-      ys_dff_models["dffel"] = "+/plugins/wildebeest/ff_models/dffel.v";
-      ys_dff_models["dffhl"] = "+/plugins/wildebeest/ff_models/dffhl.v";
-      ys_dff_models["dffehl"] = "+/plugins/wildebeest/ff_models/dffehl.v";
 
       // Legal Flops for dfflegalize
       //
@@ -1028,26 +996,6 @@ struct SynthFpgaPass : public ScriptPass {
       string dff_mode_str = dff_mode->data_string;
 
       (G_config.dff_features).insert(dff_mode_str);
-    }
-
-    if (flipflops->data_dict.count("models") == 0) {
-      log_error("'models' from 'flipflops' is missing in config file '%s'.\n",
-                config_file.c_str());
-    }
-    JsonNode *dff_models = flipflops->data_dict.at("models");
-    if (dff_models->type != 'D') {
-      log_error("'models' associated to 'flipflops' must be a dictionnary.\n");
-    }
-
-    for (auto it : dff_models->data_dict) {
-      string dff_model_str = it.first;
-      JsonNode *dff_model_path = it.second;
-      if (dff_model_path->type != 'S') {
-        log_error(
-            "Second element associated to DFF models '%s' must be a string.\n",
-            dff_model_str.c_str());
-      }
-      G_config.dff_models[dff_model_str] = dff_model_path->data_string;
     }
 
     if (flipflops->data_dict.count("legalize_list") == 0) {
@@ -2359,10 +2307,10 @@ struct SynthFpgaPass : public ScriptPass {
   }
 
   // -------------------------
-  // load_cells_models
+  // load_hardcoded_cell_models
   // -------------------------
   //
-  void load_cells_models() {
+  void load_hardcoded_cell_models() {
     run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
     run("read_verilog +/plugins/wildebeest/ff_models/dffes.v");
     run("read_verilog +/plugins/wildebeest/ff_models/dffe.v");
@@ -3319,7 +3267,7 @@ struct SynthFpgaPass : public ScriptPass {
     log("'Zero Asic' FPGA Synthesis Version : %s\n", SYNTH_FPGA_VERSION);
 
     // Read eventually config file that will setup main synthesis options like
-    // partname, lut size, DFF models, DSP and BRAM techmap files, ...
+    // partname, lut size, DSP and BRAM techmap files, ...
     //
     read_config();
 
@@ -3339,13 +3287,13 @@ struct SynthFpgaPass : public ScriptPass {
     //
     run(stringf("hierarchy %s", help_mode ? "-top <top>" : top_opt.c_str()));
 
-    // This is usefull to load non-lut cells models in case we are doing a
+    // This is useful to load non-lut cells models in case we are doing a
     // resynthesis, e.g when the input design is a previous synthesized
     // netlist which has been synthesized with 'synth_fpga'.
     //
 
     if(config_file == "") {
-      load_cells_models();
+      load_hardcoded_cell_models();
     }
     else {
       load_cell_models_from_config();
