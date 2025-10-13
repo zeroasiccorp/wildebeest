@@ -2340,16 +2340,22 @@ struct SynthFpgaPass : public ScriptPass {
     log("Loading cell models from config");
 
     if(G_config.dff_techmap != "") {
+      if(std::filesystem::path(G_config.dff_techmap).is_absolute()) {
+        log_warning("dff techmap file path '%s' is absolute.\n", G_config.dff_techmap.c_str()); // Path is expected to be relative, in same dir as .*config.json
+      }
+
       std::filesystem::path dff_techmap_path = cad_directory / G_config.dff_techmap;
       run("read_verilog " + dff_techmap_path.string());
     }
 
     if(G_config.dsps_techmap != ""){
+      if(std::filesystem::path(G_config.dsps_techmap).is_absolute()) {
+        log_warning("dff techmap file path '%s' is absolute.\n", G_config.dsps_techmap.c_str()); // Path is expected to be relative, in same dir as .*config.json
+      }
+
       std::filesystem::path dsp_techmap_path = cad_directory / G_config.dsps_techmap;
       run("read_verilog " + dsp_techmap_path.string());
     }
-    // load bram
-
   }
 
   // -------------------------
