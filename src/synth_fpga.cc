@@ -2383,12 +2383,33 @@ struct SynthFpgaPass : public ScriptPass {
     }
   }
 
+  void load_cell_models_from_config() {
+    std::filesystem::path config_path(G_config.config_file);
+
+    // Get the parent cad directory path
+    std::filesystem::path cad_directory = config_path.parent_path();
+
+    log("Loading cell models from config");
+
+    if(G_config.dff_techmap != "") {
+      std::filesystem::path dff_techmap_path = cad_directory / G_config.dff_techmap;
+      run("read_verilog " + dff_techmap_path.string());
+    }
+
+    if(G_config.dsps_techmap != ""){
+      std::filesystem::path dsp_techmap_path = cad_directory / G_config.dsps_techmap;
+      run("read_verilog " + dsp_techmap_path.string());
+    }
+    // load bram
+
+  }
+
   // -------------------------
   // load_bb_cells_models
   // -------------------------
   //
   void load_bb_cells_models() {
-    run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
+    run("read_verilog +/plugins/wildebeest/ff_models/dffer.v"); // TODO-FT how to handle this?
     run("read_verilog +/plugins/wildebeest/ff_models/dffes.v");
     run("read_verilog +/plugins/wildebeest/ff_models/dffe.v");
     run("read_verilog +/plugins/wildebeest/ff_models/dffr.v");
@@ -3322,7 +3343,14 @@ struct SynthFpgaPass : public ScriptPass {
     // resynthesis, e.g when the input design is a previous synthesized
     // netlist which has been synthesized with 'synth_fpga'.
     //
-    load_cells_models();
+
+    if(config_file == "") {
+      load_cells_models();
+    }
+    else {
+      load_cell_models_from_config();
+    }
+
 
     // In case user invokes the '-resynthesis' option at the command line level,
     // we perform a light weight synthesis for the second time.
