@@ -390,6 +390,7 @@ struct SynthFpgaPass : public ScriptPass {
     string partname;
     int lut_size;
 
+    std::vector<std::string> illegal_final_state_cells;
     // DFF related
     //
     pool<string> dff_features;
@@ -489,6 +490,10 @@ struct SynthFpgaPass : public ScriptPass {
     log("  DSP pack_command   : \n");
     log("                       %s\n", (G_config.dsps_pack_command).c_str());
 
+    log("  Illegal final state cells (flow will error out if these are still around at end of synthesis) : \n");
+    for (auto it : G_config.illegal_final_state_cells) {
+      log("                       %s\n", (it).c_str());
+    }
     log(" ====================================================================="
         "=====\n");
   }
@@ -907,6 +912,14 @@ struct SynthFpgaPass : public ScriptPass {
       log_error("'lut_size' must be an integer.\n");
     }
 
+    // illegal intermediate cell types (optional parameter)
+    if (root.data_dict.count("illegal_final_state_cells") > 0) {
+      JsonNode *illegal_cells = root.data_dict.at("illegal_final_state_cells");
+      if (illegal_cells->type != 'A') {
+        log_error("'illegal_final_state_cells' must be an array.\n");
+      }
+    }
+
     // flipflops
     if (root.data_dict.count("flipflops") == 0) {
       log_error("'flipflops' is missing in config file '%s'.\n",
@@ -976,6 +989,27 @@ struct SynthFpgaPass : public ScriptPass {
           (G_config.root_path).c_str());
     }
 
+    // Process illegal intermediate cells
+    if(root.data_dict.count("illegal_final_state_cells")) {
+      JsonNode *illegal_cells = root.data_dict.at("illegal_final_state_cells");
+
+      if (illegal_cells->type != 'A') {
+        log_error(
+            "'illegal_final_state_cells' must be an array.\n");
+      }
+
+      for (const auto& it : illegal_cells->data_array) {
+        JsonNode *illegal_cell = it;
+        if (illegal_cell->type != 'S') {
+          log_error("Array associated to 'illegal_final_state_cells' must contain "
+                    "only strings.\n");
+        }
+        std::string illegal_cell_string = illegal_cell->data_string;
+
+        (G_config.illegal_final_state_cells).push_back(illegal_cell_string);
+      }
+
+    }
     // Extract DFF associated parameters
     //
     if (flipflops->data_dict.count("features") == 0) {
@@ -2700,12 +2734,6 @@ struct SynthFpgaPass : public ScriptPass {
     run("chtype -set $mul t:$__soft_mul");
 
     run("stat");
-
-    // We may need to parametrize this in the config file with a new section
-    //
-    if (has_cell_type(yosys_get_design(), "\\MAE")) {
-      log_error("Could not techmap DSP to a valid configuration.\n");
-    }
   }
 
   // -------------------------
@@ -3517,6 +3545,30 @@ struct SynthFpgaPass : public ScriptPass {
     //
     analyze_undriven_nets(yosys_get_design()->top_module(),
                           true /* connect undriven nets to undef */);
+
+    if (has_cell_type(yosys_get_design(), "\\MAE")) {
+      log_error("Could not techmap DSP to a valid configuration.\n");
+    }
+
+    // Check for cell types that shouldn't be around at the end
+    pool<RTLIL::IdString> cell_types_present;
+    for (auto *mod : yosys_get_design()->modules()) {
+      for (auto *cell : mod->cells()) {
+          cell_types_present.insert(cell->type);
+      }
+    }
+    for (const auto &cell_type : G_config.illegal_final_state_cells) {
+      if(cell_type.empty()) {
+        continue;
+      }
+      if((cell_type[0] != '$' && cell_type[0] != '\\')) {
+        log_warning("Skipping check for illegal final state cell '%s' because cell type does not begin with '$' or '\\'.\n", cell_type.c_str());
+        continue;
+      }
+        if (cell_types_present.count(cell_type))
+            log_error("Synthesis error: illegal final state cell '%s' is still present at end of synthesis.\n",
+                      cell_type.c_str());
+    }
 
     // tries to give public names instead of using $abc generic names.
     // Right now this procedure blows up runtime for medium/big designs.
