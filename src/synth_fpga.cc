@@ -1045,6 +1045,7 @@ struct SynthFpgaPass : public ScriptPass {
             dff_model_str.c_str());
       }
       G_config.dff_models[dff_model_str] = dff_model_path->data_string;
+      log_warning("Not reading dff_models from the flipflops 'models' entry. Please use 'techmap'.\n");
     }
 
     if (flipflops->data_dict.count("legalize_list") == 0) {
@@ -3311,7 +3312,7 @@ struct SynthFpgaPass : public ScriptPass {
     log("'Zero Asic' FPGA Synthesis Version : %s\n", SYNTH_FPGA_VERSION);
 
     // Read eventually config file that will setup main synthesis options like
-    // partname, lut size, DSP and BRAM techmap files, ...
+    // partname, lut size, DFF models, DSP and BRAM techmap files, ...
     //
     read_config();
 
