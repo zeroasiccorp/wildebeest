@@ -2386,23 +2386,31 @@ struct SynthFpgaPass : public ScriptPass {
     // Get the parent cad directory path
     std::filesystem::path cad_directory = config_path.parent_path();
 
-    log("Loading cell models from config");
+    log("Loading cell models from config\n");
 
     if(G_config.dff_techmap != "") {
-      if(std::filesystem::path(G_config.dff_techmap).is_absolute()) {
-        log_warning("dff techmap file path '%s' is absolute.\n", G_config.dff_techmap.c_str()); // Path is expected to be relative, in same dir as .*config.json
+      std::filesystem::path dff_techmap_path(G_config.dff_techmap);
+      if(dff_techmap_path.is_absolute()) {
+        dff_techmap_path = cad_directory / dff_techmap_path.relative_path();
+        log_warning("dff techmap file path '%s' is absolute, but treating as relative to config file directory.\n", G_config.dff_techmap.c_str()); // Path is expected to be relative, in same dir as .*config.json
       }
-
-      std::filesystem::path dff_techmap_path = cad_directory / G_config.dff_techmap;
+      else {
+        dff_techmap_path = cad_directory / dff_techmap_path;
+      }
+      log("Reading dff techmap from %s\n", dff_techmap_path.string().c_str());
       run("read_verilog " + dff_techmap_path.string());
     }
 
     if(G_config.dsps_techmap != ""){
-      if(std::filesystem::path(G_config.dsps_techmap).is_absolute()) {
-        log_warning("dff techmap file path '%s' is absolute.\n", G_config.dsps_techmap.c_str()); // Path is expected to be relative, in same dir as .*config.json
+      std::filesystem::path dsp_techmap_path(G_config.dsps_techmap);
+      if(dsp_techmap_path.is_absolute()) {
+        dsp_techmap_path = cad_directory / dsp_techmap_path.relative_path();
+        log_warning("dsp techmap file path '%s' is absolute, but treating as relative to config file directory.\n", G_config.dsps_techmap.c_str()); // Path is expected to be relative, in same dir as .*config.json
       }
-
-      std::filesystem::path dsp_techmap_path = cad_directory / G_config.dsps_techmap;
+      else {
+        dsp_techmap_path = cad_directory / dsp_techmap_path;
+      }
+      log("Reading dsp techmap from %s\n", dsp_techmap_path.string().c_str());
       run("read_verilog " + dsp_techmap_path.string());
     }
   }

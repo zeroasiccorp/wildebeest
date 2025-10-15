@@ -15,6 +15,6 @@
             "$_DFFE_PP_",
             "$_DFFE_PN0P_"
         ],
-        "techmap": "tech_flops.v"
+        "techmap": "/tech_flops.v"
     }
 }
