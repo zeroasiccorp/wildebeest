@@ -2397,7 +2397,7 @@ struct SynthFpgaPass : public ScriptPass {
   // -------------------------
   //
   void load_bb_cells_models() {
-    run("read_verilog +/plugins/wildebeest/ff_models/dffer.v"); // TODO-FT how to handle this?
+    run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
     run("read_verilog +/plugins/wildebeest/ff_models/dffes.v");
     run("read_verilog +/plugins/wildebeest/ff_models/dffe.v");
     run("read_verilog +/plugins/wildebeest/ff_models/dffr.v");
