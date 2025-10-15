@@ -2132,12 +2132,15 @@ struct SynthFpgaPass : public ScriptPass {
     //
     for (auto cell : yosys_get_design()->top_module()->cells()) {
 
-#if 1
-      if (cell->type == "$lut") { // The only acceptable case with cell name
-				  // starting with '$'.
+      // Check first '$' cells that we always accept.
+      //
+      if (cell->type == "$lut") { 
+				  
         continue;
       }
-#endif
+      if (cell->type == "$print") { 
+        continue;
+      }
 
       // Check cell name in substr name case
       //
