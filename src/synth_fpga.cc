@@ -896,8 +896,8 @@ struct SynthFpgaPass : public ScriptPass {
       log_error("'partname' is missing in config file '%s'.\n",
                 config_file.c_str());
     }
-    JsonNode *partname = root.data_dict.at("partname");
-    if (partname->type != 'S') {
+    JsonNode *partname_node = root.data_dict.at("partname");
+    if (partname_node->type != 'S') {
       log_error("'partname' must be a string.\n");
     }
 
@@ -971,7 +971,8 @@ struct SynthFpgaPass : public ScriptPass {
       G_config.root_path = root_path->data_string;
     }
 
-    G_config.partname = partname->data_string;
+    G_config.partname = partname_node->data_string;
+    part_name = G_config.partname;
 
     G_config.lut_size = lut_size->data_number;
 
