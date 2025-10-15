@@ -986,7 +986,7 @@ struct SynthFpgaPass : public ScriptPass {
     }
 
     G_config.partname = partname_node->data_string;
-    part_name = G_config.partname;
+    // part_name = G_config.partname;
 
     G_config.lut_size = lut_size->data_number;
 
@@ -3585,7 +3585,12 @@ struct SynthFpgaPass : public ScriptPass {
 
     float totalTime = 1 + elapsed.count() * 1e-9;
 
-    log("   PartName   : %s\n", part_name.c_str());
+    if(config_file == ""){
+      log("   PartName   : %s\n", part_name.c_str());
+    }
+    else {
+      log("   PartName   : %s\n", G_config.partname.c_str());
+    }
     log("   DSP Style  : %s\n", dsp_tech.c_str());
     log("   BRAM Style : %s\n", bram_tech.c_str());
     log("   OPT target : %s\n", opt.c_str());
