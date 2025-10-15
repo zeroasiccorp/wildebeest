@@ -2382,6 +2382,9 @@ struct SynthFpgaPass : public ScriptPass {
   }
 
   void load_cell_models_from_config() {
+
+    // Deprecate this path magic in a future version.
+
     std::filesystem::path config_path(G_config.config_file);
 
     // Get the parent cad directory path
