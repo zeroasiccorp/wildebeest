@@ -841,8 +841,10 @@ struct SynthFpgaPass : public ScriptPass {
       log_error("Please select a correct BRAM architecture.\n");
     }
 
-    if ((sc_syn_lut_size != "4") && (sc_syn_lut_size != "6")) {
-      log_error("Lut sizes can be only 4 or 6.\n");
+    if ((sc_syn_lut_size != "4") && 
+        (sc_syn_lut_size != "5") &&
+        (sc_syn_lut_size != "6")) {
+      log_error("Lut sizes can be only 4, 5 or 6.\n");
     }
 
     if ((sc_syn_fsm_encoding != "one-hot") &&
@@ -2059,12 +2061,12 @@ struct SynthFpgaPass : public ScriptPass {
   }
 
   // -------------------------
-  // checkDLatch
+  // check_DLatch
   // -------------------------
   // Check presence of Latch and either error out or continue with
   // warning.
   //
-  void checkDLatch() {
+  void check_DLatch() {
 
     int foundLatch = 0;
 
@@ -2093,6 +2095,116 @@ struct SynthFpgaPass : public ScriptPass {
       log_warning(
           "CRITICAL: Continue synthesis even if LATCH is not supported.\n");
     }
+  }
+
+  // -------------------------
+  // check_illegal_cells
+  // -------------------------
+  // Check presence of illegal cells (typicaly $DFF/$SDFF) in the
+  // final netlist that would fail the P&R downstream flow.
+  //
+  // Error out if this is the case.
+  //
+  void check_illegal_cells() {
+
+    int nb_cells_to_list = 10;
+    int found_illegal = 0;
+
+    pool<string> cell_exact_name;  // set of exact illegal cell names to check
+    pool<string> cell_substr_name; // set of sub string illegal cell names to check
+
+    // exact name case to check
+    //cell_exact_name.insert("dffer");
+
+    // substr name case to check
+    //
+    cell_substr_name.insert("$");
+
+    if (!yosys_get_design()) {
+      log_warning("Design seems empty ! (did you define the -top or use "
+                  "'hierarchy -auto-top' before)\n");
+      return;
+    }
+
+    log("Check for illegal cells in the design ...\n");
+
+    // Fo all the cells ...
+    //
+    for (auto cell : yosys_get_design()->top_module()->cells()) {
+
+#if 1
+      if (cell->type == "$lut") { // The only acceptable case with cell name
+				  // starting with '$'.
+        continue;
+      }
+#endif
+
+      // Check cell name in substr name case
+      //
+      for (auto s : cell_substr_name) {
+
+         // Flag error for any cells starting with 's'.
+	 //
+         if ((cell->type).substr(0, s.size()) == s) {
+
+           // List only the first 'nb_cells_to_list' cells ...
+	   //
+           if (found_illegal > nb_cells_to_list) {
+             log("...\n");
+	     break;
+           } 
+
+           found_illegal++;
+
+           log("Found illegal cell '%s' (%s)\n", log_id(cell),
+               log_id(cell->type));
+         }
+
+         if (found_illegal > nb_cells_to_list) {
+	     break;
+         } 
+      }
+
+      if (found_illegal > nb_cells_to_list) {
+          break;
+      }
+
+      // Check cell name in exact name case
+      //
+      for (auto s : cell_exact_name) {
+
+         // Flag error for any cells with exact name 's'.
+         //
+         if (log_id(cell->type) == s) {
+
+           // List only the first 'nb_cells_to_list' cells ...
+           //
+           if (found_illegal > nb_cells_to_list) {
+             log("...\n");
+             break;
+           }
+
+           found_illegal++;
+
+           log("Found illegal cell '%s' (%s)\n", log_id(cell),
+               log_id(cell->type));
+         }
+
+         if (found_illegal > nb_cells_to_list) {
+             break;
+         }
+      }
+
+      if (found_illegal > nb_cells_to_list) {
+          break;
+      }
+
+    }
+
+    if (found_illegal) {
+      log_error("Cannot proceed further : some illegal cells found in the design.\n");
+    }
+
   }
 
   // -------------------------
@@ -3424,7 +3536,7 @@ struct SynthFpgaPass : public ScriptPass {
     // Make sure we have no LATCH otherwise eventually error out depending on
     // the command line option '-continue_if_latch'.
     //
-    checkDLatch();
+    check_DLatch();
 
     // Try to detect stuck-at DFF either through SAT solver or constant
     // detection at DFF inputs.
@@ -3596,6 +3708,11 @@ struct SynthFpgaPass : public ScriptPass {
     if (csv) {
       dump_csv_file("stat.csv", (int)totalTime);
     }
+
+    // Error out if illegal cells are in the netlist instead of erroring out
+    // in P&R.
+    //
+    check_illegal_cells();
 
     log("\n");
     log("***********************************\n");
