@@ -396,6 +396,7 @@ struct SynthFpgaPass : public ScriptPass {
     //
     pool<string> dff_features;
     dict<string, string> dff_models;
+
     string dff_techmap;
     vector<string> legal_flops;
 
@@ -499,10 +500,6 @@ struct SynthFpgaPass : public ScriptPass {
 
     log(" ====================================================================="
         "=====\n");
-
-    // Wait a bit to see the config file data on the screen
-    //
-    usleep(5000000);
   }
 
   // -------------------------
@@ -539,9 +536,7 @@ struct SynthFpgaPass : public ScriptPass {
       for (auto it : G_config.dff_features) {
         ys_dff_features.insert(it);
       }
-      for (auto it : G_config.dff_models) {
-        ys_dff_models[it.first] = it.second;
-      }
+
       for (auto it : G_config.legal_flops) {
         ys_legal_flops.push_back(it);
       }
@@ -925,8 +920,8 @@ struct SynthFpgaPass : public ScriptPass {
       log_error("'partname' is missing in config file '%s'.\n",
                 config_file.c_str());
     }
-    JsonNode *partname = root.data_dict.at("partname");
-    if (partname->type != 'S') {
+    JsonNode *partname_node = root.data_dict.at("partname");
+    if (partname_node->type != 'S') {
       log_error("'partname' must be a string.\n");
     }
 
@@ -992,7 +987,8 @@ struct SynthFpgaPass : public ScriptPass {
       G_config.root_path = root_path->data_string;
     }
 
-    G_config.partname = partname->data_string;
+    G_config.partname = partname_node->data_string;
+    // part_name = G_config.partname;
 
     G_config.lut_size = lut_size->data_number;
 
@@ -1036,9 +1032,10 @@ struct SynthFpgaPass : public ScriptPass {
       log_error("'models' from 'flipflops' is missing in config file '%s'.\n",
                 config_file.c_str());
     }
+    
     JsonNode *dff_models = flipflops->data_dict.at("models");
     if (dff_models->type != 'D') {
-      log_error("'models' associated to 'flipflops' must be a dictionary.\n");
+      log_warning("'models' associated to 'flipflops' must be a dictionary to be read in. Ignoring contents.\n");
     }
 
     for (auto it : dff_models->data_dict) {
@@ -1050,6 +1047,7 @@ struct SynthFpgaPass : public ScriptPass {
             dff_model_str.c_str());
       }
       G_config.dff_models[dff_model_str] = dff_model_path->data_string;
+      log_warning("Not reading dff_models from the flipflops 'models' entry. Please use 'techmap'.\n");
     }
 
     if (flipflops->data_dict.count("legalize_list") == 0) {
@@ -2474,10 +2472,10 @@ struct SynthFpgaPass : public ScriptPass {
   }
 
   // -------------------------
-  // load_cells_models
+  // load_hardcoded_cell_models
   // -------------------------
   //
-  void load_cells_models() {
+  void load_hardcoded_cell_models() {
     run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
     run("read_verilog +/plugins/wildebeest/ff_models/dffes.v");
     run("read_verilog +/plugins/wildebeest/ff_models/dffe.v");
@@ -2498,29 +2496,50 @@ struct SynthFpgaPass : public ScriptPass {
     }
   }
 
+  void load_cell_models_from_config() {
+
+    // Deprecate this path magic in a future version.
+
+    std::filesystem::path config_path(G_config.config_file);
+
+    // Get the parent cad directory path
+    std::filesystem::path cad_directory = config_path.parent_path();
+
+    log("Loading cell models from config\n");
+
+    if(G_config.dff_techmap != "") {
+      std::filesystem::path dff_techmap_path(G_config.dff_techmap);
+      if(dff_techmap_path.is_absolute()) {
+        dff_techmap_path = cad_directory / dff_techmap_path.relative_path();
+        log_warning("dff techmap file path '%s' is absolute, but treating as relative to config file directory.\n", G_config.dff_techmap.c_str()); // Path is expected to be relative, in same dir as .*config.json
+      }
+      else {
+        dff_techmap_path = cad_directory / dff_techmap_path;
+      }
+      log("Reading dff techmap from %s\n", dff_techmap_path.string().c_str());
+      run("read_verilog " + dff_techmap_path.string());
+    }
+
+    if(G_config.dsps_techmap != ""){
+      std::filesystem::path dsp_techmap_path(G_config.dsps_techmap);
+      if(dsp_techmap_path.is_absolute()) {
+        dsp_techmap_path = cad_directory / dsp_techmap_path.relative_path();
+        log_warning("dsp techmap file path '%s' is absolute, but treating as relative to config file directory.\n", G_config.dsps_techmap.c_str()); // Path is expected to be relative, in same dir as .*config.json
+      }
+      else {
+        dsp_techmap_path = cad_directory / dsp_techmap_path;
+      }
+      log("Reading dsp techmap from %s\n", dsp_techmap_path.string().c_str());
+      run("read_verilog " + dsp_techmap_path.string());
+    }
+  }
+
   // -------------------------
   // load_bb_cells_models
   // -------------------------
   //
   void load_bb_cells_models() {
-    run("read_verilog +/plugins/wildebeest/ff_models/dffer.v");
-    run("read_verilog +/plugins/wildebeest/ff_models/dffes.v");
-    run("read_verilog +/plugins/wildebeest/ff_models/dffe.v");
-    run("read_verilog +/plugins/wildebeest/ff_models/dffr.v");
-    run("read_verilog +/plugins/wildebeest/ff_models/dffs.v");
-    run("read_verilog +/plugins/wildebeest/ff_models/dff.v");
-
-    run("read_verilog +/plugins/wildebeest/ff_models/dffh.v");
-    run("read_verilog +/plugins/wildebeest/ff_models/dffeh.v");
-    run("read_verilog +/plugins/wildebeest/ff_models/dffl.v");
-    run("read_verilog +/plugins/wildebeest/ff_models/dffel.v");
-    run("read_verilog +/plugins/wildebeest/ff_models/dffhl.v");
-    run("read_verilog +/plugins/wildebeest/ff_models/dffehl.v");
-
-    if (part_name == "z1010") {
-      run("read_verilog "
-          "+/plugins/wildebeest/architecture/z1010/models/tech_mae.v");
-    }
+    load_hardcoded_cell_models();
 
     // Black box them all
     //
@@ -2841,8 +2860,6 @@ struct SynthFpgaPass : public ScriptPass {
 
     run("stat");
 
-    // We may need to parametrize this in the config file with a new section
-    //
     if (has_cell_type(yosys_get_design(), "\\MAE")) {
       log_error("Could not techmap DSP to a valid configuration.\n");
     }
@@ -3433,11 +3450,18 @@ struct SynthFpgaPass : public ScriptPass {
     //
     run(stringf("hierarchy %s", help_mode ? "-top <top>" : top_opt.c_str()));
 
-    // This is usefull to load non-lut cells models in case we are doing a
+    // This is useful to load non-lut cells models in case we are doing a
     // resynthesis, e.g when the input design is a previous synthesized
     // netlist which has been synthesized with 'synth_fpga'.
     //
-    load_cells_models();
+
+    if(config_file == "") {
+      load_hardcoded_cell_models();
+    }
+    else {
+      load_cell_models_from_config();
+    }
+
 
     // In case user invokes the '-resynthesis' option at the command line level,
     // we perform a light weight synthesis for the second time.
@@ -3680,7 +3704,12 @@ struct SynthFpgaPass : public ScriptPass {
 
     float totalTime = 1 + elapsed.count() * 1e-9;
 
-    log("   PartName   : %s\n", part_name.c_str());
+    if(config_file == ""){
+      log("   PartName   : %s\n", part_name.c_str());
+    }
+    else {
+      log("   PartName   : %s\n", G_config.partname.c_str());
+    }
     log("   DSP Style  : %s\n", dsp_tech.c_str());
     log("   BRAM Style : %s\n", bram_tech.c_str());
     log("   OPT target : %s\n", opt.c_str());

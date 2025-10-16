@@ -1,8 +1,12 @@
 
 set(ALL_TESTS
     unit/check_commands.ys
-    unit/heartbeat-z1000.ys
-    unit/heartbeat-z1010.ys
+    unit/heartbeat-z1000-config.ys
+    unit/heartbeat-z1010-config.ys
+    unit/heartbeat-z1000-hardcode.ys
+    unit/heartbeat-z1010-hardcode.ys
+    unit/heartbeat-z1000-config-abspath.ys
+    unit/heartbeat-z1010-config-abspath.ys
 )
 
 foreach(test_script ${ALL_TESTS})

@@ -1,3 +1,4 @@
+# yosys -m wildebeest -s heartbeat-z1000-hardcode.ys
 read_verilog <<EOF
 module heartbeat #(
     parameter N = 8
@@ -24,6 +25,6 @@ module heartbeat #(
 endmodule
 EOF
 
-synth_fpga -config data/z1000/z1000.json -show_config
+synth_fpga -partname z1000
 select -assert-count 9 */t:dffr
 select -assert-count 11 */t:$lut
