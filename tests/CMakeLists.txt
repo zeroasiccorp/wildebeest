@@ -13,10 +13,6 @@ set(ALL_TESTS
     unit/dsp/mae-techmap-efpga_mult_regio.ys
     unit/dsp/mae-techmap-efpga_macc.ys
     unit/dsp/mae-techmap-efpga_macc_regi.ys
-    # TODO: efpga_macc_pipe and efpga_macc_pipe_regi currently fail. zeroasic_dsp.pmg
-    # does not update sigP after absorbing the pipeline register via multHasReg,
-    # so the subsequent post-adder search connects to the wrong node and the
-    # accumulate feedback is not detected. Both modes map to efpga_mult_rego/regio instead.
     unit/dsp/mae-techmap-efpga_macc_pipe.ys
     unit/dsp/mae-techmap-efpga_macc_pipe_regi.ys
     unit/dsp/mae-techmap-efpga_mult_addc.ys
