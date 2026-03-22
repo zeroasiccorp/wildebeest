@@ -19,7 +19,7 @@ pattern zeroasic_dsp_pack
 state <SigBit> clock
 // A, B: * inputs. C: 3rd input (to adder). D: input to adder (could be same as C)
 state <SigSpec> sigA sigB sigC sigD sigP sigMultOut
-state <Cell*> ffA ffB ffC ffP
+state <Cell*> ffA ffB ffC ffP ffMult
 state <Cell*> postAdderStatic
 state <bool> useFeedBack multHasReg
 
@@ -82,14 +82,19 @@ code sigA sigB sigC sigD clock sigP sigMultOut
 endcode
 
 // detect if multiplier output is registered (useful for discerning macc vs macc_pipe)
-code argD sigMultOut multHasReg
+code argD sigMultOut multHasReg ffMult sigP clock
 	sigMultOut = sigP; // sigP moves around, we want to keep track of multiplier output.
+	ffMult = nullptr;
 	if (nusers(sigP) == 2) {
 		argD = sigMultOut;
 		allowAsync = false;
 		subpattern(out_dffe);
 		if (dff) {
 			multHasReg = true;
+			ffMult = dff;
+			clock = dffclock;
+			sigP = dffQ; // advance past the pipeline register so postAddMatching
+			             // searches from the correct node
 		}
 	}
 
@@ -105,7 +110,7 @@ endcode
 
 //  post adder
 // sigD will be absorbed.
-code postAdderStatic sigP sigD sigC
+code postAdderStatic sigP sigD sigC multHasReg ffMult
 	u_postAdderStatic = nullptr;
 	subpattern(postAddMatching);
 	postAdderStatic = u_postAdderStatic;
@@ -116,6 +121,13 @@ code postAdderStatic sigP sigD sigC
 		sigD = port(postAdderStatic, u_postAddAB == \A ? \B : \A);
 		sigC = sigD;
 		sigP = port(postAdderStatic, \Y);
+	} else if (multHasReg) {
+		// No post-adder found downstream of the pipeline-register candidate.
+		// The DFF on the multiplier output is a plain output register, not a
+		// pipeline register. Roll back so the P_REG block can absorb it normally.
+		multHasReg = false;
+		ffMult = nullptr;
+		sigP = sigMultOut;
 	}
 endcode
 
