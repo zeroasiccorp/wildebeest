@@ -19,6 +19,18 @@ set(ALL_TESTS
     unit/dsp/mae-techmap-efpga_mult_addc_regi.ys
     unit/dsp/mae-techmap-efpga_mult_addc_rego.ys
     unit/dsp/mae-techmap-efpga_mult_addc_regio.ys
+    unit/dsp/mae-techmap-efpga_mult_unsigned.ys
+    unit/dsp/mae-techmap-efpga_mult_regi_unsigned.ys
+    unit/dsp/mae-techmap-efpga_mult_rego_unsigned.ys
+    unit/dsp/mae-techmap-efpga_mult_regio_unsigned.ys
+    unit/dsp/mae-techmap-efpga_macc_unsigned.ys
+    unit/dsp/mae-techmap-efpga_macc_regi_unsigned.ys
+    unit/dsp/mae-techmap-efpga_macc_pipe_unsigned.ys
+    unit/dsp/mae-techmap-efpga_macc_pipe_regi_unsigned.ys
+    unit/dsp/mae-techmap-efpga_mult_addc_unsigned.ys
+    unit/dsp/mae-techmap-efpga_mult_addc_regi_unsigned.ys
+    unit/dsp/mae-techmap-efpga_mult_addc_rego_unsigned.ys
+    unit/dsp/mae-techmap-efpga_mult_addc_regio_unsigned.ys
 )
 
 foreach(test_script ${ALL_TESTS})
