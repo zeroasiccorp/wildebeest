@@ -46,6 +46,7 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm) {
 
   if (st.multHasReg) {
     cell->setParam(ID(MULT_HAS_REG), State::S1);
+    pm.autoremove(st.ffMult);
   } else {
     cell->setParam(ID(MULT_HAS_REG), State::S0);
   }

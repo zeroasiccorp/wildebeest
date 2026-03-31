@@ -74,6 +74,10 @@ jobs:
           cmake -S . -B build -D YOSYS_PATH="$HOME/.local"
           cmake --build build
           cmake --install build
+      - name: Run tests
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          cd build && ctest --output-on-failure
       - name: Pack build
         shell: bash
         run: |
