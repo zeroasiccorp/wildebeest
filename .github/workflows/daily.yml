@@ -1,0 +1,124 @@
+name: Daily build
+on:
+  schedule:
+    - cron: '0 6 * * *' # Every day at 6:00 UTC
+  workflow_dispatch:
+    inputs:
+      yosys_v0_47:
+        description: 'Yosys v0.47'
+        type: boolean
+        default: true
+      yosys_v0_48:
+        description: 'Yosys v0.48'
+        type: boolean
+        default: true
+      yosys_v0_49:
+        description: 'Yosys v0.49'
+        type: boolean
+        default: true
+      yosys_v0_50:
+        description: 'Yosys v0.50'
+        type: boolean
+        default: true
+      yosys_v0_51:
+        description: 'Yosys v0.51'
+        type: boolean
+        default: true
+      yosys_v0_52:
+        description: 'Yosys v0.52'
+        type: boolean
+        default: true
+      yosys_v0_53:
+        description: 'Yosys v0.53'
+        type: boolean
+        default: true
+      yosys_v0_54:
+        description: 'Yosys v0.54'
+        type: boolean
+        default: true
+      yosys_v0_55:
+        description: 'Yosys v0.55'
+        type: boolean
+        default: true
+      yosys_v0_56:
+        description: 'Yosys v0.56'
+        type: boolean
+        default: true
+      yosys_v0_57:
+        description: 'Yosys v0.57'
+        type: boolean
+        default: true
+      yosys_v0_58:
+        description: 'Yosys v0.58'
+        type: boolean
+        default: true
+
+concurrency:
+  group: daily-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  setup:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        shell: bash
+        run: |
+          versions=()
+          is_dispatch="${{ github.event_name == 'workflow_dispatch' }}"
+          check() { [[ "$is_dispatch" != "true" || "$1" == "true" ]]; }
+          check "${{ inputs.yosys_v0_47 }}" && versions+=("0.47")
+          check "${{ inputs.yosys_v0_48 }}" && versions+=("v0.48")
+          check "${{ inputs.yosys_v0_49 }}" && versions+=("v0.49")
+          check "${{ inputs.yosys_v0_50 }}" && versions+=("v0.50")
+          check "${{ inputs.yosys_v0_51 }}" && versions+=("v0.51")
+          check "${{ inputs.yosys_v0_52 }}" && versions+=("v0.52")
+          check "${{ inputs.yosys_v0_53 }}" && versions+=("v0.53")
+          check "${{ inputs.yosys_v0_54 }}" && versions+=("v0.54")
+          check "${{ inputs.yosys_v0_55 }}" && versions+=("v0.55")
+          check "${{ inputs.yosys_v0_56 }}" && versions+=("v0.56")
+          check "${{ inputs.yosys_v0_57 }}" && versions+=("v0.57")
+          check "${{ inputs.yosys_v0_58 }}" && versions+=("v0.58")
+          json=$(printf '%s\n' "${versions[@]}" | jq -R . | jq -sc '{"yosys_version":.}')
+          echo "matrix=$json" >> $GITHUB_OUTPUT
+
+  build:
+    needs: setup
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+    steps:
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git build-essential pkg-config cmake ccache gperf bison flex \
+            libreadline-dev gawk tcl-dev libffi-dev graphviz xdot python3 \
+            libboost-system-dev libboost-python-dev libboost-filesystem-dev \
+            zlib1g-dev libfl-dev
+
+      - name: Cache Yosys install
+        id: cache-yosys
+        uses: actions/cache@v4
+        with:
+          path: yosys-install
+          key: ${{ runner.os }}-yosys-install-${{ matrix.yosys_version }}
+
+      - if: ${{ steps.cache-yosys.outputs.cache-hit != 'true' }}
+        name: Pull Yosys
+        run: |
+          git clone --depth 1 --recursive \
+            --branch ${{ matrix.yosys_version }} \
+            -- https://github.com/YosysHQ/yosys.git yosys
+
+      - if: ${{ steps.cache-yosys.outputs.cache-hit != 'true' }}
+        name: Build and install Yosys
+        shell: bash
+        run: |
+          cd yosys
+          make config-gcc
+          make -j$(nproc) PREFIX=${{ github.workspace }}/yosys-install
+          make install PREFIX=${{ github.workspace }}/yosys-install
