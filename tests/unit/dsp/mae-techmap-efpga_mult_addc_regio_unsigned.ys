@@ -46,3 +46,5 @@ EOF
 
 synth_fpga -partname z1010
 select -assert-count 1 */t:efpga_mult_addc_regio
+select -assert-count 1 */t:efpga_mult_addc_regio %x:+[clk] */w:clk %i
+select -assert-count 1 */t:efpga_mult_addc_regio %x:+[resetn] */w:resetn %i
