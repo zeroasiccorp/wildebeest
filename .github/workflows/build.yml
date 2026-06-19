@@ -1,13 +1,10 @@
 name: Build and test
 on:
-  # Runs on pushes to test/ branches and main
   push:
     branches:
       - 'main'
       - 'test/**'
-  # Runs on all PRs
   pull_request:
-  # Manual Dispatch
   workflow_dispatch:
 
 concurrency:
@@ -41,56 +38,60 @@ jobs:
           - "v0.64"
           - "v0.65"
           - "v0.66"
-          
     steps:
-      - name: Install Dependencies
+      - name: Install dependencies
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y git build-essential pkg-config cmake ccache gperf bison flex libreadline-dev gawk tcl-dev libffi-dev graphviz xdot python3 libboost-system-dev libboost-python-dev libboost-filesystem-dev zlib1g-dev libfl-dev
+          sudo apt-get install -y git build-essential pkg-config cmake ccache gperf bison flex \
+            libreadline-dev gawk tcl-dev libffi-dev graphviz xdot python3 \
+            libboost-system-dev libboost-python-dev libboost-filesystem-dev \
+            zlib1g-dev libfl-dev
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Cache Yosys build
+
+      - name: Restore Yosys install
         id: cache-yosys
         uses: actions/cache@v4
-        env:
-          cache-name: cache-yosys
         with:
-          path: yosys
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.yosys_version }}
+          path: yosys-install
+          key: ${{ runner.os }}-yosys-install-${{ matrix.yosys_version }}
+
       - if: ${{ steps.cache-yosys.outputs.cache-hit != 'true' }}
         name: Pull Yosys
         run: |
           git clone --depth 1 --recursive \
             --branch ${{ matrix.yosys_version }} \
             -- https://github.com/YosysHQ/yosys.git yosys
+
       - if: ${{ steps.cache-yosys.outputs.cache-hit != 'true' }}
-        name: Build Yosys
+        name: Build and install Yosys
         shell: bash
         run: |
           cd yosys
           make config-gcc
-          make -j$(nproc) PREFIX=$HOME/.local
-      - name: Install Yosys
-        shell: bash
-        run: |
-          cd yosys
-          make install PREFIX=$HOME/.local
+          make -j$(nproc) PREFIX=${{ github.workspace }}/yosys-install
+          make install PREFIX=${{ github.workspace }}/yosys-install
+
       - name: Build wildebeest
         run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          cmake -S . -B build -D YOSYS_PATH="$HOME/.local"
+          export PATH="${{ github.workspace }}/yosys-install/bin:$PATH"
+          cmake -S . -B build -D YOSYS_PATH="${{ github.workspace }}/yosys-install"
           cmake --build build
           cmake --install build
+
       - name: Run tests
         run: |
-          export PATH="$HOME/.local/bin:$PATH"
+          export PATH="${{ github.workspace }}/yosys-install/bin:$PATH"
           cd build && ctest --output-on-failure
+
       - name: Pack build
         shell: bash
         run: |
-          tar -cvzf build.tar.gz build/ yosys/
+          tar -cvzf build.tar.gz build/
+
       - name: Store build artifact
         uses: actions/upload-artifact@v4
         with:
