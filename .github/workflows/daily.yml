@@ -52,6 +52,38 @@ on:
         description: 'Yosys v0.58'
         type: boolean
         default: true
+      yosys_v0_59:
+        description: 'Yosys v0.59'
+        type: boolean
+        default: true
+      yosys_v0_60:
+        description: 'Yosys v0.60'
+        type: boolean
+        default: true
+      yosys_v0_61:
+        description: 'Yosys v0.61'
+        type: boolean
+        default: true
+      yosys_v0_62:
+        description: 'Yosys v0.62'
+        type: boolean
+        default: true
+      yosys_v0_63:
+        description: 'Yosys v0.63'
+        type: boolean
+        default: true
+      yosys_v0_64:
+        description: 'Yosys v0.64'
+        type: boolean
+        default: true
+      yosys_v0_65:
+        description: 'Yosys v0.65'
+        type: boolean
+        default: true
+      yosys_v0_66:
+        description: 'Yosys v0.66'
+        type: boolean
+        default: true
 
 concurrency:
   group: daily-${{ github.workflow }}-${{ github.ref }}
@@ -81,6 +113,18 @@ jobs:
           check "${{ inputs.yosys_v0_56 }}" && versions+=("v0.56")
           check "${{ inputs.yosys_v0_57 }}" && versions+=("v0.57")
           check "${{ inputs.yosys_v0_58 }}" && versions+=("v0.58")
+          check "${{ inputs.yosys_v0_59 }}" && versions+=("v0.59")
+          check "${{ inputs.yosys_v0_60 }}" && versions+=("v0.60")
+          check "${{ inputs.yosys_v0_61 }}" && versions+=("v0.61")
+          check "${{ inputs.yosys_v0_62 }}" && versions+=("v0.62")
+          check "${{ inputs.yosys_v0_63 }}" && versions+=("v0.63")
+          check "${{ inputs.yosys_v0_64 }}" && versions+=("v0.64")
+          check "${{ inputs.yosys_v0_65 }}" && versions+=("v0.65")
+          check "${{ inputs.yosys_v0_66 }}" && versions+=("v0.66")
+          if [ ${#versions[@]} -eq 0 ]; then
+            echo "No Yosys versions selected" >&2
+            exit 1
+          fi
           json=$(printf '%s\n' "${versions[@]}" | jq -R . | jq -sc '{"yosys_version":.}')
           echo "matrix=$json" >> $GITHUB_OUTPUT
 
