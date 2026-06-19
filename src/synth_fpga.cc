@@ -511,18 +511,6 @@ struct SynthFpgaPass : public ScriptPass {
   // setting has the priority.
   //
   void setup_options() {
-    if (!config_file_success) {
-
-      // Converting 'partname' to lower case only if part name is
-      // used as 'synth_fpga' option and not through config file.
-      // If we do that also for partname set from config file, we may
-      // have trouble since we may lower case 3rd party partnames and
-      // we would have no way to refer to the exact partname name,
-      // set from config file, therefore the check on 'config_file_success'.
-      //
-      std::transform(part_name.begin(), part_name.end(), part_name.begin(),
-                     ::tolower);
-    }
 
     // If there is a config file with successful analysis then we set up
     // all the wildebeest parameters with it.
@@ -618,11 +606,12 @@ struct SynthFpgaPass : public ScriptPass {
         dff_async_set = true;
       }
 
-      if (std::to_string(G_config.lut_size) != sc_syn_lut_size) {
+      if (!sc_syn_lut_size.empty() &&
+          std::to_string(G_config.lut_size) != sc_syn_lut_size) {
         log_warning("Config file will change lut size value from %s to %d.\n",
                     sc_syn_lut_size.c_str(), G_config.lut_size);
-        sc_syn_lut_size = std::to_string(G_config.lut_size);
       }
+      sc_syn_lut_size = std::to_string(G_config.lut_size);
 
     } else {
 
@@ -809,7 +798,7 @@ struct SynthFpgaPass : public ScriptPass {
   // -------------------------
   //
   void check_options() {
-    if (partnames.count(part_name) == 0) {
+    if (!config_file_success && partnames.count(part_name) == 0) {
       log("ERROR: -partname '%s' is unknown.\n", part_name.c_str());
       log("       Available partnames are :\n");
       for (auto part_name : partnames) {
@@ -859,10 +848,17 @@ struct SynthFpgaPass : public ScriptPass {
   //
   void read_config() {
 
-    // if no 'config_file' specified return right away
-    //
     if (config_file == "") {
-      return;
+      if (part_name.empty()) {
+        log_error("Either -partname or -config must be specified.\n");
+      }
+      // Lowercase the command-line partname before using it for path lookup.
+      std::transform(part_name.begin(), part_name.end(), part_name.begin(),
+                     ::tolower);
+      config_file =
+          (std::filesystem::path(proc_share_dirname()) / SYN_SHARE_DIR /
+           "architecture" / part_name / (part_name + ".json"))
+              .string();
     }
 
     log_header(yosys_get_design(), "Reading config file '%s'\n",
@@ -988,7 +984,8 @@ struct SynthFpgaPass : public ScriptPass {
     }
 
     G_config.partname = partname_node->data_string;
-    // part_name = G_config.partname;
+    if (part_name.empty())
+      part_name = G_config.partname;
 
     G_config.lut_size = lut_size->data_number;
 
@@ -3144,7 +3141,7 @@ struct SynthFpgaPass : public ScriptPass {
     top_opt = "-auto-top";
     opt = "area";
 
-    part_name = "z1010";
+    part_name = "";
 
     no_flatten = false;
     no_opt_sat_dff = false;
@@ -3185,7 +3182,7 @@ struct SynthFpgaPass : public ScriptPass {
 
     abc_script_version = "BEST";
 
-    sc_syn_lut_size = "4";
+    sc_syn_lut_size = "";
     sc_syn_fsm_encoding = "one-hot";
     config_file = "";
     config_file_success = false;

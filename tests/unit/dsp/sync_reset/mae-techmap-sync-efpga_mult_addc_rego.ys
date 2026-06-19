@@ -1,0 +1,34 @@
+# yosys -m wildebeest -s mae-techmap-sync-efpga_mult_addc_rego.ys
+# Synchronous reset: post-adder still packed, output register stays outside DSP
+read_verilog <<EOF
+module efpga_mult_addc_rego_sync_map_inst
+  # (
+     parameter INPUT_WIDTH = 18,
+     parameter OUTPUT_WIDTH = 40,
+     localparam C_WIDTH = OUTPUT_WIDTH
+     )
+   (
+    input                                   clk,
+    input                                   reset,
+    input signed [(INPUT_WIDTH-1):0]        a,
+    input signed [(INPUT_WIDTH-1):0]        b,
+    input signed [(C_WIDTH-1):0]            c,
+    output reg [(OUTPUT_WIDTH-1):0]         y
+    );
+
+   always @(posedge clk) begin
+      if (reset) begin
+         y <= 'h0;
+      end
+      else begin
+         y <= (a * b) + c;
+      end
+   end
+
+endmodule
+EOF
+
+synth_fpga -partname z1010
+select -assert-count 1 */t:efpga_mult_addc
+select -assert-count 0 */t:efpga_mult_addc_rego
+select -assert-count 0 */t:efpga_mult_addc %x:+[clk] */w:clk %i

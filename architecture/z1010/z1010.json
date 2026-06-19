@@ -1,0 +1,40 @@
+{
+    "version": 1,
+    "partname": "z1010",
+    "lut_size": 4,
+    "flipflops": {
+        "features": ["async_reset", "sync_reset", "sync_set", "flop_enable"],
+        "models": {},
+        "legalize_list": [
+            "$_DFFE_PN0P_",
+            "$_DFFE_PP_",
+            "$_DFF_PN0_",
+            "$_DFF_P_",
+            "$_SDFFE_PN0P_",
+            "$_SDFFE_PN1P_",
+            "$_SDFF_PN0_",
+            "$_SDFF_PN1_"
+        ],
+        "techmap": "techlib/tech_flops.v"
+    },
+    "brams": {
+        "memory_libmap": ["bram/bram_memory_map.txt"],
+        "memory_libmap_parameters": ["-logic-cost-rom 0.5"],
+        "techmap": ["bram/tech_bram.v"]
+    },
+    "dsps": {
+        "family": "mae",
+        "techmap": "dsp/zeroasic_dsp_map.v",
+        "pack_command": "zeroasic_dsp",
+        "techmap_parameters": {
+            "DSP_SIGNEDONLY": 1,
+            "DSP_A_MAXWIDTH": 18,
+            "DSP_B_MAXWIDTH": 18,
+            "DSP_A_MAXWIDTH_PARTIAL": 18,
+            "DSP_A_MINWIDTH": 2,
+            "DSP_B_MINWIDTH": 2,
+            "DSP_Y_MINWIDTH": 8,
+            "DSP_NAME": "$__MAE__"
+        }
+    }
+}

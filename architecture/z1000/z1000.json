@@ -1,0 +1,26 @@
+{
+    "version": 1,
+    "partname": "z1000",
+    "lut_size": 4,
+    "flipflops": {
+        "features": ["async_reset", "flop_enable"],
+        "models": {},
+        "legalize_list": [
+            "$_DFFE_PN0P_",
+            "$_DFFE_PP_",
+            "$_DFF_PN0_",
+            "$_DFF_P_"
+        ],
+        "techmap": "techlib/tech_flops.v"
+    },
+    "brams": {
+        "memory_libmap": [],
+        "memory_libmap_parameters": [],
+        "techmap": []
+    },
+    "dsps": {
+        "family": "",
+        "techmap": "",
+        "techmap_parameters": {}
+    }
+}

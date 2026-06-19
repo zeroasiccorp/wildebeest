@@ -31,6 +31,26 @@ set(ALL_TESTS
     unit/dsp/mae-techmap-efpga_mult_addc_regi_unsigned.ys
     unit/dsp/mae-techmap-efpga_mult_addc_rego_unsigned.ys
     unit/dsp/mae-techmap-efpga_mult_addc_regio_unsigned.ys
+    unit/dsp/sync_reset/mae-techmap-sync-efpga_mult_rego.ys
+    unit/dsp/sync_reset/mae-techmap-sync-efpga_mult_regi.ys
+    unit/dsp/sync_reset/mae-techmap-sync-efpga_mult_regio.ys
+    unit/dsp/sync_reset/mae-techmap-sync-efpga_mult_addc_rego.ys
+    unit/dsp/sync_reset/mae-techmap-sync-efpga_mult_addc_regi.ys
+    unit/dsp/sync_reset/mae-techmap-sync-efpga_mult_addc_regio.ys
+    unit/dsp/sync_reset/mae-techmap-sync-efpga_macc.ys
+    unit/dsp/sync_reset/mae-techmap-sync-efpga_macc_pipe.ys
+    unit/dsp/sync_reset/mae-techmap-sync-efpga_macc_regi.ys
+    unit/dsp/sync_reset/mae-techmap-sync-efpga_macc_pipe_regi.ys
+    unit/dsp/no_reset/mae-techmap-norst-efpga_mult_rego.ys
+    unit/dsp/no_reset/mae-techmap-norst-efpga_mult_regi.ys
+    unit/dsp/no_reset/mae-techmap-norst-efpga_mult_regio.ys
+    unit/dsp/no_reset/mae-techmap-norst-efpga_mult_addc_rego.ys
+    unit/dsp/no_reset/mae-techmap-norst-efpga_mult_addc_regi.ys
+    unit/dsp/no_reset/mae-techmap-norst-efpga_mult_addc_regio.ys
+    unit/dsp/no_reset/mae-techmap-norst-efpga_macc.ys
+    unit/dsp/no_reset/mae-techmap-norst-efpga_macc_pipe.ys
+    unit/dsp/no_reset/mae-techmap-norst-efpga_macc_regi.ys
+    unit/dsp/no_reset/mae-techmap-norst-efpga_macc_pipe_regi.ys
 )
 
 foreach(test_script ${ALL_TESTS})
