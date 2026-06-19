@@ -141,6 +141,20 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm) {
       f(P, st.ffP, ID(P_EN), ID(P_ARST_N), ID(ALLOW_P_REG), ID(P_REG));
       st.ffP->connections_.at(ID::Q).replace(
           st.sigP, pm.module->addWire(NEW_ID, GetSize(st.sigP)));
+
+      // Set resetn from ffP when A/B registers were not packed (the A/B block
+      // above only runs when ffA && ffB, so resetn would otherwise be undriven
+      // for the output-register-only case, e.g. efpga_mult_rego).
+      if (!st.ffA) {
+        if (st.ffP->type.in(ID($adff), ID($adffe))) {
+          SigSpec arst = st.ffP->getPort(ID::ARST);
+          bool rstpol_n = !st.ffP->getParam(ID::ARST_POLARITY).as_bool();
+          cell->setPort(ID(resetn),
+                        rstpol_n ? arst : pm.module->Not(NEW_ID, arst));
+        } else {
+          cell->setPort(ID(resetn), State::S1);
+        }
+      }
     }
 
     log("  clock: %s (%s)\n", log_signal(st.clock), "posedge");

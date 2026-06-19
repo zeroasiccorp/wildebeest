@@ -133,6 +133,8 @@ generate
     efpga_macc _TECHMAP_REPLACE_ (
       .a(A),
       .b(B),
+      .clk(CLK),
+      .resetn(resetn),
       .y(P)
     );
   end
