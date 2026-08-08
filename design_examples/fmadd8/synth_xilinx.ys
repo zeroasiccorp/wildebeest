@@ -1,0 +1,13 @@
+plugin -i wildebeest
+
+read_verilog fmadd8.v
+read_verilog fmadd32.v
+
+hierarchy -auto-top
+
+synth_xilinx -flatten -family xc4v
+
+max_height 
+
+write_verilog -noattr -norename -noexpr -nohex -nodec xilinx_netlist.vg
+
