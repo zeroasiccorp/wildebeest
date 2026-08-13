@@ -209,7 +209,7 @@ struct MaxHeigthWorker {
 
     if (bits.count(bit) == 0) { // constant case
       string name = bit_name(bit);
-      log("  CONSTANT : %s\n", name); 
+      log("  CONSTANT : %s\n", name.c_str()); 
       return 1;
     }
 
@@ -235,7 +235,7 @@ struct MaxHeigthWorker {
     //
     if (HEIGTH(bitinfo) == 0) {
       string name = bit_name(bit);
-      log("        %s\n", name);
+      log("        %s\n", name.c_str());
       return 1;
     }
 
@@ -264,8 +264,9 @@ struct MaxHeigthWorker {
     Cell *cell = CELL(bitinfo);
 
     string cell_name = log_id(cell->name);
+    string cell_type = log_id(cell->type);
 
-    log(" %3d:   %s (%s)\n", HEIGTH(bitinfo), cell_name, cell->type);
+    log(" %3d:   %s (%s)\n", HEIGTH(bitinfo), cell_name.c_str(), cell_type.c_str());
 
     return 1;
   }
@@ -291,7 +292,7 @@ struct MaxHeigthWorker {
 
 	  string name = bit_name(it.first);
 
-          log("        %s\n", name);
+          log("        %s\n", name.c_str());
 
           return;
 	}

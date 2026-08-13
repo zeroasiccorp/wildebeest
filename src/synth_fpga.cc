@@ -3802,7 +3802,7 @@ struct SynthFpgaPass : public ScriptPass {
     log("\n");
     log("**********************************************************************************\n");
     log("** Wildebeest Synthesis Version : %s\n", SYNTH_FPGA_VERSION);
-    log("** %s\n", yosys_maybe_version());
+    //log("** %s\n", yosys_maybe_version());
     log("**********************************************************************************\n");
     log("\n");
 
