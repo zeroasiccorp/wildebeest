@@ -1,0 +1,12 @@
+plugin -i wildebeest
+
+read_verilog picorv32.v
+
+hierarchy -auto-top
+
+synth_fpga -partname z1010 -opt delay 
+
+max_height
+
+write_verilog -noattr -norename -noexpr -nohex -nodec z1010_netlist_delay_lut4.vg 
+
