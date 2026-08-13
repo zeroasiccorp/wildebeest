@@ -25,6 +25,7 @@
 #include "kernel/register.h"
 #include "kernel/rtlil.h"
 #include "kernel/sigtools.h"
+#include "kernel/yosys.h"
 #include "version.h"
 #include "synth_fpga_version.h"
 #include <algorithm>
@@ -3794,8 +3795,8 @@ struct SynthFpgaPass : public ScriptPass {
 
     log("\n");
     log(" ----------------------------\n");
-    log("  Optimization mode : %s\n", opt);
-    log("  Lut size          : %s\n", sc_syn_lut_size);
+    log("  Optimization mode : %s\n", opt.c_str());
+    log("  Lut size          : %s\n", sc_syn_lut_size.c_str());
     log(" ----------------------------\n");
 
     log("\n");

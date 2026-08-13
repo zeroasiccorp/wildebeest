@@ -208,7 +208,8 @@ struct MaxHeigthWorker {
   int print_one_cp_logic_rec(SigBit bit, int height) {
 
     if (bits.count(bit) == 0) { // constant case
-      log("  CONSTANT : %s\n", bit_name(bit)); 
+      string name = bit_name(bit);
+      log("  CONSTANT : %s\n", name); 
       return 1;
     }
 
@@ -233,7 +234,8 @@ struct MaxHeigthWorker {
     // Terminal Case of a PI
     //
     if (HEIGTH(bitinfo) == 0) {
-      log("        %s\n", bit_name(bit));
+      string name = bit_name(bit);
+      log("        %s\n", name);
       return 1;
     }
 
@@ -261,7 +263,9 @@ struct MaxHeigthWorker {
                            //
     Cell *cell = CELL(bitinfo);
 
-    log(" %3d:   %s (%s)\n", HEIGTH(bitinfo), log_id(cell->name), cell->type);
+    string cell_name = log_id(cell->name);
+
+    log(" %3d:   %s (%s)\n", HEIGTH(bitinfo), cell_name, cell->type);
 
     return 1;
   }
@@ -285,7 +289,9 @@ struct MaxHeigthWorker {
 
           auto &bitinfo = bits.at(it.first);
 
-          log("        %s\n", bit_name(it.first));
+	  string name = bit_name(it.first);
+
+          log("        %s\n", name);
 
           return;
 	}
