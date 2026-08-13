@@ -1,0 +1,14 @@
+plugin -i wildebeest
+plugin -i slang
+
+read_verilog lambda.v
+read_slang coralnpu.sv
+
+hierarchy -auto-top
+
+synth_fpga -partname z1010 -opt area -continue_if_latch -lut_size 6
+
+max_height
+
+write_verilog -noattr -norename -noexpr -nohex -nodec z1010_netlist_area.vg 
+
