@@ -1,0 +1,41 @@
+time
+
+echo " "
+echo "** Starting ABC FAST DELAY LUT4 optimization and mapping (Zero Asic Corp.)"
+echo ""
+
+write_blif fast_delay_lut4.blif 
+
+&get -n -m;
+
+echo "&sopb -C 12; &ps; time"
+&sopb -C 12; &ps; time
+
+echo "&st; &lf -K 4 -e -C 32; &ps; &save -a; time"
+&st; &lf -K 4 -e -C 32; &ps; &save -a; time
+
+echo "&shrink; &if -sz -C 5 -K 7 -S 44; &ps; &save -a; time"
+&shrink; &if -sz -C 5 -K 7 -S 44; &ps; &save -a; time
+
+&load
+
+echo "&shrink; &blut -K 4; &ps; time"
+&shrink; &blut -K 4; &ps; time
+
+echo "&if -sz -C 5 -K 7 -S 44; &save -a; &ps; time"
+&if -sz -C 5 -K 7 -S 44; &save ; &ps; time
+
+echo "&sopb -C 12; &ps; time"
+&sopb -C 12; &ps; time
+
+echo "&if -sz -C 5 -K 7 -S 44; &save -a; &ps; time"
+&if -sz -C 5 -K 7 -S 44; &save ; &ps; time
+
+&load; &ps
+
+&put;  
+
+time
+
+echo " "
+echo "** Ending ABC FAST LUT4 optimization !!!"

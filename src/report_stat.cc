@@ -506,6 +506,7 @@ struct ReportStatPass : public ScriptPass {
   // report_stat
   // ---------------------------------------------------------------------------
   void script() override {
+
     if (!G_design) {
       log_warning("Design seems empty ! (did you define the -top or use "
                   "'hierarchy -auto-top' before)\n");

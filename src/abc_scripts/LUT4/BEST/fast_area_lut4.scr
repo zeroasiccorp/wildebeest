@@ -4,7 +4,7 @@ echo " "
 echo "** Starting ABC FAST LUT4 optimization and mapping (Zero Asic Corp.)"
 echo ""
 
-write_blif fast_lut4.blif 
+write_blif fast_area_lut4.blif 
 
 &get -n -m;
 

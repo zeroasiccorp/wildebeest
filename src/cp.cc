@@ -78,6 +78,8 @@ struct MaxHeigthWorker {
 
           // Handle also Xilinx lut cells
           //
+          (cell->type != "\\IBUF") && (cell->type != "\\OBUF") &&
+          (cell->type != "\\MUXCY") && (cell->type != "\\XORCY") &&
           (cell->type != "\\MUXF5") && (cell->type != "\\MUXF6") &&
           (cell->type != "\\MUXF7") && (cell->type != "\\MUXF8") &&
           (cell->type != "\\LUT1") && (cell->type != "\\LUT2") &&
@@ -184,6 +186,109 @@ struct MaxHeigthWorker {
 
       if (HEIGTH(it.second) == max_height) {
         get_cp_logic_rec(it.first, max_height);
+      }
+    }
+  }
+
+  // ---------------------
+  // bit_name
+  // ---------------------
+  string bit_name(const SigBit &b)
+  {
+     if (b.is_wire()) {
+         return stringf("%s[%d]", log_id(b.wire), b.offset);
+     }
+
+     return b == SigBit(1) ? "1'b1" : "1'b0";
+  }
+
+  // ---------------------
+  // print_one_cp_logic_rec
+  // ---------------------
+  int print_one_cp_logic_rec(SigBit bit, int height) {
+
+    if (bits.count(bit) == 0) { // constant case
+      log("  CONSTANT : %s\n", bit_name(bit)); 
+      return 1;
+    }
+
+    auto &bitinfo = bits.at(bit);
+
+    // return if not on the CP
+    //
+    if (HEIGTH(bitinfo) < height) {
+      return 0;
+    }
+
+    if (HEIGTH(bitinfo) > height) {
+      log_error("Problem in the print CP function : Height %d must be less than "
+                "height %d\n",
+                HEIGTH(bitinfo), height);
+    }
+
+    // we are traveling along a CP
+    //
+    assert(HEIGTH(bitinfo) == height);
+
+    // Terminal Case of a PI
+    //
+    if (HEIGTH(bitinfo) == 0) {
+      log("        %s\n", bit_name(bit));
+      return 1;
+    }
+
+    pool<SigBit> *inputs = INPUTS(bitinfo);
+
+    int found_cp = 0;
+
+    for (auto from : *inputs) {
+
+      // Print recursively the first successfull sub CP 
+      //
+      if (print_one_cp_logic_rec(from, height - 1)) {
+        found_cp = 1;
+        break;
+      }
+    }
+
+    if (!found_cp) {
+      return 0;
+    }
+
+    // It is a cell
+    //
+    assert(CELL(bitinfo)); // make sure it is driven
+                           //
+    Cell *cell = CELL(bitinfo);
+
+    log(" %3d:   %s (%s)\n", HEIGTH(bitinfo), log_id(cell->name), cell->type);
+
+    return 1;
+  }
+
+  // ---------------------
+  // print_one_cp_logic
+  // ---------------------
+  void print_one_cp_logic(int max_height) {
+
+    log("\n");
+    log("Printing one critical path \n");
+    log("--------------------------\n");
+
+    // Print one CP from the 'bits' starting with 'max_height'.
+    //
+    for (auto &it : bits) {
+
+      if (HEIGTH(it.second) == max_height) {
+
+        if (print_one_cp_logic_rec(it.first, max_height)) {
+
+          auto &bitinfo = bits.at(it.first);
+
+          log("        %s\n", bit_name(it.first));
+
+          return;
+	}
       }
     }
   }
@@ -413,6 +518,8 @@ struct MaxHeigthWorker {
     // get the logic on the critical paths starting with height 'max_height'
     //
     get_cp_logic(max_height);
+
+    print_one_cp_logic(max_height);
 
     // Eventually dump the dot file fo the CP logic
     // NOTE: we can use 'xdot' to view the dot file

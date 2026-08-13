@@ -26,13 +26,12 @@
 #include "kernel/rtlil.h"
 #include "kernel/sigtools.h"
 #include "version.h"
+#include "synth_fpga_version.h"
 #include <algorithm>
 #include <cctype>
 #include <chrono>
 #include <filesystem>
 #include <unistd.h>
-
-#define SYNTH_FPGA_VERSION "1.0-" YOSYS_SYN_REVISION
 
 #define HUGE_NB_CELLS 5000000 // 5 Million cells
 #define BIG_NB_CELLS 500000   // 500K cells
@@ -2126,18 +2125,38 @@ struct SynthFpgaPass : public ScriptPass {
 
     log("Check for illegal cells in the design ...\n");
 
-    // Fo all the cells ...
+    // For all the cells ...
     //
     for (auto cell : yosys_get_design()->top_module()->cells()) {
 
       // Check first '$' cells that we always accept.
       //
       if (cell->type == "$lut") { 
-				  
         continue;
       }
+
       if (cell->type == "$print") { 
+        log_warning("Found non synthesizable cell '%s' (%s)\n", log_id(cell),
+                      log_id(cell->type));
         continue;
+      }
+
+      if (cell->type == "$check") { 
+        log_warning("Found non synthesizable cell '%s' (%s)\n", log_id(cell),
+                      log_id(cell->type));
+        continue;
+      }
+
+      // Flag simple warning on LATCh cells when 'continue_if_latch' is ON
+      // otherwise flag real error.
+      //
+      string cell_type = log_id(cell->type);
+
+      if (continue_if_latch && (cell_type.rfind("$_DLATCH", 0) == 0)) {
+
+          log_warning("Found illegal cell '%s' (%s)\n", log_id(cell),
+                      log_id(cell->type));
+          continue;
       }
 
       // Check cell name in substr name case
@@ -2666,7 +2685,14 @@ struct SynthFpgaPass : public ScriptPass {
     } else if (nb_cells >=
                BIG_NB_CELLS) { // example : 'e203_soc_top' from Golden suite
 
-      mode = "fast";
+      if (mode == "delay") {
+
+        mode = "fast_delay";
+
+      } else {
+
+        mode = "fast_area";
+      }
 
       log_warning("Optimization script changed from '%s' to '%s' due to design "
                   "size (%d cells)\n",
@@ -2927,8 +2953,10 @@ struct SynthFpgaPass : public ScriptPass {
   // -------------------------
   // coarse_synthesis
   // -------------------------
+  // Global general synthesis used up-front before any tech mapping
   //
   void coarse_synthesis() {
+
     run("opt_expr");
     run("opt_clean");
     run("check");
@@ -2938,7 +2966,25 @@ struct SynthFpgaPass : public ScriptPass {
     run("wreduce");
     run("peepopt");
     run("opt_clean");
-    run("share");
+
+    int nb_cells = getNumberOfCells();
+
+#if 0
+    log("Nb cells = %d\n", nb_cells);
+#endif
+
+    if (nb_cells < 25000) { // run the regular 'share' command for medium designs
+			    // smaller than 40K cells.
+
+       run("share");
+
+    } else {
+
+       // Use -fast 'share' option for big designs (ex: coralnpu, sonicboom).
+       //
+       run("share -fast");
+    }
+
     run("techmap -map +/cmp2lut.v -D LUT_WIDTH=" + sc_syn_lut_size);
     run("opt_expr");
     run("opt_clean");
@@ -3747,9 +3793,18 @@ struct SynthFpgaPass : public ScriptPass {
     check_illegal_cells();
 
     log("\n");
-    log("***********************************\n");
-    log("** Zero Asic FPGA Synthesis Done **\n");
-    log("***********************************\n");
+    log(" ----------------------------\n");
+    log("  Optimization mode : %s\n", opt);
+    log("  Lut size          : %s\n", sc_syn_lut_size);
+    log(" ----------------------------\n");
+
+    log("\n");
+    log("**********************************************************************************\n");
+    log("** Wildebeest Synthesis Version : %s\n", SYNTH_FPGA_VERSION);
+    log("** %s\n", yosys_maybe_version());
+    log("**********************************************************************************\n");
+    log("\n");
+
 
   } // end script()
 
