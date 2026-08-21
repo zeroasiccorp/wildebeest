@@ -1,0 +1,46 @@
+# yosys -m wildebeest -s mae-techmap-efpga_add_nomap.ys
+#
+# The add-only MAE modes are inferred from a plain '$add', so the guards that
+# keep an ordinary carry chain out of the DSPs are worth pinning down. None of
+# the four adds below should reach a MAE.
+read_verilog <<EOF
+module efpga_add_nomap_map_inst
+   (
+    input                                   clk,
+    input                                   resetn,
+    // wider than the 18 bit MAE operand ports
+    input [31:0]                            wide_a,
+    input [31:0]                            wide_b,
+    output [39:0]                           wide_y,
+    // unsigned needs a spare bit to keep the sign bit of the signed MAE
+    // datapath clear, so 18 bits unsigned does not fit either
+    input [17:0]                            u18_a,
+    input [17:0]                            u18_b,
+    output [39:0]                           u18_y,
+    // a one bit operand sign extended into the adder is a decrement, not
+    // DSP work
+    input [15:0]                            flag_a,
+    input                                   flag_s,
+    output [39:0]                           flag_y,
+    // an increment: cheaper as a carry chain than as a DSP
+    output reg [23:0]                       count_y
+    );
+
+   assign wide_y = wide_a + wide_b;
+   assign u18_y  = u18_a + u18_b;
+   assign flag_y = flag_a + {18{flag_s}};
+
+   always @(posedge clk or negedge resetn) begin
+      if (~resetn) begin
+         count_y <= 'h0;
+      end
+      else begin
+         count_y <= count_y + 1'b1;
+      end
+   end
+
+endmodule
+EOF
+
+synth_fpga -partname z1010
+select -assert-count 0 */t:efpga_a*

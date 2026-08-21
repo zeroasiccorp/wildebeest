@@ -361,3 +361,286 @@ code argQ
 	dffQ = argQ;
 	dffclock = port(ff, \CLK);
 endcode
+
+
+// ###########################################################################
+// Add-only inference
+//
+// Six of the MAE modes have no multiplier in them at all: 'efpga_adder',
+// 'efpga_adder_regi', 'efpga_adder_rego', 'efpga_adder_regio', 'efpga_acc'
+// and 'efpga_acc_regi'. None of them is reachable from the pattern above,
+// because that one starts from a MAE cell and a MAE cell only ever comes out
+// of the '$mul' driven 'mul2dsp' techmap. A design that adds or accumulates
+// but never multiplies therefore had no path to the MAE and ended up in LUTs.
+//
+// This pattern seeds those modes straight from a '$add', absorbing the same
+// input and output registers as the multiplier flow does, and emits a MAE with
+// 'ADD_ONLY' set so that 'zeroasic_dsp_map_mode.v' remains the single place
+// where a mode gets picked.
+
+pattern zeroasic_dsp_add_pack
+
+state <SigBit> clock
+state <SigSpec> sigA sigB sigP
+state <Cell*> ffA ffB ffP
+state <bool> signedA signedB
+state <bool> useFeedBack
+
+// Variables used for subpatterns
+state <SigSpec> argQ argD
+udata <bool> allowAsync
+udata <SigSpec> dffD dffQ
+udata <SigBit> dffclock
+udata <Cell*> dff
+
+// Narrowest result that is worth a MAE. Set by the 'zeroasic_dsp' pass from
+// its '-add_minwidth' option: without a floor here every carry chain in the
+// design, down to the increment of a small counter, would claim a MAE.
+udata <int> addMinWidth
+
+match add
+	select add->type.in($add)
+	select !add->get_bool_attribute(\keep)
+	select GetSize(port(add, \Y)) <= 40
+endmatch
+
+code sigA sigB sigP signedA signedB ffA ffB ffP clock useFeedBack
+	//helper function to remove unused bits
+	auto unextend = [](const SigSpec &sig) {
+		int i;
+		for (i = GetSize(sig)-1; i > 0; i--)
+			if (sig[i] != sig[i-1])
+				break;
+		// Do not remove non-const sign bit
+		if (sig[i].wire)
+			++i;
+		return sig.extract(0, i);
+	};
+
+	ffA = nullptr;
+	ffB = nullptr;
+	ffP = nullptr;
+	clock = SigBit();
+	useFeedBack = false;
+
+	// Only the bits of 'Y' that somebody reads have to come out of 'P'.
+	SigSpec Y = port(add, \Y);
+	int i;
+	for (i = GetSize(Y)-1; i >= 0; i--)
+		if (nusers(Y[i]) > 1)
+			break;
+	i++;
+	if (i < addMinWidth)
+		reject;
+	sigP = Y.extract(0, i);
+
+	sigA = unextend(port(add, \A));
+	sigB = unextend(port(add, \B));
+	signedA = param(add, \A_SIGNED).as_bool();
+	signedB = param(add, \B_SIGNED).as_bool();
+
+	// A constant operand is an increment or an offset, which stays cheaper in
+	// the fabric than a MAE.
+	if (sigA.is_fully_const() || sigB.is_fully_const())
+		reject;
+endcode
+
+// 'P' output register, and the accumulate feedback it may carry
+code argD ffP sigP clock sigA sigB signedA signedB useFeedBack
+	if (nusers(sigP) == 2) {
+		argD = sigP;
+		allowAsync = false;
+		subpattern(out_add_dffe);
+		if (dff) {
+			ffP = dff;
+			clock = dffclock;
+			// An accumulator is an adder whose registered sum comes back in
+			// as one of its own operands.
+			if (dffQ == sigA) {
+				useFeedBack = true;
+				sigA = sigB;
+				signedA = signedB;
+				sigB = SigSpec();
+			} else if (dffQ == sigB) {
+				useFeedBack = true;
+				sigB = SigSpec();
+			}
+			sigP = dffQ;
+		}
+	}
+endcode
+
+// Check that what is left actually fits one of the six add-only modes.
+code
+	// The MAE is a signed datapath: it sign extends an 18 bit operand into
+	// its 40 bit adder, which is why 'mul2dsp' is handed 'DSP_SIGNEDONLY'.
+	// An unsigned operand therefore needs a spare bit to keep its sign bit
+	// clear, exactly as an unsigned multiply does.
+	auto portWidth = [](const SigSpec &sig, bool is_signed) {
+		return GetSize(sig) + (is_signed ? 0 : 1);
+	};
+
+	if (portWidth(sigA, signedA) > 18)
+		reject;
+
+	// A one bit operand is a sign extended flag, so the '$add' is really an
+	// increment or a decrement. 'mul2dsp' keeps those off the DSP with
+	// 'DSP_A_MINWIDTH' / 'DSP_B_MINWIDTH'; do the same here.
+	if (GetSize(sigA) < 2)
+		reject;
+
+	// An accumulator has no second operand: the other side of the adder is
+	// the 40 bit accumulator, which the macro feeds back internally, and
+	// two's complement addition at that width is the same signed or not.
+	if (!useFeedBack && ((portWidth(sigB, signedB) > 18) ||
+	                     (GetSize(sigB) < 2)))
+		reject;
+endcode
+
+// 'A' input register
+code argQ sigA clock ffA
+	argQ = sigA;
+	allowAsync = false;
+	subpattern(in_add_dffe);
+	if (dff) {
+		ffA = dff;
+		clock = dffclock;
+	}
+endcode
+
+// 'B' input register
+code argQ sigB clock ffB
+	if (!sigB.empty()) {
+		argQ = sigB;
+		allowAsync = false;
+		subpattern(in_add_dffe);
+		if (dff) {
+			ffB = dff;
+			clock = dffclock;
+		}
+	}
+endcode
+
+code
+	accept;
+endcode
+
+// #######################
+// Subpattern for matching against input registers, based on knowledge of the
+//   'Q' input.
+subpattern in_add_dffe
+arg argQ clock
+
+code
+	dff = nullptr;
+	if (argQ.empty())
+		reject;
+	for (const auto &c : argQ.chunks()) {
+		// Abandon matches when 'Q' is a constant
+		if (!c.wire)
+			reject;
+		// Abandon matches when 'Q' has the keep attribute set
+		if (c.wire->get_bool_attribute(\keep))
+			reject;
+		// Abandon matches when 'Q' has a non-zero init attribute set
+		Const init = c.wire->attributes.at(\init, Const());
+		if (!init.empty())
+			for (auto b : init.extract(c.offset, c.width))
+				if (b != State::Sx && b != State::S0)
+					reject;
+	}
+endcode
+
+match ff
+	// all regs must have async reset. can't handle enables.
+	select ff->type.in($dff, $adff, $dffr)
+	// does not support clock inversion
+	select param(ff, \CLK_POLARITY).as_bool()
+
+	// it is possible that only part of a dff output matches argQ
+	slice offset GetSize(port(ff, \D))
+	index <SigBit> port(ff, \Q)[offset] === argQ[0]
+
+	// Check that the rest of argQ is present
+	filter GetSize(port(ff, \Q)) >= offset + GetSize(argQ)
+	filter port(ff, \Q).extract(offset, GetSize(argQ)) == argQ
+
+	// clock must be consistent
+	filter clock == SigBit() || port(ff, \CLK)[0] == clock
+endmatch
+
+code argQ
+	// Check that reset value, if present, is fully 0.
+	bool noResetFlop = ff->type.in($dff, $dffe);
+	bool arstZero = ff->type.in($adff, $adffe) && param(ff, \ARST_VALUE).is_fully_zero();
+	bool resetLegal = noResetFlop || arstZero;
+	if (resetLegal)
+	{
+		SigSpec Q = port(ff, \Q);
+		dff = ff;
+		dffclock = port(ff, \CLK);
+		dffD = argQ;
+		SigSpec D = port(ff, \D);
+		argQ = Q;
+		dffD.replace(argQ, D);
+	}
+endcode
+
+// #######################
+// Subpattern for matching against the output register.
+subpattern out_add_dffe
+arg argD argQ clock
+
+code
+	dff = nullptr;
+	for (auto c : argD.chunks()) {
+		// Abandon matches when 'D' is a constant
+		if (!c.wire)
+			reject;
+		// Abandon matches when 'D' has the keep attribute set
+		if (c.wire->get_bool_attribute(\keep))
+			reject;
+	}
+endcode
+
+match ff
+	select ff->type.in($dff, $adff, $dffr)
+	// does not support clock inversion
+	select param(ff, \CLK_POLARITY).as_bool()
+
+	slice offset GetSize(port(ff, \D))
+	index <SigBit> port(ff, \D)[offset] === argD[0]
+
+	// Check that the rest of argD is present
+	filter GetSize(port(ff, \D)) >= offset + GetSize(argD)
+	filter port(ff, \D).extract(offset, GetSize(argD)) == argD
+
+	filter clock == SigBit() || port(ff, \CLK)[0] == clock
+endmatch
+
+code argQ
+	// The macro always clears its output register, so a flop that resets to
+	// anything else cannot be packed into it.
+	if (ff->type.in($adff, $adffe) && !param(ff, \ARST_VALUE).is_fully_zero())
+		reject;
+
+	{
+		SigSpec D = port(ff, \D);
+		SigSpec Q = port(ff, \Q);
+		argQ = argD;
+		argQ.replace(D, Q);
+	}
+
+	// Abandon matches when 'Q' has a non-zero init attribute set
+	for (auto c : argQ.chunks()) {
+		Const init = c.wire->attributes.at(\init, Const());
+		if (!init.empty())
+			for (auto b : init.extract(c.offset, c.width))
+				if (b != State::Sx && b != State::S0)
+					reject;
+	}
+
+	dff = ff;
+	dffQ = argQ;
+	dffclock = port(ff, \CLK);
+endcode

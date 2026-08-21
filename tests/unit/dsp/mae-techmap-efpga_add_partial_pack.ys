@@ -1,0 +1,59 @@
+# yosys -m wildebeest -s mae-techmap-efpga_add_partial_pack.ys
+#
+# Every register a MAE swallows shares the macro's single active low reset and
+# is cleared by it, so a flop that disagrees has to stay in the fabric. Both
+# adds below still reach a MAE, but in the mode without the register.
+read_verilog <<EOF
+module efpga_add_partial_pack_map_inst
+   (
+    input                                   clk,
+    input                                   resetn,
+    // 'a_reg' is on a different reset than the accumulator, so this is
+    // 'efpga_acc' and not 'efpga_acc_regi'
+    input                                   resetn2,
+    input signed [17:0]                     acc_a,
+    output reg signed [39:0]                acc_y,
+    // the output register clears to something other than zero, so this is
+    // 'efpga_adder' and not 'efpga_adder_rego'
+    input signed [17:0]                     add_a,
+    input signed [17:0]                     add_b,
+    output reg signed [39:0]                add_y
+    );
+
+   reg signed [17:0] a_reg;
+
+   always @(posedge clk or negedge resetn2) begin
+      if (~resetn2) begin
+         a_reg <= 'h0;
+      end
+      else begin
+         a_reg <= acc_a;
+      end
+   end
+
+   always @(posedge clk or negedge resetn) begin
+      if (~resetn) begin
+         acc_y <= 'h0;
+      end
+      else begin
+         acc_y <= acc_y + a_reg;
+      end
+   end
+
+   always @(posedge clk or negedge resetn) begin
+      if (~resetn) begin
+         add_y <= 40'h1;
+      end
+      else begin
+         add_y <= add_a + add_b;
+      end
+   end
+
+endmodule
+EOF
+
+synth_fpga -partname z1010
+select -assert-count 1 */t:efpga_acc
+select -assert-count 0 */t:efpga_acc_regi
+select -assert-count 1 */t:efpga_adder
+select -assert-count 0 */t:efpga_adder_rego

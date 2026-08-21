@@ -25,6 +25,10 @@ PRIVATE_NAMESPACE_BEGIN
 
 #include "zeroasic_dsp.h"
 
+// An 18 bit add costs about as many LUTs as it has result bits, so anything
+// narrower than this is not worth a DSP that a multiplier could have used.
+static const int DEFAULT_ADD_MINWIDTH = 10;
+
 void zeroasic_dsp_pack(zeroasic_dsp_pm &pm) {
   auto &st = pm.st_zeroasic_dsp_pack;
 
@@ -178,6 +182,150 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm) {
   pm.blacklist(cell);
 }
 
+// The six add-only MAE modes ('efpga_adder', 'efpga_adder_regi',
+// 'efpga_adder_rego', 'efpga_adder_regio', 'efpga_acc' and 'efpga_acc_regi')
+// have no multiplier in them, so the '$mul' driven 'mul2dsp' techmap never
+// produces a MAE for a design that only adds or accumulates. Seed one here
+// from the '$add' that 'zeroasic_dsp_add_pack' matched, with 'ADD_ONLY' set so
+// that 'zeroasic_dsp_map_mode.v' stays the single place where a mode is picked.
+//
+void zeroasic_dsp_add_pack(zeroasic_dsp_pm &pm) {
+  auto &st = pm.st_zeroasic_dsp_add_pack;
+
+  Module *module = pm.module;
+  Cell *add = st.add;
+
+  Cell *ffA = st.ffA;
+  Cell *ffB = st.ffB;
+  Cell *ffP = st.ffP;
+
+  // 'efpga_adder_regi' and 'efpga_adder_regio' register both operands out of
+  // the same flops, so a single registered operand is not a mode we have.
+  if (!st.useFeedBack && !(ffA && ffB)) {
+    ffA = nullptr;
+    ffB = nullptr;
+  }
+
+  // The macro has one active low asynchronous reset shared by every register
+  // it holds, so only pack flops that agree on it. '$dff' (no reset at all)
+  // does not agree with a flop that has one.
+  auto arst = [](Cell *ff) {
+    if (ff && ff->type.in(ID($adff), ID($adffe)))
+      return ff->getPort(ID::ARST);
+    return SigSpec();
+  };
+  auto arstPolarity = [](Cell *ff) {
+    if (ff && ff->type.in(ID($adff), ID($adffe)))
+      return ff->getParam(ID::ARST_POLARITY).as_bool();
+    return false;
+  };
+  auto sameReset = [&](Cell *a, Cell *b) {
+    return arst(a) == arst(b) && arstPolarity(a) == arstPolarity(b);
+  };
+
+  if (ffP && ffA && !sameReset(ffP, ffA)) {
+    ffA = nullptr;
+    ffB = nullptr;
+  }
+  if (ffA && ffB && !sameReset(ffA, ffB)) {
+    ffA = nullptr;
+    ffB = nullptr;
+  }
+
+  // Move an operand past the register that feeds it, and extend it to the
+  // 18 bits of the macro input port.
+  auto operand = [&](SigSpec sig, Cell *ff, bool is_signed) {
+    if (ff) {
+      SigSpec D = ff->getPort(ID::D);
+      SigSpec Q = pm.sigmap(ff->getPort(ID::Q));
+      sig.replace(Q, D);
+    }
+    SigBit pad = is_signed ? sig[GetSize(sig) - 1] : SigBit(State::S0);
+    while (GetSize(sig) < 18)
+      sig.append(pad);
+    return sig;
+  };
+
+  Cell *cell = module->addCell(NEW_ID, ID(MAE));
+
+  cell->setParam(ID(ADD_ONLY), State::S1);
+  cell->setParam(ID(POST_ADDER_STATIC), State::S0);
+  cell->setParam(ID(MULT_HAS_REG), State::S0);
+  cell->setParam(ID(C_REG), State::S0);
+  cell->setParam(ID(USE_FEEDBACK), st.useFeedBack ? State::S1 : State::S0);
+  cell->setParam(ID(A_REG), ffA ? State::S1 : State::S0);
+  cell->setParam(ID(B_REG), ffB ? State::S1 : State::S0);
+  cell->setParam(ID(P_REG), ffP ? State::S1 : State::S0);
+
+  SigSpec A = operand(st.sigA, ffA, st.signedA);
+  cell->setPort(ID::A, A);
+  pm.add_siguser(A, cell);
+
+  // An accumulator has no second operand: the other side of its adder is the
+  // accumulator itself, which the macro feeds back internally.
+  SigSpec B = st.useFeedBack ? SigSpec(State::S0, 18)
+                             : operand(st.sigB, ffB, st.signedB);
+  cell->setPort(ID::B, B);
+  pm.add_siguser(B, cell);
+
+  cell->setPort(ID::C, SigSpec(State::S0, 40));
+
+  SigSpec P = st.sigP;
+  if (GetSize(P) < 40)
+    P.append(module->addWire(NEW_ID, 40 - GetSize(P)));
+  cell->setPort(ID::P, P);
+
+  if (st.clock != SigBit()) {
+    cell->setPort(ID::CLK, st.clock);
+
+    Cell *rstFrom = ffP ? ffP : ffA;
+    SigSpec resetn = arst(rstFrom);
+    if (resetn.empty())
+      resetn = State::S1;
+    else if (arstPolarity(rstFrom))
+      resetn = module->Not(NEW_ID, resetn);
+    cell->setPort(ID(resetn), resetn);
+
+    log("  clock: %s (%s)\n", log_signal(st.clock), "posedge");
+    if (ffA)
+      log(" \t ffA:%s\n", log_id(ffA));
+    if (ffB)
+      log(" \t ffB:%s\n", log_id(ffB));
+    if (ffP)
+      log(" \t ffP:%s\n", log_id(ffP));
+  }
+
+  // Hand the output register's own net over to 'P' and leave the flop
+  // dangling for 'opt_clean', the way the multiplier path does.
+  if (ffP) {
+    ffP->connections_.at(ID::Q).replace(
+        st.sigP, module->addWire(NEW_ID, GetSize(st.sigP)));
+
+    SigSpec Q = pm.sigmap(st.sigP);
+    for (auto c : Q.chunks()) {
+      if (c.wire == nullptr)
+        continue;
+      auto it = c.wire->attributes.find(ID::init);
+      if (it == c.wire->attributes.end())
+        continue;
+      for (int i = c.offset; i < c.offset + c.width; i++) {
+        if (i >= GetSize(it->second))
+          break;
+#if YOSYS_MAJOR == 0 && YOSYS_MINOR <= 57
+        it->second.bits()[i] = State::Sx;
+#else
+        it->second.set(i, State::Sx);
+#endif
+      }
+    }
+  }
+
+  log("\n");
+
+  pm.autoremove(add);
+  pm.blacklist(cell);
+}
+
 struct ZeroAsicDspPass : public Pass {
   ZeroAsicDspPass()
       : Pass("zeroasic_dsp", "ZEROASIC: pack resources into DSPs") {}
@@ -192,13 +340,43 @@ struct ZeroAsicDspPass : public Pass {
         "post-adder into\n");
     log("ZeroAsic DSP resources.\n");
     log("\n");
+    log("A second pass then infers the add-only DSP modes ('efpga_adder*' "
+        "and\n");
+    log("'efpga_acc*') from any '$add' left over, which the '$mul' driven "
+        "techmap\n");
+    log("cannot reach.\n");
+    log("\n");
+    log("    -no_add\n");
+    log("        do not infer the add-only modes, leaving every remaining "
+        "'$add' to\n");
+    log("        the fabric.\n");
+    log("\n");
+    log("    -add_minwidth <n>\n");
+    log("        smallest add result width worth a DSP (default %d). Below "
+        "this an\n",
+        DEFAULT_ADD_MINWIDTH);
+    log("        '$add' stays in the fabric so that narrow carry chains do "
+        "not use up\n");
+    log("        the DSPs.\n");
+    log("\n");
   }
 
   void execute(std::vector<std::string> args, RTLIL::Design *design) override {
     log_header(design, "Executing ZEROASIC_DSP pass (pack DFFs into DSPs).\n");
 
+    bool no_add = false;
+    int add_minwidth = DEFAULT_ADD_MINWIDTH;
+
     size_t argidx;
     for (argidx = 1; argidx < args.size(); argidx++) {
+      if (args[argidx] == "-no_add") {
+        no_add = true;
+        continue;
+      }
+      if ((args[argidx] == "-add_minwidth") && (argidx + 1 < args.size())) {
+        add_minwidth = max(2, atoi(args[++argidx].c_str()));
+        continue;
+      }
       break;
     }
     extra_args(args, argidx, design);
@@ -211,6 +389,15 @@ struct ZeroAsicDspPass : public Pass {
       {
         zeroasic_dsp_pm pm(module, module->selected_cells());
         pm.run_zeroasic_dsp_pack(zeroasic_dsp_pack);
+      }
+
+      // Runs on a fresh matcher so that the '$add' cells the multiplier pass
+      // absorbed above are gone before the add-only modes get a look at what
+      // is left.
+      if (!no_add) {
+        zeroasic_dsp_pm pm(module, module->selected_cells());
+        pm.ud_zeroasic_dsp_add_pack.addMinWidth = add_minwidth;
+        pm.run_zeroasic_dsp_add_pack(zeroasic_dsp_add_pack);
       }
     }
   }
