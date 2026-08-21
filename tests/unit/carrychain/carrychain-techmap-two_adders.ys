@@ -1,0 +1,37 @@
+# yosys -m wildebeest -s carrychain-techmap-two_adders.ys
+
+#Two independent adders must give two independent carry chains : all 18
+#result bits are mapped and nothing is left in soft logic.
+
+read_verilog -lib ../data/carrychain/models/tech_carry.v
+
+read_verilog <<EOF
+module carrychain_two_adders
+  # (
+     parameter WIDTH = 8
+     )
+   (
+    input [(WIDTH-1):0] a,
+    input [(WIDTH-1):0] b,
+    input [(WIDTH-1):0] c,
+    input [(WIDTH-1):0] d,
+    output [WIDTH:0]    y0,
+    output [WIDTH:0]    y1
+    );
+
+   assign y0 = a + b;
+   assign y1 = c + d;
+
+endmodule
+EOF
+
+synth_fpga -config ../data/carrychain/carrychain.json
+
+#The whole adder is in the carry chain : no '$alu' survived and no soft
+#logic was needed.
+select -assert-count 18 */t:efpga_carry
+select -assert-count 0 */t:$alu
+select -assert-count 0 */t:$lut
+
+select -assert-count 9 */w:y0 %ci */t:efpga_carry %i
+select -assert-count 9 */w:y1 %ci */t:efpga_carry %i

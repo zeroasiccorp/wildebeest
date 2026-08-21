@@ -1,0 +1,36 @@
+# yosys -m wildebeest -s carrychain-techmap-add_unsigned.ys
+
+#An unsigned 8 bit + 8 bit -> 9 bit adder must map entirely onto the hard
+#carry chain : one 'efpga_carry' per result bit and nothing left in soft
+#logic.
+
+read_verilog -lib ../data/carrychain/models/tech_carry.v
+
+read_verilog <<EOF
+module carrychain_add_unsigned
+  # (
+     parameter WIDTH = 8
+     )
+   (
+    input [(WIDTH-1):0] a,
+    input [(WIDTH-1):0] b,
+    output [WIDTH:0]    y
+    );
+
+   assign y = a + b;
+
+endmodule
+EOF
+
+synth_fpga -config ../data/carrychain/carrychain.json
+
+#The whole adder is in the carry chain : no '$alu' survived and no soft
+#logic was needed.
+select -assert-count 9 */t:efpga_carry
+select -assert-count 0 */t:$alu
+select -assert-count 0 */t:$lut
+
+#Both operands feed the chain and the chain drives the whole result.
+select -assert-count 8 */w:a %co */t:efpga_carry %i
+select -assert-count 8 */w:b %co */t:efpga_carry %i
+select -assert-count 9 */w:y %ci */t:efpga_carry %i
