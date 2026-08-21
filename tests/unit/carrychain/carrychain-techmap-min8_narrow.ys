@@ -1,0 +1,26 @@
+# yosys -m wildebeest -s carrychain-techmap-min8_narrow.ys
+
+#A techmap that rejects narrow adders through '_TECHMAP_FAIL_' must leave
+#them to the generic '+/techmap.v' soft logic mapping : a 4 bit adder gets no
+#carry cell at all.
+
+read_verilog -lib ../data/carrychain/models/tech_carry.v
+
+read_verilog <<EOF
+module carrychain_min8_narrow
+   (
+    input [3:0]  a,
+    input [3:0]  b,
+    output [4:0] y
+    );
+
+   assign y = a + b;
+
+endmodule
+EOF
+
+synth_fpga -config ../data/carrychain/carrychain_min8.json
+
+select -assert-count 0 */t:efpga_carry
+select -assert-count 0 */t:$alu
+select -assert-min 1 */t:$lut

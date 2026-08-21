@@ -1,0 +1,28 @@
+# yosys -m wildebeest -s carrychain-techmap-compare.ys
+
+#'alumacc' implements a magnitude comparison with an '$alu' whose carry out
+#is the result, so a comparison must use the hard carry chain too (the sum
+#bits are simply left unused).
+
+read_verilog -lib ../data/carrychain/models/tech_carry.v
+
+read_verilog <<EOF
+module carrychain_compare
+  # (
+     parameter WIDTH = 8
+     )
+   (
+    input [(WIDTH-1):0] a,
+    input [(WIDTH-1):0] b,
+    output              gt
+    );
+
+   assign gt = (a > b);
+
+endmodule
+EOF
+
+synth_fpga -config ../data/carrychain/carrychain.json
+
+select -assert-count 8 */t:efpga_carry
+select -assert-count 0 */t:$alu

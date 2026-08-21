@@ -1,0 +1,34 @@
+# yosys -m wildebeest -s carrychain-techmap-add_carry_in.ys
+
+#'a + b + ci' folds the extra term into the 'CI' port of the '$alu', so the
+#'ci' primary input must reach exactly one carry cell : the bottom of the
+#chain.
+
+read_verilog -lib ../data/carrychain/models/tech_carry.v
+
+read_verilog <<EOF
+module carrychain_add_carry_in
+  # (
+     parameter WIDTH = 8
+     )
+   (
+    input [(WIDTH-1):0] a,
+    input [(WIDTH-1):0] b,
+    input               ci,
+    output [WIDTH:0]    y
+    );
+
+   assign y = a + b + ci;
+
+endmodule
+EOF
+
+synth_fpga -config ../data/carrychain/carrychain.json
+
+#The whole adder is in the carry chain : no '$alu' survived and no soft
+#logic was needed.
+select -assert-count 9 */t:efpga_carry
+select -assert-count 0 */t:$alu
+select -assert-count 0 */t:$lut
+
+select -assert-count 1 */w:ci %co */t:efpga_carry %i

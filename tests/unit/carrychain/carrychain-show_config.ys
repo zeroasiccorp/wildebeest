@@ -1,0 +1,29 @@
+# yosys -m wildebeest -s carrychain-show_config.ys
+
+#'-show_config' must report the configured adder techmap, and that same file
+#must then really be handed over to the 'techmap' pass.
+
+logger -expect log ".*ADDER techmap.*" 1
+logger -expect log ".*Verilog-2005 frontend: .*data/carrychain/tech_adder.v.*" 1
+
+read_verilog -lib ../data/carrychain/models/tech_carry.v
+
+read_verilog <<EOF
+module carrychain_show_config
+  # (
+     parameter WIDTH = 8
+     )
+   (
+    input [(WIDTH-1):0] a,
+    input [(WIDTH-1):0] b,
+    output [WIDTH:0]    y
+    );
+
+   assign y = a + b;
+
+endmodule
+EOF
+
+synth_fpga -config ../data/carrychain/carrychain.json -show_config
+
+select -assert-count 9 */t:efpga_carry

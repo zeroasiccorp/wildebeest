@@ -1,0 +1,31 @@
+# yosys -m wildebeest -s carrychain-techmap-undeclared_primitive.ys
+
+#The adder techmap does not need the carry chain primitive to be declared :
+#with no model read in, the same 9 'efpga_carry' cells must be created.  This
+#is what keeps the techmap file itself free of any primitive definition (a
+#module living in a techmap file is a mapping rule and would be expanded back
+#into soft logic).
+
+read_verilog <<EOF
+module carrychain_undeclared_primitive
+  # (
+     parameter WIDTH = 8
+     )
+   (
+    input [(WIDTH-1):0] a,
+    input [(WIDTH-1):0] b,
+    output [WIDTH:0]    y
+    );
+
+   assign y = a + b;
+
+endmodule
+EOF
+
+synth_fpga -config ../data/carrychain/carrychain.json
+
+#The whole adder is in the carry chain : no '$alu' survived and no soft
+#logic was needed.
+select -assert-count 9 */t:efpga_carry
+select -assert-count 0 */t:$alu
+select -assert-count 0 */t:$lut

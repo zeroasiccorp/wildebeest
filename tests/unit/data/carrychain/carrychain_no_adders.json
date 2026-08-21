@@ -1,0 +1,20 @@
+{
+    "version": 1,
+    "partname": "z1010",
+    "lut_size": 4,
+    "flipflops": {
+        "features": [
+            "async_reset",
+            "async_set",
+            "flop_enable"
+        ],
+        "models": {},
+        "legalize_list": [
+            "$_DFF_PN0_",
+            "$_DFF_P_",
+            "$_DFFE_PP_",
+            "$_DFFE_PN0P_"
+        ],
+        "techmap": "../z1010/tech_flops.v"
+    }
+}

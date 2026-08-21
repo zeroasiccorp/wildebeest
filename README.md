@@ -221,11 +221,14 @@ The configuration format is still work in progress. A draft format specification
                         "<str, name of define>": <str or int, value of define>
                 }
                 "pack_command": "DSP packing command" (optional)
+        },
+        "adders": { (optional)
+                "techmap": <path, relative path to yosys hard carry-chain adder tech mapping file>
         }
 }
 ```
 
-Sections version, partname, lut_size, flip-flops, are required. Sections root_path, brams,and dsps are optional. If "root_path" is not specified, it will correspond to the path where the config file is located.
+Sections version, partname, lut_size, flip-flops, are required. Sections root_path, brams, dsps, and adders are optional. If "root_path" is not specified, it will correspond to the path where the config file is located. The "adders" techmap (applied after `alumacc` and before the generic techmap, independently of DSP inference) maps `$alu` onto a hard carry-chain adder primitive; when absent, adders remain in soft logic.
 
 ### Logic Only Example: No BRAMs or DSPs
 

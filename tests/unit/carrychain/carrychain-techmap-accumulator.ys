@@ -1,0 +1,40 @@
+# yosys -m wildebeest -s carrychain-techmap-accumulator.ys
+
+#A registered accumulator : the adder goes to the hard carry chain while the
+#state still legalizes onto the flip flops described by the config.
+
+read_verilog -lib ../data/carrychain/models/tech_carry.v
+
+read_verilog <<EOF
+module carrychain_accumulator
+  # (
+     parameter WIDTH = 8
+     )
+   (
+    input                    clk,
+    input                    resetn,
+    input [(WIDTH-1):0]      a,
+    output reg [(WIDTH-1):0] y
+    );
+
+   always @(posedge clk or negedge resetn) begin
+      if (~resetn) begin
+         y <= 'h0;
+      end
+      else begin
+         y <= y + a;
+      end
+   end
+
+endmodule
+EOF
+
+synth_fpga -config ../data/carrychain/carrychain.json
+
+#The whole adder is in the carry chain : no '$alu' survived and no soft
+#logic was needed.
+select -assert-count 8 */t:efpga_carry
+select -assert-count 0 */t:$alu
+select -assert-count 0 */t:$lut
+
+select -assert-count 8 */t:dffr
