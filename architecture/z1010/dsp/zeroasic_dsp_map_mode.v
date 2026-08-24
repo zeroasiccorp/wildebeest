@@ -5,7 +5,10 @@ module MAE #(
   parameter P_REG=0,
   parameter MULT_HAS_REG=0,
   parameter POST_ADDER_STATIC=0,
-  parameter USE_FEEDBACK=0
+  parameter USE_FEEDBACK=0,
+  // Multiplier bypassed: 'A' and 'B' (or 'A' and the accumulator) go straight
+  // into the adder. Set by 'zeroasic_dsp' when it seeds a MAE from a '$add'.
+  parameter ADD_ONLY=0
  )
 (
   input [17:0] A,
@@ -30,7 +33,63 @@ module MAE #(
 );
 
 generate
-  if (A_REG == 1'b1 && B_REG == 1'b1 && P_REG==1'b0 && POST_ADDER_STATIC==1'b0) begin
+  if (ADD_ONLY == 1'b1 && USE_FEEDBACK == 1'b0 && A_REG == 1'b0 && B_REG == 1'b0 && P_REG == 1'b0) begin
+    efpga_adder _TECHMAP_REPLACE_ (
+      .a(A),
+      .b(B),
+      .y(P)
+    );
+  end
+  else if (ADD_ONLY == 1'b1 && USE_FEEDBACK == 1'b0 && A_REG == 1'b1 && B_REG == 1'b1 && P_REG == 1'b0) begin
+    efpga_adder_regi _TECHMAP_REPLACE_ (
+      .a(A),
+      .b(B),
+      .clk(CLK),
+      .resetn(resetn),
+      .y(P)
+    );
+  end
+  else if (ADD_ONLY == 1'b1 && USE_FEEDBACK == 1'b0 && A_REG == 1'b0 && B_REG == 1'b0 && P_REG == 1'b1) begin
+    efpga_adder_rego _TECHMAP_REPLACE_ (
+      .a(A),
+      .b(B),
+      .clk(CLK),
+      .resetn(resetn),
+      .y(P)
+    );
+  end
+  else if (ADD_ONLY == 1'b1 && USE_FEEDBACK == 1'b0 && A_REG == 1'b1 && B_REG == 1'b1 && P_REG == 1'b1) begin
+    efpga_adder_regio _TECHMAP_REPLACE_ (
+      .a(A),
+      .b(B),
+      .clk(CLK),
+      .resetn(resetn),
+      .y(P)
+    );
+  end
+  else if (ADD_ONLY == 1'b1 && USE_FEEDBACK == 1'b1 && A_REG == 1'b0 && P_REG == 1'b1) begin
+    efpga_acc _TECHMAP_REPLACE_ (
+      .a(A),
+      .clk(CLK),
+      .resetn(resetn),
+      .y(P)
+    );
+  end
+  else if (ADD_ONLY == 1'b1 && USE_FEEDBACK == 1'b1 && A_REG == 1'b1 && P_REG == 1'b1) begin
+    efpga_acc_regi _TECHMAP_REPLACE_ (
+      .a(A),
+      .clk(CLK),
+      .resetn(resetn),
+      .y(P)
+    );
+  end
+  // Every add-only combination 'zeroasic_dsp' can produce is listed above, so
+  // anything else with the multiplier bypassed is a bug. Fail loudly rather
+  // than fall through into a multiplier mode below.
+  else if (ADD_ONLY == 1'b1) begin
+    wire _TECHMAP_FAIL_ = 1'b1;
+  end
+  else if (A_REG == 1'b1 && B_REG == 1'b1 && P_REG==1'b0 && POST_ADDER_STATIC==1'b0) begin
     efpga_mult_regi _TECHMAP_REPLACE_ (
       .a(A),
       .b(B),

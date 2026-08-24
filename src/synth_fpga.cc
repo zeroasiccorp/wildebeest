@@ -53,6 +53,7 @@ struct SynthFpgaPass : public ScriptPass {
   bool no_xor_tree_process;
   bool no_opt_const_dff;
   bool no_dsp_pack;
+  bool no_dsp_add;
   bool show_dff_init_value;
   bool continue_if_latch;
   bool set_dff_init_value_to_zero;
@@ -2873,6 +2874,12 @@ struct SynthFpgaPass : public ScriptPass {
     // Call the DSP packer command
     //
     if ((sc_syn_dsps_pack_command != "") && (!no_dsp_pack)) {
+      // '-no_add' is a 'zeroasic_dsp' option; the pack command is
+      // configurable, so do not hand it to anything else.
+      if (no_dsp_add &&
+          (sc_syn_dsps_pack_command.rfind("zeroasic_dsp", 0) == 0)) {
+        sc_syn_dsps_pack_command += " -no_add";
+      }
       run(sc_syn_dsps_pack_command);
     }
 
@@ -3066,6 +3073,12 @@ struct SynthFpgaPass : public ScriptPass {
     log("        Disable DSP packing.\n");
     log("\n");
 
+    log("    -no_dsp_add\n");
+    log("        Disable inference of the add-only DSP modes, leaving adders "
+        "and\n");
+    log("        accumulators in the fabric.\n");
+    log("\n");
+
     log("    -fsm_encoding [one-hot, binary]\n");
     log("        Specifies FSM encoding : by default a 'one-hot' encoding is "
         "performed.\n");
@@ -3214,6 +3227,7 @@ struct SynthFpgaPass : public ScriptPass {
     no_xor_tree_process = false;
     no_opt_const_dff = false;
     no_dsp_pack = false;
+    no_dsp_add = false;
     show_dff_init_value = false;
     set_dff_init_value_to_zero = false;
     continue_if_latch = false;
@@ -3337,6 +3351,11 @@ struct SynthFpgaPass : public ScriptPass {
 
       if (args[argidx] == "-no_dsp_pack") {
         no_dsp_pack = true;
+        continue;
+      }
+
+      if (args[argidx] == "-no_dsp_add") {
+        no_dsp_add = true;
         continue;
       }
 
