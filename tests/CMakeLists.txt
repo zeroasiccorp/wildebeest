@@ -19,6 +19,12 @@ set(ALL_TESTS
     unit/dsp/mae-techmap-efpga_mult_addc_regi.ys
     unit/dsp/mae-techmap-efpga_mult_addc_rego.ys
     unit/dsp/mae-techmap-efpga_mult_addc_regio.ys
+    unit/dsp/mae-techmap-efpga_adder.ys
+    unit/dsp/mae-techmap-efpga_adder_regi.ys
+    unit/dsp/mae-techmap-efpga_adder_rego.ys
+    unit/dsp/mae-techmap-efpga_adder_regio.ys
+    unit/dsp/mae-techmap-efpga_acc.ys
+    unit/dsp/mae-techmap-efpga_acc_regi.ys
     unit/dsp/mae-techmap-efpga_mult_unsigned.ys
     unit/dsp/mae-techmap-efpga_mult_regi_unsigned.ys
     unit/dsp/mae-techmap-efpga_mult_rego_unsigned.ys
@@ -48,6 +54,14 @@ set(ALL_TESTS
     unit/carrychain/carrychain-techmap-min8_narrow.ys
     unit/carrychain/carrychain-no_techmap-soft_logic.ys
     unit/carrychain/carrychain-show_config.ys
+    unit/dsp/mae-techmap-efpga_adder_unsigned.ys
+    unit/dsp/mae-techmap-efpga_adder_regi_unsigned.ys
+    unit/dsp/mae-techmap-efpga_adder_rego_unsigned.ys
+    unit/dsp/mae-techmap-efpga_adder_regio_unsigned.ys
+    unit/dsp/mae-techmap-efpga_acc_unsigned.ys
+    unit/dsp/mae-techmap-efpga_acc_regi_unsigned.ys
+    unit/dsp/mae-techmap-efpga_add_nomap.ys
+    unit/dsp/mae-techmap-efpga_add_partial_pack.ys
 )
 
 foreach(test_script ${ALL_TESTS})

@@ -1,0 +1,13 @@
+plugin -i wildebeest
+
+read_verilog fmadd8.v
+read_verilog fmadd32.v
+
+hierarchy -auto-top
+
+synth_fpga -partname z1010 -opt delay -lut_size 6 
+
+max_height
+
+write_verilog -noattr -norename -noexpr -nohex -nodec z1010_netlist.vg
+

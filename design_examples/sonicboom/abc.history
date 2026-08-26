@@ -1,0 +1,19 @@
+source -s abc.rc
+read_blif small_delay_lut4.blif; &et -n -m; &ps
+read_blif small_delay_lut4.blif; &get -n -m; &ps
+read_blif out.blif; &get -n -m; &ps
+read_blif small_delay_lut4.blif 
+&get -n; &ps
+&sopb; &ps
+&if -sz -C 5 -K 7 -S 44 ; &ps;
+&sopb -C 5; &ps; time
+&st; &lf -K 4 -e -C 32; &ps; time
+&shrink; &lf -K 4 -e -C 32; &ps; time
+&sopb -C 12; &ps; time
+&shrink; &if -sz -C 5 -K 7 -S 44; &ps; time
+&mfs -W 2 -D 15 -M 600 ; &ps ; time
+&synch2 -W 2 -K 4; &ps; time
+&shrink; &blut -K 4; &ps; time
+&if -sz -C 5 -K 7 -S 44 ; &ps; time
+&shrink; &if -sz -C 5 -K 7 -S 44 ; &ps; time
+exit
