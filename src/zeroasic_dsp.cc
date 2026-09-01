@@ -149,7 +149,16 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm) {
       // Set resetn from ffP when A/B registers were not packed (the A/B block
       // above only runs when ffA && ffB, so resetn would otherwise be undriven
       // for the output-register-only case, e.g. efpga_mult_rego).
-      if (!st.ffA) {
+      //
+      // The test is on the whole A/B condition and not on ffA alone.  The .pmg
+      // matches ffA and ffB independently, so ffA can be matched with ffB not
+      // -- a multiplier with one registered operand and one combinational one,
+      // which is what a pre-adder feeding a multiplier looks like -- and then
+      // neither block assigned resetn.  The cell kept the unconnected
+      // MAE.resetn port, VPR's Netlist::compress() indexed pin_net_indices_ at
+      // -1 on the driverless net, and the run died as 'free(): invalid pointer'
+      // with nothing naming the cell.
+      if (!(st.ffA && st.ffB)) {
         if (st.ffP->type.in(ID($adff), ID($adffe))) {
           SigSpec arst = st.ffP->getPort(ID::ARST);
           bool rstpol_n = !st.ffP->getParam(ID::ARST_POLARITY).as_bool();
