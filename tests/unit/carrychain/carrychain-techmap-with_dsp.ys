@@ -1,0 +1,33 @@
+# yosys -m wildebeest -s carrychain-techmap-with_dsp.ys
+
+#Adder tech mapping is independent from DSP inference : with a config that
+#describes both, the multiply goes to the DSP and the unrelated adder to the
+#hard carry chain.
+
+read_verilog -lib ../data/carrychain/models/tech_carry.v
+
+read_verilog <<EOF
+module carrychain_with_dsp
+  # (
+     parameter WIDTH = 8
+     )
+   (
+    input [(WIDTH-1):0]    a,
+    input [(WIDTH-1):0]    b,
+    input [(WIDTH-1):0]    c,
+    input [(WIDTH-1):0]    d,
+    output [(2*WIDTH-1):0] p,
+    output [WIDTH:0]       s
+    );
+
+   assign p = a * b;
+   assign s = c + d;
+
+endmodule
+EOF
+
+synth_fpga -config ../data/carrychain/carrychain_dsp.json
+
+select -assert-count 1 */t:DSP48
+select -assert-count 9 */t:efpga_carry
+select -assert-count 0 */t:$alu

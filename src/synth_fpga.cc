@@ -99,6 +99,10 @@ struct SynthFpgaPass : public ScriptPass {
   dict<string, string> ys_dsps_parameter_string;
   string ys_dsps_pack_command = "";
 
+  // Adders (carry chain)
+  //
+  string ys_adders_techmap = "";
+
   // Methods
   //
   SynthFpgaPass() : ScriptPass("synth_fpga", "Zero Asic FPGA synthesis flow") {}
@@ -416,6 +420,11 @@ struct SynthFpgaPass : public ScriptPass {
     dict<string, string> dsps_parameter_string;
     string dsps_pack_command;
 
+    //
+    // Adder (carry chain) related
+    //
+    string adders_techmap;
+
   } config_type;
 
   // The global config object
@@ -498,6 +507,9 @@ struct SynthFpgaPass : public ScriptPass {
     log("\n");
     log("  DSP pack_command   : \n");
     log("                       %s\n", (G_config.dsps_pack_command).c_str());
+
+    log("  ADDER techmap      : \n");
+    log("                       %s\n", (G_config.adders_techmap).c_str());
 
     log(" ====================================================================="
         "=====\n");
@@ -594,6 +606,18 @@ struct SynthFpgaPass : public ScriptPass {
         }
 
         ys_dsps_pack_command = G_config.dsps_pack_command;
+      }
+
+      // Adder (carry chain) techmap setting.  Resolved relative to root_path
+      // just like the DSP/BRAM/DFF techmaps.
+      //
+      if (G_config.adders_techmap == "") {
+
+        ys_adders_techmap = "";
+
+      } else {
+
+        ys_adders_techmap = G_config.root_path + "/" + G_config.adders_techmap;
       }
 
       // We call the 'dsp_tech' through the config file mechanism as 'config'
@@ -1252,6 +1276,30 @@ struct SynthFpgaPass : public ScriptPass {
         log_error("'pack_command' associated to 'dsps' must be a string.\n");
       }
       G_config.dsps_pack_command = dsps_pack_command->data_string;
+    }
+
+    // adders (optional carry-chain hard adder techmap)
+    //
+    JsonNode *adders = NULL;
+    if (root.data_dict.count("adders") != 0) {
+      adders = root.data_dict.at("adders");
+      if (adders->type != 'D') {
+        log_error("'adders' must be a dictionnary.\n");
+      }
+    }
+
+    // Adder techmap file (optional : absence leaves adders in soft logic).
+    //
+    if (!adders || (adders->data_dict.count("techmap") == 0)) {
+      G_config.adders_techmap = "";
+
+    } else {
+
+      JsonNode *adders_techmap = adders->data_dict.at("techmap");
+      if (adders_techmap->type != 'S') {
+        log_error("'techmap' associated to 'adders' must be a string.\n");
+      }
+      G_config.adders_techmap = adders_techmap->data_string;
     }
 
     log_header(yosys_get_design(),
@@ -2900,6 +2948,29 @@ struct SynthFpgaPass : public ScriptPass {
   }
 
   // -------------------------
+  // infer_adders
+  // -------------------------
+  //
+  // Map arithmetic ($alu, produced by 'alumacc') onto the target hard
+  // carry-chain 'adder' primitive using the config-provided techmap file.
+  // Deliberately independent of DSP inference (not gated by 'no_dsp'), and must
+  // be called AFTER 'alumacc' (which creates the $alu cells) and BEFORE the
+  // generic 'techmap -map +/techmap.v' (which would otherwise lower $alu to
+  // soft gates).  A no-op when no adder techmap is configured.
+  //
+  void infer_adders() {
+    if (ys_adders_techmap == "") {
+      return;
+    }
+
+    run("stat");
+
+    run("techmap -map " + ys_adders_techmap);
+
+    run("stat");
+  }
+
+  // -------------------------
   // resynthesize
   // -------------------------
   // Avoid the heavy synthesis flow and performs a light structural synthesis
@@ -3603,6 +3674,12 @@ struct SynthFpgaPass : public ScriptPass {
     // to not handling efficiently parallel case.
     //
     run("pmux2shiftx");
+
+    // Map $alu onto the target hard carry-chain 'adder' primitive (if a config
+    // adder techmap is provided) before the generic techmap lowers it to soft
+    // gates.  No-op otherwise.
+    //
+    infer_adders();
 
     run("techmap -map +/techmap.v");
 

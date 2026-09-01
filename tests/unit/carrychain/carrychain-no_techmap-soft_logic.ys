@@ -1,0 +1,29 @@
+# yosys -m wildebeest -s carrychain-no_techmap-soft_logic.ys
+
+#Negative control : the very same adder, synthesized with a config that has
+#no 'adders' section, stays in soft logic.  That config differs from
+#'carrychain.json' by that section only.
+
+read_verilog -lib ../data/carrychain/models/tech_carry.v
+
+read_verilog <<EOF
+module carrychain_no_techmap
+  # (
+     parameter WIDTH = 8
+     )
+   (
+    input [(WIDTH-1):0] a,
+    input [(WIDTH-1):0] b,
+    output [WIDTH:0]    y
+    );
+
+   assign y = a + b;
+
+endmodule
+EOF
+
+synth_fpga -config ../data/carrychain/carrychain_no_adders.json
+
+select -assert-count 0 */t:efpga_carry
+select -assert-count 0 */t:$alu
+select -assert-min 1 */t:$lut

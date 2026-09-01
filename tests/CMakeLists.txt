@@ -37,6 +37,23 @@ set(ALL_TESTS
     unit/dsp/mae-techmap-efpga_mult_addc_regi_unsigned.ys
     unit/dsp/mae-techmap-efpga_mult_addc_rego_unsigned.ys
     unit/dsp/mae-techmap-efpga_mult_addc_regio_unsigned.ys
+    unit/carrychain/carrychain-techmap-add_unsigned.ys
+    unit/carrychain/carrychain-techmap-add_signed.ys
+    unit/carrychain/carrychain-techmap-add_carry_in.ys
+    unit/carrychain/carrychain-techmap-sub.ys
+    unit/carrychain/carrychain-techmap-increment.ys
+    unit/carrychain/carrychain-techmap-compare.ys
+    unit/carrychain/carrychain-techmap-accumulator.ys
+    unit/carrychain/carrychain-techmap-wide_add.ys
+    unit/carrychain/carrychain-techmap-two_adders.ys
+    unit/carrychain/carrychain-techmap-undeclared_primitive.ys
+    unit/carrychain/carrychain-techmap-with_dsp.ys
+    unit/carrychain/carrychain-techmap-with_no_dsp.ys
+    unit/carrychain/carrychain-techmap-abspath.ys
+    unit/carrychain/carrychain-techmap-min8_wide.ys
+    unit/carrychain/carrychain-techmap-min8_narrow.ys
+    unit/carrychain/carrychain-no_techmap-soft_logic.ys
+    unit/carrychain/carrychain-show_config.ys
     unit/dsp/mae-techmap-efpga_adder_unsigned.ys
     unit/dsp/mae-techmap-efpga_adder_regi_unsigned.ys
     unit/dsp/mae-techmap-efpga_adder_rego_unsigned.ys

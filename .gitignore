@@ -2,3 +2,4 @@
 .o
 build/
 netlist_synth_fpga.verilog
+tiny_area_lut4.blif
