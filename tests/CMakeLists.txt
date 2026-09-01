@@ -62,6 +62,9 @@ set(ALL_TESTS
     unit/dsp/mae-techmap-efpga_acc_regi_unsigned.ys
     unit/dsp/mae-techmap-efpga_add_nomap.ys
     unit/dsp/mae-techmap-efpga_add_partial_pack.ys
+    unit/dsp/mae-techmap-efpga_mult_rego_partial_pack.ys
+    unit/dsp/mae-techmap-efpga_mult_rego_partial_pack_mirror.ys
+    unit/dsp/mae-techmap-efpga_mult_addc_rego_partial_pack.ys
 )
 
 foreach(test_script ${ALL_TESTS})
