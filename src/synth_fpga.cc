@@ -64,12 +64,26 @@ struct SynthFpgaPass : public ScriptPass {
   bool no_dsp;
   bool no_bram;
   bool bram_with_init;
+  string logic_cost_rom;
+  bool logic_cost_rom_set;
   bool no_sdff;
   string dsp_tech;
   string bram_tech;
 
   pool<string> opt_options = {"fast", "area", "delay"};
-  pool<string> partnames = {"z1000", "z1010", "z1060"};
+  pool<string> partnames = {"z1000", "z1010", "z1060", "z1070"};
+
+  // Parts sharing the Platypus techlib/DSP setup.  'z1070' is the init-capable
+  // member of the family : it is 'z1060' plus a BRAM library that carries the
+  // memory contents through to the netlist.
+  //
+  pool<string> platypus_partnames = {"z1010", "z1060", "z1070"};
+
+  // Parts whose BRAM library can hold initial contents, so '-bram_with_init'
+  // means something.  On any other part the option is refused rather than
+  // quietly producing a zeroed BRAM.
+  //
+  pool<string> bram_init_partnames = {"z1070"};
   pool<string> dsp_arch = {"config", "zeroasic", "bare_mult", "mae"};
   pool<string> bram_arch = {"config", "zeroasic"};
 
@@ -113,7 +127,7 @@ struct SynthFpgaPass : public ScriptPass {
   // Json node that stores sections of the synthesis 'config' file.
   //
   struct JsonNode {
-    char type; // S=String, N=Number, A=Array, D=Dict
+    char type; // S=String, N=Number, B=Boolean, A=Array, D=Dict
     string data_string;
     int64_t data_number;
     vector<JsonNode *> data_array;
@@ -257,6 +271,29 @@ struct SynthFpgaPass : public ScriptPass {
 
             data_string += ch;
           }
+
+          break;
+        }
+
+        // JSON booleans.  'data_number' carries 0 or 1 so that a caller can
+        // treat a 'B' node like an 'N' node when it wants to be lenient.
+        //
+        if (ch == 't' || ch == 'f') {
+          const string word = (ch == 't') ? "true" : "false";
+
+          for (size_t i = 1; i < word.size(); i++) {
+            ch = f.get();
+
+            if (ch == EOF)
+              log_error("Unexpected EOF in JSON file '%s'.\n", cf_file.c_str());
+
+            if (ch != word[i])
+              log_error("Expected '%s' in config file '%s' at line %d.\n",
+                        word.c_str(), cf_file.c_str(), line);
+          }
+
+          type = 'B';
+          data_number = (word == "true") ? 1 : 0;
 
           break;
         }
@@ -410,6 +447,8 @@ struct SynthFpgaPass : public ScriptPass {
     vector<string> brams_memory_libmap;
     vector<string> brams_memory_libmap_parameters;
     vector<string> brams_techmap;
+    string brams_logic_cost_rom;
+    bool brams_with_init;
 
     //
     // DSP related
@@ -485,6 +524,16 @@ struct SynthFpgaPass : public ScriptPass {
     for (auto it : G_config.brams_techmap) {
       log("                       %s\n", it.c_str());
     }
+
+    log("  BRAM logic_cost_rom : \n");
+    log("                       %s\n",
+        (G_config.brams_logic_cost_rom == "")
+            ? "(default)"
+            : (G_config.brams_logic_cost_rom).c_str());
+
+    log("  BRAM bram_with_init : \n");
+    log("                       %s\n",
+        G_config.brams_with_init ? "true" : "false");
 
     log("  DSP family         : \n");
     log("                       %s\n", (G_config.dsps_family).c_str());
@@ -576,6 +625,38 @@ struct SynthFpgaPass : public ScriptPass {
           ys_brams_memory_libmap_parameters.push_back(param);
         }
       }
+
+      // The config file wins over '-logic_cost_rom', the way it does for the
+      // DFF features, but say so rather than dropping the option on the floor.
+      //
+      if ((G_config.brams_logic_cost_rom != "") && logic_cost_rom_set &&
+          (G_config.brams_logic_cost_rom != logic_cost_rom)) {
+        log_warning("Config file 'logic_cost_rom' (%s) overrides "
+                    "'-logic_cost_rom' (%s).\n",
+                    (G_config.brams_logic_cost_rom).c_str(),
+                    logic_cost_rom.c_str());
+      }
+
+      if (G_config.brams_logic_cost_rom != "") {
+        logic_cost_rom = G_config.brams_logic_cost_rom;
+      }
+
+      // Pushed last on purpose : 'memory_libmap' keeps the last occurrence of
+      // an option, so this wins over a '-logic-cost-rom' spelled out by hand in
+      // 'memory_libmap_parameters'.  Only pushed when it was actually asked
+      // for, so a config file that says nothing about it keeps whatever
+      // 'memory_libmap_parameters' holds and the default otherwise.
+      //
+      if ((G_config.brams_logic_cost_rom != "") || logic_cost_rom_set) {
+        ys_brams_memory_libmap_parameters.push_back("-logic-cost-rom " +
+                                                    logic_cost_rom);
+      }
+
+      // The config file declares whether its BRAM library is init capable.
+      // '-bram_with_init' on the command line still turns it on, so the two
+      // ways of asking agree rather than one silently cancelling the other.
+      //
+      bram_with_init = bram_with_init || G_config.brams_with_init;
 
       ys_brams_techmap.clear();
 
@@ -681,7 +762,7 @@ struct SynthFpgaPass : public ScriptPass {
 
       // Legal Flops for dfflegalize
       //
-      if ((part_name == "z1010") || (part_name == "z1060")) {
+      if (platypus_partnames.count(part_name)) {
 
         // Match legal flop types from config file exactly
         //
@@ -740,7 +821,7 @@ struct SynthFpgaPass : public ScriptPass {
       ys_brams_memory_libmap_parameters.clear();
       ys_brams_techmap.clear();
 
-      if ((part_name == "z1010") || (part_name == "z1060")) {
+      if (platypus_partnames.count(part_name)) {
 
         // ----------------------------
         // bram memory_libmap settings
@@ -757,7 +838,7 @@ struct SynthFpgaPass : public ScriptPass {
         }
         ys_brams_memory_libmap.push_back(brams_memory_libmap1);
 
-        string brams_memory_libmap_param1 = "-logic-cost-rom 0.5";
+        string brams_memory_libmap_param1 = "-logic-cost-rom " + logic_cost_rom;
         ys_brams_memory_libmap_parameters.push_back(brams_memory_libmap_param1);
 
         // ----------------------------
@@ -783,8 +864,7 @@ struct SynthFpgaPass : public ScriptPass {
       ys_dsps_parameter_string.clear();
       ys_dsps_pack_command = "";
 
-      if (((part_name == "z1010") || (part_name == "z1060")) &&
-          (dsp_tech == "zeroasic")) {
+      if (platypus_partnames.count(part_name) && (dsp_tech == "zeroasic")) {
 
         ys_dsps_techmap = "+/plugins/wildebeest/architecture/" + part_name +
                           "/dsp/zeroasic_dsp_map.v ";
@@ -805,7 +885,7 @@ struct SynthFpgaPass : public ScriptPass {
 
         return;
 
-      } else if (((part_name == "z1010") || (part_name == "z1060")) &&
+      } else if (platypus_partnames.count(part_name) &&
                  (dsp_tech == "bare_mult")) {
 
         ys_dsps_techmap = "+/plugins/wildebeest/architecture/" + part_name +
@@ -821,7 +901,7 @@ struct SynthFpgaPass : public ScriptPass {
         return;
       }
 
-      if ((part_name == "z1010") || (part_name == "z1060")) {
+      if (platypus_partnames.count(part_name)) {
         log_warning("Could not find any specific DSP tech settings with "
                     "'dsp_tech' = '%s'\n",
                     dsp_tech.c_str());
@@ -850,6 +930,26 @@ struct SynthFpgaPass : public ScriptPass {
         log("               - %s\n", dsp.c_str());
       }
       log_error("Please select a correct DSP architecture.\n");
+    }
+
+    // '-bram_with_init' only means something on a part whose BRAM library can
+    // actually hold initial contents.  Refusing it here matters more than it
+    // looks : a library that drops the contents still places, routes and
+    // programs, and the failure only shows up as a BRAM full of zeros.
+    //
+    // The config file path is exempt because there the caller supplies its own
+    // memory library and techmap, so the part name says nothing about whether
+    // they are init capable.
+    //
+    if (bram_with_init && !config_file_success &&
+        (bram_init_partnames.count(part_name) == 0)) {
+      log("ERROR: '-bram_with_init' is not supported for partname '%s'.\n",
+          part_name.c_str());
+      log("       Partnames with an init capable BRAM library are :\n");
+      for (auto part : bram_init_partnames) {
+        log("               - %s\n", part.c_str());
+      }
+      log_error("Please select a partname with BRAM init support.\n");
     }
 
     if (bram_arch.count(bram_tech) == 0) {
@@ -1159,6 +1259,48 @@ struct SynthFpgaPass : public ScriptPass {
         (G_config.brams_memory_libmap_parameters)
             .push_back(memory_libmap_parameters_path_str);
       }
+    }
+
+    // 'logic_cost_rom' : cost per bit of a write-portless memory left in soft
+    // logic.  Raising it pushes ROMs into BRAM.  Written straight through to
+    // 'memory_libmap -logic-cost-rom'.  The JSON reader turns a real such as
+    // 0.5 into a string and an integer such as 1 into a number, so accept both.
+    //
+    if (!brams || (brams->data_dict.count("logic_cost_rom") == 0)) {
+      G_config.brams_logic_cost_rom = "";
+
+    } else {
+
+      JsonNode *logic_cost_rom = brams->data_dict.at("logic_cost_rom");
+
+      if (logic_cost_rom->type == 'S') {
+        G_config.brams_logic_cost_rom = logic_cost_rom->data_string;
+      } else if (logic_cost_rom->type == 'N') {
+        G_config.brams_logic_cost_rom =
+            std::to_string(logic_cost_rom->data_number);
+      } else {
+        log_error("'logic_cost_rom' associated to 'brams' must be a number.\n");
+      }
+    }
+
+    // 'bram_with_init' : declares that the memory library and techmap given
+    // above carry initial memory contents through to the netlist.  It selects
+    // no files -- those are the two keys above -- it tells us to check that the
+    // contents actually arrived, because every way of losing them looks
+    // identical downstream and none of them is an error on its own.
+    //
+    if (!brams || (brams->data_dict.count("bram_with_init") == 0)) {
+      G_config.brams_with_init = false;
+
+    } else {
+
+      JsonNode *bram_with_init_node = brams->data_dict.at("bram_with_init");
+
+      if ((bram_with_init_node->type != 'B') &&
+          (bram_with_init_node->type != 'N')) {
+        log_error("'bram_with_init' associated to 'brams' must be a boolean.\n");
+      }
+      G_config.brams_with_init = (bram_with_init_node->data_number != 0);
     }
 
     if (!brams || (brams->data_dict.count("techmap") == 0)) {
@@ -2805,6 +2947,329 @@ struct SynthFpgaPass : public ScriptPass {
   }
 
   // -------------------------
+  // BRAM init tracking
+  // -------------------------
+  // Initialized memory contents reach the netlist as an 'INIT' parameter that
+  // 'memory_libmap' attaches to the mapped memory cell and that the BRAM
+  // techmap has to forward to the architecture macro.
+  //
+  // Every way of losing it on that path shows up downstream as the very same
+  // thing -- a netlist with no 'INIT' at all -- and not one of them is an error
+  // on its own.  The design still maps, places, routes and programs; the BRAM
+  // just comes up holding zeros, which is a wrong answer rather than a failure.
+  // So we record what arrived after each step and make a loss name the step
+  // that lost it.
+  //
+  // Only active when BRAM init was actually asked for, either with
+  // '-bram_with_init' or with 'bram_with_init' in the config file.
+
+  typedef enum e_bram_init_stage {
+    BRAM_INIT_AFTER_LIBMAP,
+    BRAM_INIT_AFTER_TECHMAP,
+    BRAM_INIT_END_OF_FLOW
+  } bram_init_stage;
+
+  // Cell name -> width of the 'INIT' parameter it carried when last seen.
+  //
+  dict<string, int> bram_init_cells;
+
+  // 'Const::as_string' is the one bit accessor spelled the same way across all
+  // the Yosys versions this plugin builds against.  It reads MSB first, so bit
+  // index 'i' of the parameter is at position 'size - 1 - i'.
+  //
+  // RTLIL names keep their '\\' or '$' marker; drop the '\\' so that the log
+  // reads like the source.
+  //
+  static string bram_init_pretty(const string &name) {
+    if ((GetSize(name) > 1) && (name[0] == '\\')) {
+      return name.substr(1);
+    }
+    return name;
+  }
+
+  static int bram_init_set_bits(const string &bits) {
+    int count = 0;
+    for (auto ch : bits) {
+      if (ch == '1') {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  static int bram_init_lowest_set(const string &bits) {
+    for (int i = GetSize(bits) - 1; i >= 0; i--) {
+      if (bits[i] == '1') {
+        return GetSize(bits) - 1 - i;
+      }
+    }
+    return -1;
+  }
+
+  static int bram_init_highest_set(const string &bits) {
+    for (int i = 0; i < GetSize(bits); i++) {
+      if (bits[i] == '1') {
+        return GetSize(bits) - 1 - i;
+      }
+    }
+    return -1;
+  }
+
+  // Collect the cells carrying a non empty 'INIT'.  Before the BRAM techmap the
+  // mapped memories are the '$__...' cells 'memory_libmap' produced, so we can
+  // tell them from anything else that happens to use an 'INIT' parameter; after
+  // it we only ever look up names we recorded here.
+  //
+  dict<string, pair<string, string>>
+  collect_bram_init(bool mapped_memories_only) {
+    dict<string, pair<string, string>> result; // name -> (type, INIT bits)
+
+    RTLIL::Design *design = yosys_get_design();
+
+    if (!design) {
+      return result;
+    }
+
+    for (auto module : design->modules()) {
+      for (auto cell : module->cells()) {
+
+        if (!cell->hasParam(ID::INIT)) {
+          continue;
+        }
+
+        if (mapped_memories_only &&
+            (cell->type.str().compare(0, 3, "$__") != 0)) {
+          continue;
+        }
+
+        RTLIL::Const init = cell->getParam(ID::INIT);
+
+        if (init.size() == 0) {
+          continue;
+        }
+
+        result[cell->name.str()] =
+            std::make_pair(cell->type.str(), init.as_string());
+      }
+    }
+
+    return result;
+  }
+
+  // Is there still a memory left for the flops, and does it hold contents ?
+  // That is a legal outcome -- soft logic is sometimes the right answer -- so it
+  // is reported rather than refused, but it is also the single most likely
+  // reason for an empty netlist, hence the pointer at what decides it.
+  //
+  bool has_initialized_unmapped_memory() {
+    RTLIL::Design *design = yosys_get_design();
+
+    if (!design) {
+      return false;
+    }
+
+    for (auto module : design->modules()) {
+      for (auto cell : module->cells()) {
+
+        if ((cell->type != ID($mem)) && (cell->type != ID($mem_v2))) {
+          continue;
+        }
+
+        if (!cell->hasParam(ID::INIT)) {
+          continue;
+        }
+
+        string bits = cell->getParam(ID::INIT).as_string();
+
+        if (bram_init_set_bits(bits) > 0) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  // Is a cell of that name still in the design, whatever parameters it has
+  // left ?  This is what tells a dropped 'INIT' apart from a cell that was
+  // renamed or folded away : only the first is proof that something took the
+  // memory contents off a block that is still there.
+  //
+  bool design_has_cell(const string &name) {
+    RTLIL::Design *design = yosys_get_design();
+
+    if (!design) {
+      return false;
+    }
+
+    for (auto module : design->modules()) {
+      for (auto cell : module->cells()) {
+        if (cell->name.str() == name) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  void report_bram_init_cell(const string &type, const string &name,
+                             const string &bits) {
+    int set_bits = bram_init_set_bits(bits);
+
+    if (set_bits == 0) {
+      log("BRAM INIT: %s %s: width %d, 0 set bits\n",
+          bram_init_pretty(type).c_str(), bram_init_pretty(name).c_str(),
+          GetSize(bits));
+      return;
+    }
+
+    log("BRAM INIT: %s %s: width %d, %d set bits, lowest %d, highest %d\n",
+        bram_init_pretty(type).c_str(), bram_init_pretty(name).c_str(),
+        GetSize(bits), set_bits, bram_init_lowest_set(bits),
+        bram_init_highest_set(bits));
+  }
+
+  string bram_init_techmap_files() {
+    string files = "";
+
+    for (auto it : ys_brams_techmap) {
+      files += (files == "") ? "" : ", ";
+      files += it;
+    }
+
+    return files;
+  }
+
+  string bram_init_libmap_files() {
+    string files = "";
+
+    for (auto it : ys_brams_memory_libmap) {
+      files += (files == "") ? "" : ", ";
+      files += it;
+    }
+
+    return files;
+  }
+
+  void check_bram_init(bram_init_stage stage) {
+    if (!bram_with_init) {
+      return;
+    }
+
+    if (stage == BRAM_INIT_AFTER_LIBMAP) {
+
+      bram_init_cells.clear();
+
+      for (auto it : collect_bram_init(true /* mapped_memories_only */)) {
+        bram_init_cells[it.first] = GetSize(it.second.second);
+      }
+
+      if (bram_init_cells.size() != 0) {
+        return;
+      }
+
+      if (!has_initialized_unmapped_memory()) {
+        return;
+      }
+
+      // The memories kept their contents but none of them reached a BRAM.
+      //
+      log_warning(
+          "BRAM init was requested but no memory was mapped to a BRAM "
+          "carrying an 'INIT' parameter.\n"
+          "         The memories are left in soft logic, which is legal but "
+          "means the\n"
+          "         initial contents are implemented with flops rather than "
+          "with BRAM.\n"
+          "         This is decided by 'memory_libmap', so check the 'init' "
+          "keyword of the\n"
+          "         memory library '%s'\n"
+          "         -- it must be 'no_undef', never 'none' and never 'any' --\n"
+          "         and the '-logic-cost-rom' value, currently %s.\n",
+          bram_init_libmap_files().c_str(), logic_cost_rom.c_str());
+
+      return;
+    }
+
+    if (bram_init_cells.size() == 0) {
+      return;
+    }
+
+    dict<string, pair<string, string>> current = collect_bram_init(false);
+
+    // Built up as we go and swapped in at the end rather than written through,
+    // so that the loop is not walking a container it is also changing.
+    //
+    dict<string, int> still_carrying;
+
+    for (auto it : bram_init_cells) {
+      string name = it.first;
+      int expected_width = it.second;
+
+      if (current.count(name) == 0) {
+
+        // The cell may legitimately have been renamed or folded away late in
+        // the flow.  A cell that is still there and has lost the parameter is
+        // the only thing that proves something dropped it.
+        //
+        if (!design_has_cell(name)) {
+          continue;
+        }
+
+        if (stage == BRAM_INIT_AFTER_TECHMAP) {
+          log_error(
+              "BRAM init was requested but cell '%s' lost its 'INIT' "
+              "parameter\n"
+              "       across the BRAM techmap.  The techmap has to forward "
+              "'INIT' to the\n"
+              "       macro it instantiates, as in\n"
+              "           spram_1024x16 #(.INIT(INIT)) _TECHMAP_REPLACE_ "
+              "(...)\n"
+              "       Fix the techmap file(s) : %s\n",
+              bram_init_pretty(name).c_str(),
+              bram_init_techmap_files().c_str());
+        }
+
+        // Reached only at the end of the flow : 'log_error' does not return.
+        //
+        log_error("BRAM init was requested but cell '%s' lost its 'INIT' "
+                  "parameter\n"
+                  "       between BRAM inference and the end of synthesis. One "
+                  "of the passes\n"
+                  "       run in between -- 'memory_map', 'simplemap', the "
+                  "'opt' rounds,\n"
+                  "       'obs_clean'/'opt_clean' -- dropped it. Downstream "
+                  "this is\n"
+                  "       indistinguishable from a techmap that never "
+                  "forwarded it.\n",
+                  bram_init_pretty(name).c_str());
+      }
+
+      int width = GetSize(current.at(name).second);
+
+      if (width < expected_width) {
+        log_error("BRAM init was requested but cell '%s' had its 'INIT' "
+                  "parameter truncated\n"
+                  "       from %d bits to %d bits %s.\n",
+                  bram_init_pretty(name).c_str(), expected_width, width,
+                  (stage == BRAM_INIT_AFTER_TECHMAP)
+                      ? "across the BRAM techmap"
+                      : "by an optimization pass after BRAM inference");
+      }
+
+      still_carrying[name] = width;
+
+      if (stage == BRAM_INIT_AFTER_TECHMAP) {
+        report_bram_init_cell(current.at(name).first, name,
+                              current.at(name).second);
+      }
+    }
+
+    bram_init_cells.swap(still_carrying);
+  }
+
+  // -------------------------
   // infer_BRAMs
   // -------------------------
   // In order that BRAM inference kicks in, we need to have both
@@ -2863,10 +3328,14 @@ struct SynthFpgaPass : public ScriptPass {
 
     run(sc_syn_bram_memory_libmap);
 
+    check_bram_init(BRAM_INIT_AFTER_LIBMAP);
+
     log("\nWARNING: Make sure you are using the right 'partname' for the BRAM "
         "inference in case of failure.\n");
 
     run(sc_syn_bram_techmap);
+
+    check_bram_init(BRAM_INIT_AFTER_TECHMAP);
 
     run("stat");
   }
@@ -3110,8 +3579,11 @@ struct SynthFpgaPass : public ScriptPass {
     log("\n");
 
     log("    -partname\n");
-    log("        Specifies the Architecture partname used. 'z1010' is used by "
-        "default.\n");
+    log("        Specifies the Architecture partname used : 'z1000', 'z1010', "
+        "'z1060'\n");
+    log("        or 'z1070'. 'z1010' is used by default. 'z1070' is 'z1060' "
+        "with a BRAM\n");
+    log("        library that can hold initial memory contents.\n");
     log("        partname is not case sensitive.\n");
     log("\n");
 
@@ -3126,8 +3598,21 @@ struct SynthFpgaPass : public ScriptPass {
     log("\n");
 
     log("    -bram_with_init\n");
-    log("        Use BRAM with init feature. By default BRAM has no init "
+    log("        Use BRAM with init feature so that initialized memories keep "
+        "their\n");
+    log("        contents in the netlist. By default BRAM has no init "
         "feature.\n");
+    log("        Requires '-partname z1070'. Through a config file, set "
+        "'bram_with_init'\n");
+    log("        in the 'brams' section instead.\n");
+    log("\n");
+
+    log("    -logic_cost_rom <num>\n");
+    log("        Cost per bit of a memory with no write port left in soft "
+        "logic. Raising\n");
+    log("        it pushes ROMs into BRAM. Default is 0.5. Through a config "
+        "file, set\n");
+    log("        'logic_cost_rom' in the 'brams' section instead.\n");
     log("\n");
 
     log("    -no_dsp\n");
@@ -3287,6 +3772,8 @@ struct SynthFpgaPass : public ScriptPass {
     bram_tech = "zeroasic";
     no_bram = false;
     bram_with_init = false;
+    logic_cost_rom = "0.5";
+    logic_cost_rom_set = false;
     no_sdff = false;
 
     resynthesis = false;
@@ -3382,6 +3869,12 @@ struct SynthFpgaPass : public ScriptPass {
 
       if (args[argidx] == "-bram_with_init") {
         bram_with_init = true;
+        continue;
+      }
+
+      if (args[argidx] == "-logic_cost_rom" && argidx + 1 < args.size()) {
+        logic_cost_rom = args[++argidx];
+        logic_cost_rom_set = true;
         continue;
       }
 
@@ -3817,6 +4310,14 @@ struct SynthFpgaPass : public ScriptPass {
     //
     analyze_undriven_nets(yosys_get_design()->top_module(),
                           true /* connect undriven nets to undef */);
+
+    // Last look at the BRAM contents before the netlist goes back to the
+    // caller : everything between BRAM inference and here -- 'memory_map',
+    // 'simplemap', the 'opt' rounds, 'obs_clean'/'opt_clean' -- had a chance to
+    // drop or shorten the 'INIT' parameter, and downstream that is
+    // indistinguishable from the techmap never having forwarded it.
+    //
+    check_bram_init(BRAM_INIT_END_OF_FLOW);
 
     // tries to give public names instead of using $abc generic names.
     // Right now this procedure blows up runtime for medium/big designs.

@@ -1,0 +1,43 @@
+# yosys -m wildebeest -s bram-init-ff-fallback.ys
+#
+# Soft logic is sometimes the right answer, and asking for BRAM init must not
+# turn that into an error.
+#
+# A 16x4 ROM costs 64 bits.  At the default '-logic-cost-rom 0.5' that is 32
+# against the block's cost of 48, so 'memory_libmap' leaves it in soft logic and
+# no BRAM cell is created at all.  Nothing was dropped and nothing is wrong, so
+# the run has to succeed -- but it is also the single most common reason for a
+# netlist with no memory contents in it, so it is reported, and the report has to
+# point at what actually decided it rather than just saying init is missing.
+#
+# The raised-cost half of this is bram-init-logic_cost_rom.ys.
+
+read_verilog <<VEOF
+module rom_tiny (
+    input            clk,
+    input      [3:0] addr,
+    output reg [3:0] dout
+);
+   reg [3:0] mem [0:15];
+
+   initial begin
+      mem[0]  = 4'h3; mem[1]  = 4'hc; mem[2]  = 4'h7; mem[3]  = 4'h1;
+      mem[4]  = 4'h9; mem[5]  = 4'h4; mem[6]  = 4'he; mem[7]  = 4'h2;
+      mem[8]  = 4'hb; mem[9]  = 4'h8; mem[10] = 4'h5; mem[11] = 4'hf;
+      mem[12] = 4'h0; mem[13] = 4'ha; mem[14] = 4'h6; mem[15] = 4'hd;
+   end
+
+   always @(posedge clk) begin
+      dout <= mem[addr];
+   end
+
+endmodule
+VEOF
+
+logger -expect warning "BRAM init was requested but no memory was mapped to a BRAM carrying an 'INIT' parameter." 1
+
+synth_fpga -partname z1070 -bram_with_init
+
+# Left in soft logic, so there is no BRAM at all -- and no error.
+select -assert-count 0 */t:spram_4096x4
+select -assert-min 1 */t:$lut

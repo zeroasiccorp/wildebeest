@@ -1,0 +1,35 @@
+# yosys -m wildebeest -s bram-init-uninitialized.ys
+#
+# A memory with no initial contents must still map, and must still carry a full
+# width all-zero 'INIT'.
+#
+# This is the regression that guards the other direction of W-2 : 'no_undef'
+# must not make an uninitialised memory unmappable, and must not shorten the
+# parameter to nothing.  All-zero is also the honest value here, because that is
+# what the hardware macro comes up holding.
+
+read_verilog <<VEOF
+module ram_no_init (
+    input             clk,
+    input             we,
+    input      [9:0]  addr,
+    input      [15:0] din,
+    output reg [15:0] dout
+);
+   reg [15:0] mem [0:1023];
+
+   always @(posedge clk) begin
+      if (we) begin
+         mem[addr] <= din;
+      end
+      dout <= mem[addr];
+   end
+
+endmodule
+VEOF
+
+logger -expect log "BRAM INIT: spram_1024x16 .*: width 16384, 0 set bits" 1
+
+synth_fpga -partname z1070 -bram_with_init
+
+select -assert-count 1 */t:spram_1024x16
