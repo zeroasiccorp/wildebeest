@@ -65,6 +65,10 @@ set(ALL_TESTS
     unit/dsp/mae-techmap-efpga_mult_rego_partial_pack.ys
     unit/dsp/mae-techmap-efpga_mult_rego_partial_pack_mirror.ys
     unit/dsp/mae-techmap-efpga_mult_addc_rego_partial_pack.ys
+    unit/dsp/mae-techmap-phase_split.ys
+    unit/dsp/mae-techmap-phase_mult_only.ys
+    unit/dsp/mae-techmap-phase_add_only.ys
+    unit/dsp/mae-techmap-phase_add_default.ys
 )
 
 foreach(test_script ${ALL_TESTS})

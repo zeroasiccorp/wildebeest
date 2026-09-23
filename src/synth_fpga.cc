@@ -2776,14 +2776,15 @@ struct SynthFpgaPass : public ScriptPass {
     run("dfflegalize" + legalize_list);
   }
 
-  bool has_cell_type(RTLIL::Design *design, const std::string &target_type) {
+  int count_cell_type(RTLIL::Design *design, const std::string &target_type) {
+    int count = 0;
     for (auto module : design->modules()) {
       for (auto cell : module->cells()) {
         if (cell->type.str() == target_type)
-          return true;
+          count++;
       }
     }
-    return false;
+    return count;
   }
 
   // -------------------------
@@ -2886,6 +2887,12 @@ struct SynthFpgaPass : public ScriptPass {
 
     run("stat");
 
+    // Phase 1: multipliers.
+    //
+    // The '$mul' driven techmap creates one '\MAE' per multiplier it maps,
+    // and the multiplier pack only absorbs registers and pre/post-adders into
+    // those MAEs, so it never creates one.
+    //
     run("memory_dff"); // 'dsp' will merge registers, reserve memory port
                        // registers first
 
@@ -2899,8 +2906,6 @@ struct SynthFpgaPass : public ScriptPass {
     for (auto it : ys_dsps_parameter_string) {
       sc_syn_dsps_techmap += "-D " + it.first + "=" + it.second + " ";
     }
-
-    string sc_syn_dsps_pack_command = ys_dsps_pack_command;
 
 #if 0
      log("Call %s\n", sc_syn_dsps_techmap.c_str());
@@ -2919,16 +2924,28 @@ struct SynthFpgaPass : public ScriptPass {
     run("wreduce");
     run("select -clear");
 
-    // Call the DSP packer command
+    // The phase options are 'zeroasic_dsp' options; the pack command is
+    // configurable, so do not hand them to anything else. Any other pack
+    // command runs once, as a whole, in the multiplier phase.
     //
-    if ((sc_syn_dsps_pack_command != "") && (!no_dsp_pack)) {
-      // '-no_add' is a 'zeroasic_dsp' option; the pack command is
-      // configurable, so do not hand it to anything else.
-      if (no_dsp_add &&
-          (sc_syn_dsps_pack_command.rfind("zeroasic_dsp", 0) == 0)) {
-        sc_syn_dsps_pack_command += " -no_add";
-      }
-      run(sc_syn_dsps_pack_command);
+    string sc_syn_dsps_pack_command = ys_dsps_pack_command;
+    bool run_pack = (sc_syn_dsps_pack_command != "") && !no_dsp_pack;
+    bool phased_pack =
+        (sc_syn_dsps_pack_command.rfind("zeroasic_dsp", 0) == 0);
+
+    if (run_pack) {
+      run(sc_syn_dsps_pack_command + (phased_pack ? " -mult_only" : ""));
+    }
+
+    // Phase boundary: every MAE that exists now is one the multipliers use.
+    //
+    int nb_mult_dsps = count_cell_type(yosys_get_design(), "\\MAE");
+    log("DSPs used by multipliers: %d\n", nb_mult_dsps);
+
+    // Phase 2: add-only modes, from the '$add' cells phase 1 left over.
+    //
+    if (run_pack && phased_pack && !no_dsp_add) {
+      run(sc_syn_dsps_pack_command + " -add_only");
     }
 
     std::string ys_dsps_techmap_modes = "+/plugins/wildebeest/architecture/" +
@@ -2942,7 +2959,7 @@ struct SynthFpgaPass : public ScriptPass {
 
     run("stat");
 
-    if (has_cell_type(yosys_get_design(), "\\MAE")) {
+    if (count_cell_type(yosys_get_design(), "\\MAE") > 0) {
       log_error("Could not techmap DSP to a valid configuration.\n");
     }
   }
@@ -3141,13 +3158,19 @@ struct SynthFpgaPass : public ScriptPass {
     log("\n");
 
     log("    -no_dsp_pack\n");
-    log("        Disable DSP packing.\n");
+    log("        Disable DSP packing. Multipliers are still mapped to DSPs by "
+        "the\n");
+    log("        techmap, but registers and pre/post-adders are not packed into "
+        "them,\n");
+    log("        and no add-only DSP mode is inferred (as with -no_dsp_add).\n");
     log("\n");
 
     log("    -no_dsp_add\n");
     log("        Disable inference of the add-only DSP modes, leaving adders "
         "and\n");
-    log("        accumulators in the fabric.\n");
+    log("        accumulators in the fabric. Multiplier packing, including "
+        "post-adders\n");
+    log("        absorbed into a multiplier's DSP, is unaffected.\n");
     log("\n");
 
     log("    -fsm_encoding [one-hot, binary]\n");
