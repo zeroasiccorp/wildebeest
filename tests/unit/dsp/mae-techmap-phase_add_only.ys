@@ -1,0 +1,45 @@
+# yosys -m wildebeest -s mae-techmap-phase_add_only.ys
+#
+# 'zeroasic_dsp -add_only' runs the add-only phase alone: it seeds an add-only
+# MAE from each eligible '$add' and does not touch the multiplies, which stay
+# '$mul' since no multiplier techmap ran here. The multiply-add's '$add' is
+# 40 bits wide, wider than the 18 bit MAE operands, so it stays too.
+read_verilog <<EOF
+module mult_and_add
+   (
+    input signed [17:0]  mul_a,
+    input signed [17:0]  mul_b,
+    output [35:0]        mul_y,
+    input signed [17:0]  mac_a,
+    input signed [17:0]  mac_b,
+    input signed [39:0]  mac_c,
+    output [39:0]        mac_y,
+    input signed [17:0]  add_a,
+    input signed [17:0]  add_b,
+    output signed [39:0] add_y
+    );
+
+   assign mul_y = mul_a * mul_b;
+   assign mac_y = mac_a * mac_b + mac_c;
+   assign add_y = add_a + add_b;
+
+endmodule
+EOF
+
+proc
+flatten
+opt
+wreduce
+opt_clean
+
+zeroasic_dsp -add_only
+techmap -map ../../../architecture/z1010/dsp/zeroasic_dsp_map_mode.v
+
+select -assert-count 1 */t:efpga_adder
+select -assert-count 0 */t:efpga_m*
+select -assert-count 2 */t:$mul
+select -assert-count 0 */t:MAE
+
+# The two phase options are mutually exclusive.
+logger -expect error "mutually exclusive" 1
+zeroasic_dsp -mult_only -add_only

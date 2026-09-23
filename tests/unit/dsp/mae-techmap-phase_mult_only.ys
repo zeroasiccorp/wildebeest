@@ -1,0 +1,49 @@
+# yosys -m wildebeest -s mae-techmap-phase_mult_only.ys
+#
+# 'zeroasic_dsp -mult_only' runs the multiplier phase alone: it packs the post
+# adder of the multiply-add into the MAE the techmap made for it, and leaves
+# the plain add in the fabric for a later add-only phase.
+read_verilog <<EOF
+module mult_and_add
+   (
+    input signed [17:0]  mul_a,
+    input signed [17:0]  mul_b,
+    output [35:0]        mul_y,
+    input signed [17:0]  mac_a,
+    input signed [17:0]  mac_b,
+    input signed [39:0]  mac_c,
+    output [39:0]        mac_y,
+    input signed [17:0]  add_a,
+    input signed [17:0]  add_b,
+    output signed [39:0] add_y
+    );
+
+   assign mul_y = mul_a * mul_b;
+   assign mac_y = mac_a * mac_b + mac_c;
+   assign add_y = add_a + add_b;
+
+endmodule
+EOF
+
+proc
+flatten
+opt
+wreduce
+opt_clean
+
+memory_dff
+techmap -map +/mul2dsp.v -map ../../../architecture/z1010/dsp/zeroasic_dsp_map.v -D DSP_A_MAXWIDTH=18 -D DSP_B_MAXWIDTH=18 -D DSP_A_MAXWIDTH_PARTIAL=18 -D DSP_A_MINWIDTH=2 -D DSP_B_MINWIDTH=2 -D DSP_Y_MINWIDTH=8 -D DSP_SIGNEDONLY=1 -D DSP_NAME=$__MAE__
+select a:mul2dsp
+setattr -unset mul2dsp
+opt_expr -fine
+wreduce
+select -clear
+
+zeroasic_dsp -mult_only
+techmap -map ../../../architecture/z1010/dsp/zeroasic_dsp_map_mode.v
+
+select -assert-count 1 */t:efpga_mult
+select -assert-count 1 */t:efpga_mult_addc
+select -assert-count 0 */t:efpga_a*
+select -assert-count 1 */t:$add
+select -assert-count 0 */t:MAE
