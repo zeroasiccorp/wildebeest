@@ -1,0 +1,44 @@
+# yosys -m wildebeest -s bram-init-config-memlib-none.ys
+#
+# W-5, at the memory library : when init was requested but no memory reached a
+# BRAM at all, the report must point at what actually decided that.
+#
+# Here the techmap is the init-capable one but the memory library declares
+# 'init none', so 'memory_libmap' drops the block as a candidate before geometry
+# and leaves the memory in soft logic.  Downstream that is indistinguishable
+# from a techmap that dropped the parameter -- in both cases the netlist simply
+# has no memory contents in it -- so a message that only said "init missing"
+# would send the reader looking in the wrong file.
+#
+# This is a warning and not an error on purpose : soft logic is a legal outcome,
+# and the same situation arises whenever a memory is genuinely too small to be
+# worth a block.
+
+read_verilog <<VEOF
+module rom_tiny (
+    input            clk,
+    input      [3:0] addr,
+    output reg [3:0] dout
+);
+   reg [3:0] mem [0:15];
+
+   initial begin
+      mem[0]  = 4'h3; mem[1]  = 4'hc; mem[2]  = 4'h7; mem[3]  = 4'h1;
+      mem[4]  = 4'h9; mem[5]  = 4'h4; mem[6]  = 4'he; mem[7]  = 4'h2;
+      mem[8]  = 4'hb; mem[9]  = 4'h8; mem[10] = 4'h5; mem[11] = 4'hf;
+      mem[12] = 4'h0; mem[13] = 4'ha; mem[14] = 4'h6; mem[15] = 4'hd;
+   end
+
+   always @(posedge clk) begin
+      dout <= mem[addr];
+   end
+
+endmodule
+VEOF
+
+logger -expect warning "check the 'init' keyword of the" 1
+
+synth_fpga -config ../data/bram/bram_init_memlib_none.json
+
+# Left in soft logic, so there is no BRAM -- but the run still succeeds.
+select -assert-count 0 */t:spram_4096x4

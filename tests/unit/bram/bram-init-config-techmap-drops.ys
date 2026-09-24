@@ -1,0 +1,44 @@
+# yosys -m wildebeest -s bram-init-config-techmap-drops.ys
+#
+# W-5, at the techmap : a BRAM techmap that declares an 'INIT' parameter and
+# then never forwards it must be caught, and the message must say so.
+#
+# This is the exact shape of the half-finished with-init techmap this work
+# replaces, and it is worth its own test because it is completely silent.
+# 'memory_libmap' attaches the contents, the techmap swallows them, and the
+# design still maps, places, routes and programs -- the BRAM just comes up
+# holding zeros.  Every other way of losing the contents looks identical from
+# downstream, so the message has to name the techmap rather than only say that
+# init is missing.
+#
+# The fixture is '../data/bram/tech_bram_drops_init.v', which is the shipped
+# z1070 techmap with the '#(.INIT(INIT))' removed from every replacement.
+#
+# Declaring no parameter at all is a different bug and needs no test here :
+# yosys itself refuses it with "Can't find object for defparam `INIT`".
+
+read_verilog <<VEOF
+module rom_tiny (
+    input            clk,
+    input      [3:0] addr,
+    output reg [3:0] dout
+);
+   reg [3:0] mem [0:15];
+
+   initial begin
+      mem[0]  = 4'h3; mem[1]  = 4'hc; mem[2]  = 4'h7; mem[3]  = 4'h1;
+      mem[4]  = 4'h9; mem[5]  = 4'h4; mem[6]  = 4'he; mem[7]  = 4'h2;
+      mem[8]  = 4'hb; mem[9]  = 4'h8; mem[10] = 4'h5; mem[11] = 4'hf;
+      mem[12] = 4'h0; mem[13] = 4'ha; mem[14] = 4'h6; mem[15] = 4'hd;
+   end
+
+   always @(posedge clk) begin
+      dout <= mem[addr];
+   end
+
+endmodule
+VEOF
+
+logger -expect error "lost its 'INIT' parameter" 1
+
+synth_fpga -config ../data/bram/bram_init_techmap_drops.json

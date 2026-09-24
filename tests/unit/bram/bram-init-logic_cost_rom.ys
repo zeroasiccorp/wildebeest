@@ -1,0 +1,42 @@
+# yosys -m wildebeest -s bram-init-logic_cost_rom.ys
+#
+# W-3 : '-logic-cost-rom' must be settable rather than hardwired.
+#
+# It is the cost per bit of a memory with no write port left in soft logic, and
+# it is what decides whether a small ROM becomes a BRAM.  The default of 0.5 is
+# right for a BRAM that cannot hold contents -- there is no point spending a
+# block on a ROM it would come up unable to serve -- and wrong the moment the
+# BRAM can hold them.
+#
+# The 16x4 ROM below is the size that discriminates : 64 bits at 0.5 is 32
+# against the block cost of 48, so it stays in soft logic (that is
+# bram-init-ff-fallback.ys), and at 1.0 it is 64 against 48, so it maps.  Bigger
+# ROMs map either way and would prove nothing.
+
+read_verilog <<VEOF
+module rom_tiny (
+    input            clk,
+    input      [3:0] addr,
+    output reg [3:0] dout
+);
+   reg [3:0] mem [0:15];
+
+   initial begin
+      mem[0]  = 4'h3; mem[1]  = 4'hc; mem[2]  = 4'h7; mem[3]  = 4'h1;
+      mem[4]  = 4'h9; mem[5]  = 4'h4; mem[6]  = 4'he; mem[7]  = 4'h2;
+      mem[8]  = 4'hb; mem[9]  = 4'h8; mem[10] = 4'h5; mem[11] = 4'hf;
+      mem[12] = 4'h0; mem[13] = 4'ha; mem[14] = 4'h6; mem[15] = 4'hd;
+   end
+
+   always @(posedge clk) begin
+      dout <= mem[addr];
+   end
+
+endmodule
+VEOF
+
+logger -expect log "BRAM INIT: spram_4096x4 .*: width 16384, 32 set bits, lowest 0, highest 63" 1
+
+synth_fpga -partname z1070 -bram_with_init -logic_cost_rom 1.0
+
+select -assert-count 1 */t:spram_4096x4
