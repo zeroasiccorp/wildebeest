@@ -1,0 +1,31 @@
+# yosys -m wildebeest -s mae-techmap-phase_add_default.ys
+#
+# A design whose only arithmetic is an add uses no DSP in the multiplier
+# phase, and must still reach an add-only mode through the default flow: the
+# phase split must not strand the add-only phase behind the multiplier one.
+read_verilog <<EOT
+module add_only_design
+   (
+    input                clk,
+    input                resetn,
+    input signed [15:0]  a,
+    input signed [15:0]  b,
+    output reg signed [39:0] y
+    );
+
+   always @(posedge clk or negedge resetn) begin
+      if (~resetn) begin
+         y <= 'h0;
+      end
+      else begin
+         y <= a + b;
+      end
+   end
+
+endmodule
+EOT
+
+logger -expect log "DSPs used by multipliers: 0" 1
+synth_fpga -partname z1010
+select -assert-count 1 */t:efpga_adder*
+select -assert-count 0 */t:efpga_m*

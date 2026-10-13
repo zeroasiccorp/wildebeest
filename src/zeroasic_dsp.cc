@@ -355,10 +355,32 @@ struct ZeroAsicDspPass : public Pass {
         "techmap\n");
     log("cannot reach.\n");
     log("\n");
+    log("By default both passes run on one module before the next module is "
+        "looked at.\n");
+    log("The options below run one of them on its own over the whole "
+        "selection, so\n");
+    log("that a caller can run the multiplier pass to completion, inspect what "
+        "it\n");
+    log("used, and only then start the add-only pass.\n");
+    log("\n");
+    log("    -mult_only\n");
+    log("        run only the first pass: pack registers and pre/post-adders "
+        "into the\n");
+    log("        MAEs that the multiplier techmap created. No MAE is created, "
+        "and\n");
+    log("        every remaining '$add' is left alone.\n");
+    log("\n");
+    log("    -add_only\n");
+    log("        run only the second pass: infer the add-only modes from the "
+        "'$add'\n");
+    log("        cells that are left. Existing MAEs are not touched. Cannot be "
+        "combined\n");
+    log("        with -mult_only.\n");
+    log("\n");
     log("    -no_add\n");
     log("        do not infer the add-only modes, leaving every remaining "
         "'$add' to\n");
-    log("        the fabric.\n");
+    log("        the fabric. With -add_only this makes the pass a no-op.\n");
     log("\n");
     log("    -add_minwidth <n>\n");
     log("        smallest add result width worth a DSP (default %d). Below "
@@ -374,10 +396,20 @@ struct ZeroAsicDspPass : public Pass {
     log_header(design, "Executing ZEROASIC_DSP pass (pack DFFs into DSPs).\n");
 
     bool no_add = false;
+    bool mult_only = false;
+    bool add_only = false;
     int add_minwidth = DEFAULT_ADD_MINWIDTH;
 
     size_t argidx;
     for (argidx = 1; argidx < args.size(); argidx++) {
+      if (args[argidx] == "-mult_only") {
+        mult_only = true;
+        continue;
+      }
+      if (args[argidx] == "-add_only") {
+        add_only = true;
+        continue;
+      }
       if (args[argidx] == "-no_add") {
         no_add = true;
         continue;
@@ -390,24 +422,50 @@ struct ZeroAsicDspPass : public Pass {
     }
     extra_args(args, argidx, design);
 
-    for (auto module : design->selected_modules()) {
+    if (mult_only && add_only)
+      log_cmd_error("Options -mult_only and -add_only are mutually "
+                    "exclusive.\n");
 
-      if (design->scratchpad_get_bool("zeroasic_dsp.multonly"))
-        continue;
+    // No phase requested: both passes, one module at a time.
+    //
+    if (!mult_only && !add_only) {
+      for (auto module : design->selected_modules()) {
 
-      {
+        {
+          zeroasic_dsp_pm pm(module, module->selected_cells());
+          pm.run_zeroasic_dsp_pack(zeroasic_dsp_pack);
+        }
+
+        // Runs on a fresh matcher so that the '$add' cells the multiplier
+        // pass absorbed above are gone before the add-only modes get a look
+        // at what is left.
+        if (!no_add) {
+          zeroasic_dsp_pm pm(module, module->selected_cells());
+          pm.ud_zeroasic_dsp_add_pack.addMinWidth = add_minwidth;
+          pm.run_zeroasic_dsp_add_pack(zeroasic_dsp_add_pack);
+        }
+      }
+      return;
+    }
+
+    // One phase over the whole selection, so that the multiplier phase is
+    // complete for every module before any add-only MAE is created.
+    //
+    if (mult_only) {
+      for (auto module : design->selected_modules()) {
         zeroasic_dsp_pm pm(module, module->selected_cells());
         pm.run_zeroasic_dsp_pack(zeroasic_dsp_pack);
       }
+      return;
+    }
 
-      // Runs on a fresh matcher so that the '$add' cells the multiplier pass
-      // absorbed above are gone before the add-only modes get a look at what
-      // is left.
-      if (!no_add) {
-        zeroasic_dsp_pm pm(module, module->selected_cells());
-        pm.ud_zeroasic_dsp_add_pack.addMinWidth = add_minwidth;
-        pm.run_zeroasic_dsp_add_pack(zeroasic_dsp_add_pack);
-      }
+    if (no_add)
+      return;
+
+    for (auto module : design->selected_modules()) {
+      zeroasic_dsp_pm pm(module, module->selected_cells());
+      pm.ud_zeroasic_dsp_add_pack.addMinWidth = add_minwidth;
+      pm.run_zeroasic_dsp_add_pack(zeroasic_dsp_add_pack);
     }
   }
 } ZeroAsicDspPass;
