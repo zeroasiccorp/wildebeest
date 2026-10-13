@@ -1,0 +1,47 @@
+# yosys -m wildebeest -s bram-init-forward.ys
+#
+# W-1 : the with-init techmap must forward 'INIT' to the macro it instantiates.
+#
+# 'memory_libmap' attaches the memory contents to the mapped cell as an 'INIT'
+# parameter.  If the techmap declares that parameter but never passes it on --
+# which is what a half-finished with-init techmap looks like -- the contents are
+# dropped and nothing downstream complains.  The netlist is well formed, place
+# and route succeed, the bitstream builds, and the BRAM comes up holding zeros.
+# So the assertion has to be on the parameter, not on the cell.
+#
+# The pattern puts the address in the top ten bits and its complement in the
+# bottom six, so no data bit is constant across the memory and yosys cannot
+# legitimately drop one.  That makes the expected bit count exact :
+#   sum popcount(i[9:0])            for i in 0..1023 = 5120
+#   sum (6 - popcount(i[5:0]))      for i in 0..1023 = 3072
+# which is 8192 of the 16384 bits the macro holds.  Word 0 is 16'h003f, so the
+# lowest set bit is INIT[0]; word 1023 is 16'hffc0, so the highest is
+# INIT[1023*16 + 15] = INIT[16383].
+
+read_verilog <<VEOF
+module rom_forward (
+    input             clk,
+    input      [9:0]  addr,
+    output reg [15:0] dout
+);
+   reg [15:0] mem [0:1023];
+   integer    i;
+
+   initial begin
+      for (i = 0; i < 1024; i = i + 1) begin
+         mem[i] = {i[9:0], ~i[5:0]};
+      end
+   end
+
+   always @(posedge clk) begin
+      dout <= mem[addr];
+   end
+
+endmodule
+VEOF
+
+logger -expect log "BRAM INIT: spram_1024x16 .*: width 16384, 8192 set bits, lowest 0, highest 16383" 1
+
+synth_fpga -partname z1070 -bram_with_init
+
+select -assert-count 1 */t:spram_1024x16

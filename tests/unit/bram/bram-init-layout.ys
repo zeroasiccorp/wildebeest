@@ -1,0 +1,51 @@
+# yosys -m wildebeest -s bram-init-layout.ys
+#
+# W-1 : 'INIT' must be forwarded verbatim, in the layout yosys produced.
+#
+# The contract 'memory_libmap' writes, and that the bitstream tools read back,
+# is that bit 'b' of hardware word 'w' lives at INIT[w * Wmax + b], with Wmax
+# the widest width the memory library declares -- 16 for these blocks.  The
+# techmap picks a macro geometry but must not re-order the bits while doing it :
+# the layout is a flat vector over the whole capacity, so the same value is
+# already correct for every geometry.
+#
+# Getting this wrong is the family's quietest failure.  Nothing errors; the BRAM
+# simply holds scrambled data.  So rather than a bit count, this test sets
+# exactly two bits at addresses whose flat index is easy to state :
+#
+#   mem[3]   = 16'h0001 -> bit 0  of word 3   -> INIT[3*16 + 0]   = INIT[48]
+#   mem[100] = 16'h8000 -> bit 15 of word 100 -> INIT[100*16 + 15] = INIT[1615]
+#
+# If the techmap re-orders, pads, or truncates anything, those two indices move
+# and the failure names which end of the vector went wrong.
+
+read_verilog <<VEOF
+module ram_layout (
+    input             clk,
+    input             we,
+    input      [9:0]  addr,
+    input      [15:0] din,
+    output reg [15:0] dout
+);
+   reg [15:0] mem [0:1023];
+
+   initial begin
+      mem[3]   = 16'h0001;
+      mem[100] = 16'h8000;
+   end
+
+   always @(posedge clk) begin
+      if (we) begin
+         mem[addr] <= din;
+      end
+      dout <= mem[addr];
+   end
+
+endmodule
+VEOF
+
+logger -expect log "BRAM INIT: spram_1024x16 .*: width 16384, 2 set bits, lowest 48, highest 1615" 1
+
+synth_fpga -partname z1070 -bram_with_init
+
+select -assert-count 1 */t:spram_1024x16

@@ -84,7 +84,9 @@ This command runs Zero Asic FPGA synthesis flow.
         Specifies optimization mode [area, delay, fast] (default=area).
 
     -partname <name>
-        Specifies architecture partname [z1000, z1010]. (default=z1010).
+        Specifies architecture partname [z1000, z1010, z1060, z1070].
+        (default=z1010). 'z1070' is 'z1060' with a BRAM library that can hold
+        initial memory contents.
 
     -config <file name>
         Specifies the config file setting main 'synth_fpga' parameters.
@@ -101,6 +103,17 @@ This command runs Zero Asic FPGA synthesis flow.
     -use_bram_tech [zeroasic]
         Invoke architecture specific DSP inference. It is off by default. -no_bram 
         overides -use_bram_tech.
+
+    -bram_with_init
+        Use BRAM with init feature so that initialized memories keep their
+        contents in the netlist. By default BRAM has no init feature. Requires
+        '-partname z1070'. Through a config file, set 'bram_with_init' in the
+        'brams' section instead.
+
+    -logic_cost_rom <num>
+        Cost per bit of a memory with no write port left in soft logic. Raising
+        it pushes ROMs into BRAM. Default is 0.5. Through a config file, set
+        'logic_cost_rom' in the 'brams' section instead.
 
     -no_dsp
         Bypass DSP inference. It is off by default.
@@ -212,6 +225,8 @@ The configuration format is still work in progress. A draft format specification
         "brams": { (optional)
                 "memory_libmap": [<path, relative path to yosys memory mapping file>, ...],
                 "memory_libmap_parameters": [<parameter setting>, ...] (optional),
+                "logic_cost_rom": <number, cost per bit of a ROM left in soft logic> (optional),
+                "bram_with_init": <bool, the files above carry memory contents> (optional),
                 "techmap": [<path, relative path to yosys memory tech mapping>, ...]
         },
         "dsps": { (optional)
@@ -229,6 +244,12 @@ The configuration format is still work in progress. A draft format specification
 ```
 
 Sections version, partname, lut_size, flip-flops, are required. Sections root_path, brams, dsps, and adders are optional. If "root_path" is not specified, it will correspond to the path where the config file is located. The "adders" techmap (applied after `alumacc` and before the generic techmap, independently of DSP inference) maps `$alu` onto a hard carry-chain adder primitive; when absent, adders remain in soft logic.
+
+The "brams" keys `logic_cost_rom` and `bram_with_init` control memory initialization. `logic_cost_rom` is the cost per bit of a memory with no write port left in soft logic; raising it pushes small ROMs into BRAM, and it is written straight through to `memory_libmap -logic-cost-rom` (default 0.5). `bram_with_init` declares that the `memory_libmap` and `techmap` files given alongside it carry the memory contents through to the netlist; it selects no files of its own. Setting it makes `synth_fpga` check that the contents really did arrive, and fail if they did not.
+
+That check is worth having because losing memory contents is silent. A memory library that declares `init none`, or a techmap that declares an `INIT` parameter and never forwards it to the macro, both produce a netlist that maps, places, routes and programs perfectly well -- the BRAM simply comes up holding zeros. The two cases are indistinguishable downstream, so the check reports which one happened.
+
+To use an initialized BRAM through `-partname` rather than a config file, use `-partname z1070 -bram_with_init`. `z1070` is the only part whose BRAM library can hold initial contents; asking for `-bram_with_init` on any other part is an error rather than a zeroed BRAM.
 
 ### Logic Only Example: No BRAMs or DSPs
 
@@ -293,6 +314,39 @@ Sections version, partname, lut_size, flip-flops, are required. Sections root_pa
     }
 }
 ```
+### Example: BRAM With Initial Contents
+
+```json
+{
+    "version": 1,
+    "partname": "z1070",
+    "lut_size": 4,
+    "flipflops": {
+        "features": ["async_reset", "async_set", "flop_enable"],
+        "models": {
+        },
+        "legalize_list": ["$_DFF_PN0_", "$_DFF_P_", "$_DFFE_PP_", "$_DFFE_PN0P_"],
+        "techmap": "architecture/z1070/techlib/tech_flops.v"
+    },
+    "brams": {
+        "bram_with_init": true,
+        "logic_cost_rom": 1.0,
+        "memory_libmap": ["architecture/z1070/bram/bram_memory_map_with_init.txt"],
+        "techmap": ["architecture/z1070/bram/tech_bram_with_init.v"]
+    }
+}
+```
+
+The memory library must declare `init no_undef`, never `init any`. With `any`, yosys leaves an `x` in the `INIT` parameter for every bit the design did not initialize, and those reach the netlist as literal `x` characters that a place and route tool reading eblif rejects outright. `no_undef` forces them to 0, which is what the hardware block comes up holding anyway.
+
+The techmap must forward `INIT` to the macro it instantiates:
+
+```verilog
+spram_1024x16 #(.INIT(INIT)) _TECHMAP_REPLACE_ (
+```
+
+`INIT` is a flat bit vector over the whole capacity of the block, laid out so that bit `b` of hardware word `w` is at `INIT[w * Wmax + b]`, with `Wmax` the widest width the memory library declares. The same value is therefore already correct for every macro geometry the techmap can pick, so it must be passed through unchanged -- re-ordering it scrambles the memory contents without anything reporting an error.
+
 ### Third Party Example: With BRAM and DSPs
 ```json
 {

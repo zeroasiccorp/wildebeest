@@ -1,0 +1,39 @@
+# yosys -m wildebeest -s bram-init-unsupported-z1060.ys
+#
+# '-bram_with_init' must be refused on a part whose BRAM library cannot hold
+# initial contents.  'z1060' is such a part.
+#
+# Refusing matters more than it looks.  The alternative is not a crash : a BRAM
+# library that drops the contents still maps, places, routes and programs, and
+# the only symptom is a block that comes up holding zeros -- a design that
+# computes the wrong answer with every test green.  Erroring here is what turns
+# that into something a caller can see.
+#
+# One partname per script, because 'log_error' ends the run.
+
+# The diagnosis goes through 'log' and only the last line through 'log_error',
+# which is how every other option check in synth_fpga reports, so assert both :
+# the message that names the part, and the failure itself.
+logger -expect log "'-bram_with_init' is not supported for partname 'z1060'." 1
+logger -expect error "Please select a partname with BRAM init support." 1
+
+read_verilog <<VEOF
+module rom_small (
+    input            clk,
+    input      [3:0] addr,
+    output reg [3:0] dout
+);
+   reg [3:0] mem [0:15];
+
+   initial begin
+      mem[0] = 4'h3; mem[1] = 4'hc; mem[2] = 4'h7; mem[3] = 4'h1;
+   end
+
+   always @(posedge clk) begin
+      dout <= mem[addr];
+   end
+
+endmodule
+VEOF
+
+synth_fpga -partname z1060 -bram_with_init

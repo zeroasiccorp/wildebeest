@@ -1,0 +1,54 @@
+# yosys -m wildebeest -s bram-init-no_undef.ys
+#
+# W-2 : the with-init memory library must declare 'init no_undef', never
+# 'init any'.
+#
+# 'any' lets yosys leave an 'x' in 'INIT' for every bit the design did not
+# initialise.  Those bits reach the netlist as literal 'x' characters, and the
+# eblif reader in VPR treats an 'x' as a fatal parse error, so the design cannot
+# be placed and routed at all.  'no_undef' forces them to 0, which is also what
+# the hardware macro comes up holding.
+#
+# Only four of the 1024 words are initialised :
+#   16'h1234 -> 5 bits, 16'hbeef -> 13, 16'h0f0f -> 8, 16'hcafe -> 11
+# so the whole 16384 bit parameter must hold exactly 37 set bits.  An 'x' in the
+# uninitialised bits could not produce an exact count, and neither could a
+# library that dropped the untouched words, so the count alone pins the
+# behaviour down.  The lowest is bit 2 of word 0 (16'h1234) and the highest is
+# bit 15 of word 1023 (16'hcafe), at INIT[1023*16 + 15].
+#
+# The memory has a write port on purpose : a read-only version of it is almost
+# all zeros and yosys would be entitled to fold it away.
+
+read_verilog <<VEOF
+module ram_partial_init (
+    input             clk,
+    input             we,
+    input      [9:0]  addr,
+    input      [15:0] din,
+    output reg [15:0] dout
+);
+   reg [15:0] mem [0:1023];
+
+   initial begin
+      mem[0]    = 16'h1234;
+      mem[1]    = 16'hbeef;
+      mem[5]    = 16'h0f0f;
+      mem[1023] = 16'hcafe;
+   end
+
+   always @(posedge clk) begin
+      if (we) begin
+         mem[addr] <= din;
+      end
+      dout <= mem[addr];
+   end
+
+endmodule
+VEOF
+
+logger -expect log "BRAM INIT: spram_1024x16 .*: width 16384, 37 set bits, lowest 2, highest 16383" 1
+
+synth_fpga -partname z1070 -bram_with_init
+
+select -assert-count 1 */t:spram_1024x16

@@ -1,0 +1,51 @@
+# yosys -m wildebeest -s bram-init-config.ys
+#
+# W-4 : BRAM init must be reachable from a config file, with no command line
+# flag.
+#
+# This is the path that matters for a caller driving synth_fpga by config file :
+# it supplies its own memory library and techmap, so the part name says nothing
+# about whether they can hold memory contents, and until now there was no way to
+# say so.  'bram_with_init' in the 'brams' section is that declaration.  It
+# selects no files -- 'memory_libmap' and 'techmap' already do that -- it turns
+# on the check that the contents actually arrived.
+#
+# W-3 rides along here : 'logic_cost_rom' is set to 1.0 in the config, which is
+# what moves this 16x4 ROM out of soft logic and into a BRAM.  At the default
+# 0.5 it would stay in LUTs, so the mapping itself proves the key was read.
+#
+# The config points at the real architecture files rather than a copy of them,
+# so this cannot drift away from what is shipped.
+#
+# Note also that the config file holds a JSON boolean.  The config reader had no
+# notion of 'true' or 'false' before this, and refused any file containing one.
+
+read_verilog <<VEOF
+module rom_tiny (
+    input            clk,
+    input      [3:0] addr,
+    output reg [3:0] dout
+);
+   reg [3:0] mem [0:15];
+
+   initial begin
+      mem[0]  = 4'h3; mem[1]  = 4'hc; mem[2]  = 4'h7; mem[3]  = 4'h1;
+      mem[4]  = 4'h9; mem[5]  = 4'h4; mem[6]  = 4'he; mem[7]  = 4'h2;
+      mem[8]  = 4'hb; mem[9]  = 4'h8; mem[10] = 4'h5; mem[11] = 4'hf;
+      mem[12] = 4'h0; mem[13] = 4'ha; mem[14] = 4'h6; mem[15] = 4'hd;
+   end
+
+   always @(posedge clk) begin
+      dout <= mem[addr];
+   end
+
+endmodule
+VEOF
+
+logger -expect log "BRAM bram_with_init" 1
+logger -expect log "BRAM logic_cost_rom" 1
+logger -expect log "BRAM INIT: spram_4096x4 .*: width 16384, 32 set bits, lowest 0, highest 63" 1
+
+synth_fpga -config ../data/bram/bram_init.json -show_config
+
+select -assert-count 1 */t:spram_4096x4

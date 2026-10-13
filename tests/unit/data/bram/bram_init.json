@@ -1,0 +1,18 @@
+{
+    "version": 1,
+    "partname": "z1070",
+    "lut_size": 4,
+    "flipflops": {
+        "features": ["async_reset", "async_set", "flop_enable"],
+        "models": {
+        },
+        "legalize_list": ["$_DFF_PN0_", "$_DFF_P_", "$_DFFE_PP_", "$_DFFE_PN0P_"],
+        "techmap": "../z1010/tech_flops.v"
+    },
+    "brams": {
+        "bram_with_init": true,
+        "logic_cost_rom": 1.0,
+        "memory_libmap": ["../../../../architecture/z1070/bram/bram_memory_map_with_init.txt"],
+        "techmap": ["../../../../architecture/z1070/bram/tech_bram_with_init.v"]
+    }
+}

@@ -1,0 +1,139 @@
+# bram_memory_map_with_init.txt
+#
+# Init-capable variant of 'bram_memory_map.txt', selected by
+# 'synth_fpga -bram_with_init'.  The only difference is the 'init' keyword.
+#
+# 'init no_undef' -- never 'init any'.  'any' lets yosys emit 'x' for every
+# uninitialised, out-of-range and unused bit; the eblif reader in VPR treats
+# 'x' as a fatal parse error, so an 'init any' netlist cannot be placed and
+# routed at all.  'no_undef' forces those bits to 0, which is also what the
+# hardware macro comes up holding.
+#
+# Layout of the '\INIT' parameter yosys attaches to the mapped cell, which
+# 'tech_bram_with_init.v' forwards verbatim to the macro:
+#
+#   len(INIT) = (2**abits >> (nwidths - 1)) * dbits[nwidths - 1]
+#             = (2**14 >> 5) * 32 = 16384   for $__tech_spram__
+#             = (2**14 >> 4) * 16 = 16384   for $__tech_sdpram__/$__tech_tdpram__
+#
+#   INIT[w * Wmax + b] is bit 'b' of hardware word 'w', counting from 0.
+#
+# The layout is independent of the width the design actually uses: a port of
+# width W puts user address 'a' at INIT[a*W] .. INIT[a*W + W - 1], because the
+# low address bits select the position within the widest word.  That is what
+# makes verbatim forwarding correct for every geometry in the techmap, and it
+# is why the techmap must never re-order the bits.
+
+ram block $__tech_spram__ {
+  abits 14;
+  widths 1 2 4 8 16 32 per_port;
+  cost 48;
+  init no_undef;
+  byte 8;
+  
+  port srsw "A" {
+    wrbe_separate;
+    
+    clock posedge;
+    clken;
+    rden;
+    # read/write modes; adapted from third party
+    # Goal:  cover all the modes that are compatible with a
+    # conventional memory architecture, which amounts to
+    # everything except for write first
+    portoption "WRITE_MODE" "UNDEFINED" {
+    	rdwr undefined;
+    	wrtrans all old;
+    }
+    portoption "WRITE_MODE" "NO_CHANGE" {
+    	rdwr no_change;
+    	wrtrans all old;
+    }
+    portoption "WRITE_MODE" "READ_FIRST" {
+    	rdwr old;
+    	wrtrans all old;
+    }
+  }
+}
+
+ram block $__tech_sdpram__ {
+  abits 14;
+  widths 1 2 4 8 16 per_port;
+  cost 48;
+  init no_undef;
+  byte 8;
+  
+  port sw "A" {
+    wrbe_separate;
+    
+    option "SYNC_MODE" 1 {
+      clock posedge "C";
+    }
+    option "SYNC_MODE" 0 {
+      clock posedge;
+    }
+    clken;
+    # read/write modes; adapted from third party
+    # Goal:  cover all the modes that are compatible with a
+    # conventional memory architecture, which amounts to
+    # everything except for write first; on a write only
+    # port that just boils down to setting the write mode
+    # to old data
+    wrtrans all old;
+  }
+  port sr "B" {
+    option "SYNC_MODE" 1 {
+      clock posedge "C";
+    }
+    option "SYNC_MODE" 0 {
+      clock posedge;
+    }
+    clken;
+    rden;
+    # Setting up read mode on the read only port is not
+    # allowed in yosys, so nothing to add here.  Let the
+    # tool do the work.
+  }
+}
+
+ram block $__tech_tdpram__ {
+  abits 14;
+  widths 1 2 4 8 16 per_port;
+  cost 48;
+  init no_undef;
+  byte 8;
+  
+  port srsw "A" "B" {
+    wrbe_separate;
+    
+    option "SYNC_MODE" 1 {
+      clock posedge "C";
+    }
+    option "SYNC_MODE" 0 {
+      clock posedge;
+    }
+    clken;
+    rden;
+
+    # Allow ports here to be optional; this gives yosys some flexibility
+    # to instantiate a TDP port when its ports are not fully utilized
+    optional_rw;
+
+    # read/write modes; adapted from third party
+    # Goal:  cover all the modes that are compatible with a
+    # conventional memory architecture, which amounts to
+    # everything except for write first
+    portoption "WRITE_MODE" "UNDEFINED" {
+    	rdwr undefined;
+    	wrtrans all old;
+    }
+    portoption "WRITE_MODE" "NO_CHANGE" {
+    	rdwr no_change;
+    	wrtrans all old;
+    }
+    portoption "WRITE_MODE" "READ_FIRST" {
+    	rdwr old;
+    	wrtrans all old;
+    }
+  }
+}

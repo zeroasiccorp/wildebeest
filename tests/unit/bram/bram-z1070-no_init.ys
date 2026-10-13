@@ -1,0 +1,40 @@
+# yosys -m wildebeest -s bram-z1070-no_init.ys
+#
+# 'z1070' without '-bram_with_init' must behave exactly like the parts it was
+# derived from : BRAM inference still works, and nothing attaches memory
+# contents to the cell.
+#
+# The memory here is deliberately uninitialised.  An initialised one would not
+# be a fair test : a memory library that declares 'init none' is dropped as a
+# candidate before geometry, so an initialised memory cannot reach an
+# init-incapable BRAM at all and would land in soft logic for a reason that has
+# nothing to do with this check.
+
+read_verilog <<VEOF
+module ram_plain (
+    input             clk,
+    input             we,
+    input      [9:0]  addr,
+    input      [15:0] din,
+    output reg [15:0] dout
+);
+   reg [15:0] mem [0:1023];
+
+   always @(posedge clk) begin
+      if (we) begin
+         mem[addr] <= din;
+      end
+      dout <= mem[addr];
+   end
+
+endmodule
+VEOF
+
+# Nothing asserts on the absence of the 'BRAM INIT:' report here : 'logger
+# -expect' cannot be given a count of zero.  The report is only ever emitted
+# when init was requested, which bram-init-forward.ys covers from the other
+# side.
+
+synth_fpga -partname z1070
+
+select -assert-count 1 */t:spram_1024x16

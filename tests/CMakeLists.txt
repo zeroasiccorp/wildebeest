@@ -69,6 +69,19 @@ set(ALL_TESTS
     unit/dsp/mae-techmap-phase_mult_only.ys
     unit/dsp/mae-techmap-phase_add_only.ys
     unit/dsp/mae-techmap-phase_add_default.ys
+    unit/bram/bram-init-forward.ys
+    unit/bram/bram-init-no_undef.ys
+    unit/bram/bram-init-layout.ys
+    unit/bram/bram-init-uninitialized.ys
+    unit/bram/bram-init-ff-fallback.ys
+    unit/bram/bram-init-logic_cost_rom.ys
+    unit/bram/bram-init-unsupported-z1010.ys
+    unit/bram/bram-init-unsupported-z1060.ys
+    unit/bram/bram-init-config.ys
+    unit/bram/bram-init-config-techmap-drops.ys
+    unit/bram/bram-init-config-memlib-none.ys
+    unit/bram/bram-z1070-no_init.ys
+    unit/bram/bram-z1070-heartbeat.ys
 )
 
 foreach(test_script ${ALL_TESTS})
