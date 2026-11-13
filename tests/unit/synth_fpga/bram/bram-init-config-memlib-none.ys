@@ -38,7 +38,7 @@ VEOF
 
 logger -expect warning "check the 'init' keyword of the" 1
 
-synth_fpga -config ../data/bram/bram_init_memlib_none.json
+synth_fpga -config ../../data/bram/bram_init_memlib_none.json
 
 # Left in soft logic, so there is no BRAM -- but the run still succeeds.
 select -assert-count 0 */t:spram_4096x4

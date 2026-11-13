@@ -4,7 +4,7 @@
 #to one : the arithmetic must still land on the hard carry chain, only the
 #operand inversion is left to soft logic.
 
-read_verilog -lib ../data/carrychain/models/tech_carry.v
+read_verilog -lib ../../data/carrychain/models/tech_carry.v
 
 read_verilog <<EOF
 module carrychain_sub
@@ -22,7 +22,7 @@ module carrychain_sub
 endmodule
 EOF
 
-synth_fpga -config ../data/carrychain/carrychain.json
+synth_fpga -config ../../data/carrychain/carrychain.json
 
 select -assert-count 8 */t:efpga_carry
 select -assert-count 0 */t:$alu

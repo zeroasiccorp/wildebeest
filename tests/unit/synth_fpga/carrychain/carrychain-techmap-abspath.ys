@@ -4,7 +4,7 @@
 #techmap path : the leading '/' form must resolve the same way (same idea as
 #'heartbeat-z1010-config-abspath.ys').
 
-read_verilog -lib ../data/carrychain/models/tech_carry.v
+read_verilog -lib ../../data/carrychain/models/tech_carry.v
 
 read_verilog <<EOF
 module carrychain_abspath
@@ -22,7 +22,7 @@ module carrychain_abspath
 endmodule
 EOF
 
-synth_fpga -config ../data/carrychain/carrychain_abspath.json
+synth_fpga -config ../../data/carrychain/carrychain_abspath.json
 
 #The whole adder is in the carry chain : no '$alu' survived and no soft
 #logic was needed.

@@ -4,7 +4,7 @@
 #is the result, so a comparison must use the hard carry chain too (the sum
 #bits are simply left unused).
 
-read_verilog -lib ../data/carrychain/models/tech_carry.v
+read_verilog -lib ../../data/carrychain/models/tech_carry.v
 
 read_verilog <<EOF
 module carrychain_compare
@@ -22,7 +22,7 @@ module carrychain_compare
 endmodule
 EOF
 
-synth_fpga -config ../data/carrychain/carrychain.json
+synth_fpga -config ../../data/carrychain/carrychain.json
 
 select -assert-count 8 */t:efpga_carry
 select -assert-count 0 */t:$alu

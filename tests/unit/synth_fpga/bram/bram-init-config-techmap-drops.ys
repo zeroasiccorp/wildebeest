@@ -11,7 +11,7 @@
 # downstream, so the message has to name the techmap rather than only say that
 # init is missing.
 #
-# The fixture is '../data/bram/tech_bram_drops_init.v', which is the shipped
+# The fixture is '../../data/bram/tech_bram_drops_init.v', which is the shipped
 # z1070 techmap with the '#(.INIT(INIT))' removed from every replacement.
 #
 # Declaring no parameter at all is a different bug and needs no test here :
@@ -41,4 +41,4 @@ VEOF
 
 logger -expect error "lost its 'INIT' parameter" 1
 
-synth_fpga -config ../data/bram/bram_init_techmap_drops.json
+synth_fpga -config ../../data/bram/bram_init_techmap_drops.json

@@ -3,7 +3,7 @@
 #A registered accumulator : the adder goes to the hard carry chain while the
 #state still legalizes onto the flip flops described by the config.
 
-read_verilog -lib ../data/carrychain/models/tech_carry.v
+read_verilog -lib ../../data/carrychain/models/tech_carry.v
 
 read_verilog <<EOF
 module carrychain_accumulator
@@ -29,7 +29,7 @@ module carrychain_accumulator
 endmodule
 EOF
 
-synth_fpga -config ../data/carrychain/carrychain.json
+synth_fpga -config ../../data/carrychain/carrychain.json
 
 #The whole adder is in the carry chain : no '$alu' survived and no soft
 #logic was needed.

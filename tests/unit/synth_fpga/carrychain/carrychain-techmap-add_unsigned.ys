@@ -4,7 +4,7 @@
 #carry chain : one 'efpga_carry' per result bit and nothing left in soft
 #logic.
 
-read_verilog -lib ../data/carrychain/models/tech_carry.v
+read_verilog -lib ../../data/carrychain/models/tech_carry.v
 
 read_verilog <<EOF
 module carrychain_add_unsigned
@@ -22,7 +22,7 @@ module carrychain_add_unsigned
 endmodule
 EOF
 
-synth_fpga -config ../data/carrychain/carrychain.json
+synth_fpga -config ../../data/carrychain/carrychain.json
 
 #The whole adder is in the carry chain : no '$alu' survived and no soft
 #logic was needed.

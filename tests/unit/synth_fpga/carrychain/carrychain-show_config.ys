@@ -6,7 +6,7 @@
 logger -expect log ".*ADDER techmap.*" 1
 logger -expect log ".*Verilog-2005 frontend: .*data/carrychain/tech_adder.v.*" 1
 
-read_verilog -lib ../data/carrychain/models/tech_carry.v
+read_verilog -lib ../../data/carrychain/models/tech_carry.v
 
 read_verilog <<EOF
 module carrychain_show_config
@@ -24,6 +24,6 @@ module carrychain_show_config
 endmodule
 EOF
 
-synth_fpga -config ../data/carrychain/carrychain.json -show_config
+synth_fpga -config ../../data/carrychain/carrychain.json -show_config
 
 select -assert-count 9 */t:efpga_carry

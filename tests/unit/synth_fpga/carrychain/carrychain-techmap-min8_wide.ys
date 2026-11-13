@@ -3,7 +3,7 @@
 #Same techmap as 'carrychain-techmap-min8_narrow' : an adder that is wide
 #enough must be accepted and fully mapped onto the hard carry chain.
 
-read_verilog -lib ../data/carrychain/models/tech_carry.v
+read_verilog -lib ../../data/carrychain/models/tech_carry.v
 
 read_verilog <<EOF
 module carrychain_min8_wide
@@ -21,7 +21,7 @@ module carrychain_min8_wide
 endmodule
 EOF
 
-synth_fpga -config ../data/carrychain/carrychain_min8.json
+synth_fpga -config ../../data/carrychain/carrychain_min8.json
 
 #The whole adder is in the carry chain : no '$alu' survived and no soft
 #logic was needed.

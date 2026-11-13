@@ -1,4 +1,6 @@
 # yosys -m wildebeest -s heartbeat-z1000-hardcode.ys
+# KNOWN-ISSUE SF13: despite the file name this runs -partname z1000 (the real
+# z1010 hardcoded flow is in heartbeat-z1010-hardcode-real.ys).
 read_verilog <<EOF
 module heartbeat #(
     parameter N = 8

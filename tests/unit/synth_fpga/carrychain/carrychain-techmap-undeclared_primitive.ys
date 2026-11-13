@@ -22,7 +22,7 @@ module carrychain_undeclared_primitive
 endmodule
 EOF
 
-synth_fpga -config ../data/carrychain/carrychain.json
+synth_fpga -config ../../data/carrychain/carrychain.json
 
 #The whole adder is in the carry chain : no '$alu' survived and no soft
 #logic was needed.
