@@ -1,0 +1,5 @@
+# An empty design: synth_fpga warns and does nothing.
+
+logger -expect warning "Design seems empty" 1
+synth_fpga
+logger -check-expected

@@ -1,0 +1,19 @@
+# -opt delay: XOR trees are rebalanced before ABC, ABC runs its delay
+# script, and the max_level / max_height report is printed.  The result is
+# proven equivalent to the RTL.
+
+read_verilog ../../data/designs/xor_tree.v
+proc
+design -save rtl
+
+logger -expect log "Analyze XOR trees" 1
+logger -expect log "Found '0' duplicated XORs after binarization." 1
+logger -expect log "Calling ABC script in 'tiny_delay' mode" 1
+logger -expect log "   Max height / Max levels    = " 1
+synth_fpga -opt delay
+logger -check-expected
+
+rename top gate
+design -copy-from rtl -as gold top
+miter -equiv -flatten -make_assert gold gate miter
+sat -verify -prove-asserts miter

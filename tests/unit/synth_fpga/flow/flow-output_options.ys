@@ -1,0 +1,14 @@
+# -verilog writes the netlist to the given file instead of
+# netlist_synth_fpga.verilog; -autoname and -insbuf run their passes; -wait
+# reads one character from stdin (EOF under ctest) before continuing.
+
+read_verilog ../../data/designs/counter.v
+logger -expect log "Dump Verilog file 'out.v'" 1
+logger -expect log "Executing AUTONAME pass" 1
+logger -expect log "Executing INSBUF pass" 1
+synth_fpga -verilog out.v -autoname -insbuf -wait
+logger -check-expected
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut
+!grep -q "module top" out.v
+!test ! -e netlist_synth_fpga.verilog

@@ -1,0 +1,8 @@
+# -opt fast with 5-input LUTs uses the 'fast' ABC script.
+
+read_verilog ../../data/designs/counter.v
+logger -expect log "Calling ABC script in 'fast' mode" 1
+synth_fpga -opt fast -lut_size 5
+logger -check-expected
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut

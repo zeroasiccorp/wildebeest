@@ -1,0 +1,6 @@
+# Only one-hot and binary FSM encodings are accepted.
+
+read_verilog ../../data/designs/counter.v
+
+logger -expect error "-fsm_encoding can be only .one-hot. or .binary.." 1
+synth_fpga -fsm_encoding gray

@@ -1,0 +1,9 @@
+# Latches are not supported: synth_fpga stops.
+
+read_verilog <<EOF
+module top (input en, d, output reg q);
+   always @* if (en) q = d;
+endmodule
+EOF
+logger -expect error "Cannot proceed further : LATCH synthesis is not supported." 1
+synth_fpga

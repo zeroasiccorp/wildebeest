@@ -23,12 +23,12 @@ Line numbers refer to the source as of commit `6763981`.
 | ID | Sev | Where | Issue |
 |----|-----|-------|-------|
 | SF1 | M | 4048-4054 | The top-module check runs before `hierarchy`. A design with several modules returns "Design seems empty", even with `-top`. |
-| SF2 | H | 2760 | `run("blackbox ")` has no arguments and blackboxes the whole design, so `-obs_clean` on z1010 empties the netlist. |
+| SF2 | H | 2760 | `run("blackbox ")` has no arguments and blackboxes the whole design. With `-obs_clean` on z1010 (the default part) the top module becomes a blackbox, `top_module()` returns null, and `synth_fpga` **segfaults** in `analyze_undriven_nets(nullptr)` (confirmed in Phase 2c). `-obs_clean` works on z1000, where this line does not run. |
 | SF3 | M | 2797, 4089 | `-no_flatten -obs_clean` reads the FF models a second time, giving a "Re-definition of module" error. |
 | SF4 | M | 2940 | A missing space builds the command `dfflegalize-cell`. Triggered by an empty `legalize_list` in a config file. |
 | SF5 | M | 2896 | `-opt fast` with LUT4 or LUT6 points at `.scr` files that don't exist. `-abc_script_version` is never validated. |
 | SF6 | M | globals | Config and flop state (`G_config`, `ys_legal_flops`, ...) is never reset between two `synth_fpga` runs in one session. |
-| SF7 | H, to confirm | 1534, 2052 | XOR-tree leaves are kept in a set, so duplicate leaves don't cancel. Possibly wrong logic with `-opt delay`. |
+| SF7 | H, **confirmed** | 1534, 2052 | XOR-tree leaves are kept in a set, so a repeated leaf doesn't cancel. `(a8^a9)^(a8^a10)^(a11^a12)` synthesized with `-opt delay` computes `a8^a9^a10^a11^a12` instead of `a9^a10^a11^a12` (SAT counterexample; the same design is proven equivalent with `-no_xor_tree_process`, in area mode, and with Yosys's own `synth -lut 4`). Test `synth_fpga/flow/flow-opt_delay-repeated_xor_leaf.ys` asserts equivalence and is marked `.xfail`. |
 | SF8 | M | 3403 | The DSP mode map uses the command-line partname, not the partname in the config file. |
 | SF9 | L | 711-725 | The DFF-feature fallback flags are inverted. |
 | SF10 | L | 2660 | The CSV logic level is -1 when `-show_max_level` is given. |
@@ -38,6 +38,9 @@ Line numbers refer to the source as of commit `6763981`.
 | SF14 | H | `abc_scripts/*.scr` | `LUT4/BEST/tiny_area_lut4.scr` and other scripts using `write_blif`/`read_blif` write a fixed-name file such as `tiny_area_lut4.blif` into the current directory and read it back. Two runs in the same directory corrupt each other's ABC input and segfault. The test runner works around it with one sandbox directory per test. |
 
 | SF15 | M | 594-701, 2710-2746 | `root_path` is applied inconsistently. `setup_options` builds the techmap/libmap paths as `root_path + "/" + file`, and a relative `root_path` is taken relative to the **current directory**, not the config file. `load_cell_models_from_config` reads the flip-flop and DSP model files relative to the **config file's directory** and ignores `root_path`. Any `root_path` other than one naming the config file's own directory (relative to where Yosys runs) therefore fails with "file not found". Found in Phase 2b. |
+| SF16 | H | flow | `synth_fpga -no_flatten` segfaults inside Yosys's `stat` (`hierarchy_builder` → `statdata_t`) after the flow has transformed the design, on every design tried, including a single-module counter; `-obs_clean -no_flatten` crashes the same way. Likely related to the cell-model modules the flow reads into the design (they would be flattened away otherwise), but the root cause is not analysed. Seen on Yosys 0.70; to be confirmed on the CI versions. Found in Phase 2c. |
+| SF17 | L | `resynthesize` | `-resynthesis` leaves 7 internal nets of the techmapped adder undriven. They drive nothing (the netlist is correct and has no `x`), but `-stop_if_undriven_nets` treats them as fatal. Found in Phase 2c. |
+| SF18 | L | 788-796 | On z1000, `-no_dff_enable`, `-no_dff_async_reset` and `-dff_async_set` have no effect (same netlist as without them); they only change the legal flop list on the platypus parts. Found in Phase 2c. |
 
 ## zopt_dff / zopt_const_dff
 

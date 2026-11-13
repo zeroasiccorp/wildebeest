@@ -1,0 +1,6 @@
+# The hardcoded z1060 flow.
+
+read_verilog ../../data/designs/counter.v
+synth_fpga -partname z1060
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut

@@ -1,0 +1,12 @@
+# -no_dsp_pack skips the packing step: the multiplier is an efpga_mult and
+# the output register stays in the fabric (by default it would be packed into
+# efpga_mult_rego).
+
+read_verilog <<EOF
+module top (input clk, input signed [17:0] a, b, output reg [35:0] y);
+   always @(posedge clk) y <= a * b;
+endmodule
+EOF
+synth_fpga -partname z1010 -no_dsp_pack
+select -assert-count 1 t:efpga_mult
+select -assert-count 36 t:dff

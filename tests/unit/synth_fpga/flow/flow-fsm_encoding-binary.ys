@@ -1,0 +1,15 @@
+# -fsm_encoding binary is accepted; the FSM passes run.
+
+read_verilog <<EOF
+module top (input clk, rst, go, output reg [1:0] o);
+   reg [1:0] s;
+   always @(posedge clk)
+      if (rst) s <= 0;
+      else case (s) 0: if (go) s <= 1; 1: s <= 2; 2: s <= 3; 3: s <= 0; endcase
+   always @* case (s) 0: o = 2'b00; 1: o = 2'b01; 2: o = 2'b11; default: o = 2'b10; endcase
+endmodule
+EOF
+logger -expect log "Executing FSM_EXTRACT pass" 1
+synth_fpga -fsm_encoding binary
+logger -check-expected
+select -assert-min 1 t:dff*

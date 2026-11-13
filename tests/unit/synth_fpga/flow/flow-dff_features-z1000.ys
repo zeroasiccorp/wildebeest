@@ -1,0 +1,16 @@
+# KNOWN-ISSUE SF18: on z1000 the flip-flop feature flags have no effect:
+# each flag alone still gives the same 8 'dffer' cells as the default.
+
+read_verilog ../../data/designs/counter.v
+design -save orig
+synth_fpga -partname z1000 -no_dff_enable
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut
+design -load orig
+synth_fpga -partname z1000 -no_dff_async_reset
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut
+design -load orig
+synth_fpga -partname z1000 -dff_async_set
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut

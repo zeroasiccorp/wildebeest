@@ -1,0 +1,18 @@
+# KNOWN-ISSUE SF1: the top-module check runs before 'hierarchy', so a design
+# with several modules and no top yet is treated as empty, even with -top.
+
+read_verilog <<EOF
+module top (input a, output y);
+   sub u (.a(a), .y(y));
+endmodule
+module sub (input a, output y);
+   assign y = ~a;
+endmodule
+module other (input a, output y);
+   assign y = a;
+endmodule
+EOF
+logger -expect warning "Design seems empty" 1
+synth_fpga -top top
+logger -check-expected
+select -assert-mod-count 3 =*

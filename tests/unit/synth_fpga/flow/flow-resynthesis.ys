@@ -1,0 +1,10 @@
+# -resynthesis runs the lighter resynthesis flow.  It leaves internal nets of
+# the techmapped adder undriven; they are tied to 'x' with a warning (they
+# drive nothing, so the result is unaffected).
+
+read_verilog ../../data/designs/counter.v
+logger -expect warning "Setting to 'X' undriven net" 1
+synth_fpga -resynthesis
+logger -check-expected
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut

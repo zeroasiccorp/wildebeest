@@ -1,0 +1,6 @@
+# Without -verilog the netlist is written to netlist_synth_fpga.verilog in
+# the current directory.
+
+read_verilog ../../data/designs/counter.v
+synth_fpga
+!grep -q "module top" netlist_synth_fpga.verilog
