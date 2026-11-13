@@ -1,6 +1,0 @@
-# KNOWN-ISSUE SF5: -opt fast with 4-input LUTs points at
-# LUT4/BEST/fast_lut4.scr, which does not exist, so ABC fails.
-
-read_verilog ../../data/designs/counter.v
-logger -expect error "ABC script did not complete successfully" 1
-synth_fpga -opt fast

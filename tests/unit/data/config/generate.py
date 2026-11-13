@@ -256,9 +256,12 @@ case(W, "root_path_config_dir", "An explicit 'root_path' naming the config file'
 case(W, "root_path_elsewhere", "KNOWN-ISSUE SF15: 'root_path' is used for the techmap commands but\n"
      "# not when the flip-flop / DSP model files are read, which always uses the\n"
      "# config file's directory.  With root_path pointing elsewhere the model\n"
-     "# file is looked up next to the config file and is not found.",
+     "# file is looked up next to the config file and is not found.  (Some Yosys\n"
+     "# versions, e.g. 0.52, read a missing file without an error; the flow then\n"
+     "# stops later on the unmapped flip-flops.)",
      mod(root_path="../z1000", flipflops__techmap="tech_flops.v"),
-     [("error", rx("data/config/tech_flops.v"), 1)])
+     [("error", rx("data/config/tech_flops.v") + "|" +
+       rx("some illegal cells found in the design"), 1)])
 case(W, "models_not_dict", "'flipflops.models' that is not a dictionary is\n"
      "# ignored with a warning.", mod(flipflops__models=["x"]),
      [("warning", rx("'models' associated to 'flipflops' must be a dictionary to be read in. Ignoring contents."), 1)],
