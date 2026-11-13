@@ -34,6 +34,13 @@ target_compile_definitions(wildebeest
         SYN_SHARE_DIR=\"plugins/${OUTPUT_NAME}\"
 )
 
+if (WILDEBEEST_COVERAGE)
+    # -fprofile-update=atomic keeps counters sane when ctest runs in parallel
+    # and several yosys processes merge into the same .gcda files.
+    target_compile_options(wildebeest PRIVATE --coverage -O0 -g -fprofile-update=atomic)
+    target_link_options(wildebeest PRIVATE --coverage)
+endif()
+
 set_target_properties(wildebeest PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}

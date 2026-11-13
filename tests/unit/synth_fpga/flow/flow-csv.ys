@@ -1,0 +1,8 @@
+# -csv writes stat.csv: top,LUTs,flip-flops,max logic level,run time.
+# The run time is wall-clock based, so it is not checked.
+
+read_verilog ../../data/designs/counter.v
+logger -expect log "   Dumped file stat.csv" 1
+synth_fpga -csv
+logger -check-expected
+!grep -qE "^top,[0-9]+,8,[0-9]+,[0-9]+$" stat.csv

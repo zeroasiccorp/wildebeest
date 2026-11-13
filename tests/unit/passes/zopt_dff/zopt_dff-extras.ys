@@ -1,0 +1,33 @@
+# Less common shapes (data/zopt_dff/extras.v): a zero-width flop, a hold
+# path through a $pmux, an inverted enable (Q on the mux B input), a flop that
+# already has an enable, two chained sync resets of opposite polarity, an
+# always-active async load, $sdffce with D == Q, and an async-load register
+# that -sat proves constant.  Both runs are proven equivalent.
+# Flop names from proc vary between Yosys versions, so messages are matched
+# on the Q signal.
+
+read_verilog -icells ../../data/zopt_dff/extras.v
+proc
+opt_clean
+design -save orig
+
+logger -expect log "Adding EN signal on .* Q = .q_pmux." 1
+logger -expect log "Adding EN signal on has_en .* .D = .d, Q = .q_has_en." 1
+logger -expect log "Adding EN signal on .* .D = .d, Q = .q_inv_en." 1
+logger -expect log "Adding EN signal on .* .D = .d, Q = .q_sel_path." 1
+logger -expect log "Adding SRST signal on .* .D = .d, Q = .q_chain, rval = 4'0000." 1
+logger -expect log "Handling always-active async load on al_arst_core " 1
+logger -expect log "Handling D = Q on sdffce_dq .* .conecting SRST instead." 1
+logger -expect log "Changing const-value async load to async reset on aldff_sat " 1
+logger -expect log "Setting constant 0-bit at position [0-3] on aldff_sat " 4
+logger -expect log "Setting constant [01]-bit at position [0-3] on sdffce_dq " 4
+equiv_opt -undef -assert -multiclock zopt_dff -sat
+logger -check-expected
+design -load postopt
+select -assert-count 4 t:$dffe
+select -assert-count 1 t:$dffsr
+select -assert-count 1 t:$sdff
+select -assert-none t:$dff t:$aldff t:$adff t:$sdffce
+
+design -load orig
+equiv_opt -undef -assert -multiclock zopt_dff -keepdc

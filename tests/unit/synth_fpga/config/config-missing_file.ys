@@ -1,0 +1,13 @@
+# A config file that does not exist.
+# (no fixture: the file is missing)
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect error "Cannot find file '../../data/config/does_not_exist.json'." 1
+synth_fpga -config ../../data/config/does_not_exist.json

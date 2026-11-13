@@ -1,0 +1,16 @@
+# 'flipflops.models' that is not a dictionary is
+# ignored with a warning.
+# Fixture: data/config/config-models_not_dict.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect warning "'models' associated to 'flipflops' must be a dictionary to be read in. Ignoring contents." 1
+synth_fpga -config ../../data/config/config-models_not_dict.json
+logger -check-expected
+select -assert-min 1 t:$lut

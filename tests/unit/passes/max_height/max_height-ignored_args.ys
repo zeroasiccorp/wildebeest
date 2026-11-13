@@ -1,0 +1,13 @@
+# KNOWN-ISSUE MH1: the option loop never stops, so unknown options and
+# selections are silently ignored.  '-bogus' is accepted, and selecting only
+# the off-path LUT l4 still reports the whole module (height 3).
+
+read_rtlil ../../data/rtlil/lut_network.il
+cd top
+connect -set k 1'1
+cd ..
+
+logger -expect log "   Max height / Max levels    = 3" 2
+max_height -bogus
+max_height l4
+logger -check-expected

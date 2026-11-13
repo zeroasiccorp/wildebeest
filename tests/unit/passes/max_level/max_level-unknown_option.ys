@@ -1,0 +1,10 @@
+# An unknown option is rejected by the standard argument check.
+
+read_verilog <<EOF
+module top (input a, output y);
+   assign y = ~a;
+endmodule
+EOF
+
+logger -expect error "Unknown option or option in arguments" 1
+max_level -bogus

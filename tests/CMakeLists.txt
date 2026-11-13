@@ -1,96 +1,69 @@
 
-set(ALL_TESTS
-    unit/check_commands.ys
-    unit/heartbeat-z1000-config.ys
-    unit/heartbeat-z1010-config.ys
-    unit/heartbeat-z1000-hardcode.ys
-    unit/heartbeat-z1010-hardcode.ys
-    unit/heartbeat-z1000-config-abspath.ys
-    unit/heartbeat-z1010-config-abspath.ys
-    unit/dsp/mae-techmap-efpga_mult.ys
-    unit/dsp/mae-techmap-efpga_mult_regi.ys
-    unit/dsp/mae-techmap-efpga_mult_rego.ys
-    unit/dsp/mae-techmap-efpga_mult_regio.ys
-    unit/dsp/mae-techmap-efpga_macc.ys
-    unit/dsp/mae-techmap-efpga_macc_regi.ys
-    unit/dsp/mae-techmap-efpga_macc_pipe.ys
-    unit/dsp/mae-techmap-efpga_macc_pipe_regi.ys
-    unit/dsp/mae-techmap-efpga_mult_addc.ys
-    unit/dsp/mae-techmap-efpga_mult_addc_regi.ys
-    unit/dsp/mae-techmap-efpga_mult_addc_rego.ys
-    unit/dsp/mae-techmap-efpga_mult_addc_regio.ys
-    unit/dsp/mae-techmap-efpga_adder.ys
-    unit/dsp/mae-techmap-efpga_adder_regi.ys
-    unit/dsp/mae-techmap-efpga_adder_rego.ys
-    unit/dsp/mae-techmap-efpga_adder_regio.ys
-    unit/dsp/mae-techmap-efpga_acc.ys
-    unit/dsp/mae-techmap-efpga_acc_regi.ys
-    unit/dsp/mae-techmap-efpga_mult_unsigned.ys
-    unit/dsp/mae-techmap-efpga_mult_regi_unsigned.ys
-    unit/dsp/mae-techmap-efpga_mult_rego_unsigned.ys
-    unit/dsp/mae-techmap-efpga_mult_regio_unsigned.ys
-    unit/dsp/mae-techmap-efpga_macc_unsigned.ys
-    unit/dsp/mae-techmap-efpga_macc_regi_unsigned.ys
-    unit/dsp/mae-techmap-efpga_macc_pipe_unsigned.ys
-    unit/dsp/mae-techmap-efpga_macc_pipe_regi_unsigned.ys
-    unit/dsp/mae-techmap-efpga_mult_addc_unsigned.ys
-    unit/dsp/mae-techmap-efpga_mult_addc_regi_unsigned.ys
-    unit/dsp/mae-techmap-efpga_mult_addc_rego_unsigned.ys
-    unit/dsp/mae-techmap-efpga_mult_addc_regio_unsigned.ys
-    unit/carrychain/carrychain-techmap-add_unsigned.ys
-    unit/carrychain/carrychain-techmap-add_signed.ys
-    unit/carrychain/carrychain-techmap-add_carry_in.ys
-    unit/carrychain/carrychain-techmap-sub.ys
-    unit/carrychain/carrychain-techmap-increment.ys
-    unit/carrychain/carrychain-techmap-compare.ys
-    unit/carrychain/carrychain-techmap-accumulator.ys
-    unit/carrychain/carrychain-techmap-wide_add.ys
-    unit/carrychain/carrychain-techmap-two_adders.ys
-    unit/carrychain/carrychain-techmap-undeclared_primitive.ys
-    unit/carrychain/carrychain-techmap-with_dsp.ys
-    unit/carrychain/carrychain-techmap-with_no_dsp.ys
-    unit/carrychain/carrychain-techmap-abspath.ys
-    unit/carrychain/carrychain-techmap-min8_wide.ys
-    unit/carrychain/carrychain-techmap-min8_narrow.ys
-    unit/carrychain/carrychain-no_techmap-soft_logic.ys
-    unit/carrychain/carrychain-show_config.ys
-    unit/dsp/mae-techmap-efpga_adder_unsigned.ys
-    unit/dsp/mae-techmap-efpga_adder_regi_unsigned.ys
-    unit/dsp/mae-techmap-efpga_adder_rego_unsigned.ys
-    unit/dsp/mae-techmap-efpga_adder_regio_unsigned.ys
-    unit/dsp/mae-techmap-efpga_acc_unsigned.ys
-    unit/dsp/mae-techmap-efpga_acc_regi_unsigned.ys
-    unit/dsp/mae-techmap-efpga_add_nomap.ys
-    unit/dsp/mae-techmap-efpga_add_partial_pack.ys
-    unit/dsp/mae-techmap-efpga_mult_rego_partial_pack.ys
-    unit/dsp/mae-techmap-efpga_mult_rego_partial_pack_mirror.ys
-    unit/dsp/mae-techmap-efpga_mult_addc_rego_partial_pack.ys
-    unit/dsp/mae-techmap-phase_split.ys
-    unit/dsp/mae-techmap-phase_mult_only.ys
-    unit/dsp/mae-techmap-phase_add_only.ys
-    unit/dsp/mae-techmap-phase_add_default.ys
-    unit/bram/bram-init-forward.ys
-    unit/bram/bram-init-no_undef.ys
-    unit/bram/bram-init-layout.ys
-    unit/bram/bram-init-uninitialized.ys
-    unit/bram/bram-init-ff-fallback.ys
-    unit/bram/bram-init-logic_cost_rom.ys
-    unit/bram/bram-init-unsupported-z1010.ys
-    unit/bram/bram-init-unsupported-z1060.ys
-    unit/bram/bram-init-config.ys
-    unit/bram/bram-init-config-techmap-drops.ys
-    unit/bram/bram-init-config-memlib-none.ys
-    unit/bram/bram-z1070-no_init.ys
-    unit/bram/bram-z1070-heartbeat.ys
+# C++ unit tests (tests/cpp/): built only on request, and always with coverage.
+if (WILDEBEEST_CXXTESTS)
+    add_subdirectory(cpp)
+endif()
+
+# Every *.ys script below unit/ is a test.  Scripts are discovered rather than
+# listed so a new test cannot be silently left out.  unit/data/ only holds
+# fixtures (no .ys files).
+file(GLOB_RECURSE ALL_TESTS
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/unit/*.ys
 )
+list(SORT ALL_TESTS)
+
+# Scripts that must not be registered (keep empty unless there is a reason,
+# and give the reason next to the entry).
+set(EXCLUDED_TESTS
+)
+list(REMOVE_ITEM ALL_TESTS ${EXCLUDED_TESTS})
+
+set(TEST_SANDBOX_ROOT ${CMAKE_BINARY_DIR}/tests/sandbox)
 
 foreach(test_script ${ALL_TESTS})
     set(test_fullpath ${CMAKE_CURRENT_SOURCE_DIR}/${test_script})
-    get_filename_component(test_dir ${test_fullpath} DIRECTORY)
+    get_filename_component(test_rel_dir ${test_script} DIRECTORY)
+    get_filename_component(test_name_we ${test_script} NAME_WE)
+
+    # Labels come from the directory path below unit/, e.g.
+    # unit/synth_fpga/dsp/x.ys -> "synth_fpga;dsp".  Top-level scripts get
+    # "smoke".  Scripts named *-slow.ys also get "slow" and are skipped by the
+    # regular build matrix (ctest -LE slow).
+    string(REGEX REPLACE "^unit/?" "" label_path "${test_rel_dir}")
+    if(label_path STREQUAL "")
+        set(test_labels smoke)
+    else()
+        string(REPLACE "/" ";" test_labels "${label_path}")
+    endif()
+    if(test_name_we MATCHES "-slow$")
+        list(APPEND test_labels slow)
+    endif()
+
+    string(REGEX REPLACE "[^A-Za-z0-9_.-]" "_" sandbox_name "${test_script}")
+
     add_test(
         NAME ${test_script}
-        WORKING_DIRECTORY ${test_dir}
-        COMMAND
-            ${YOSYS_BINDIR}/yosys -m $<TARGET_FILE:wildebeest> ${test_fullpath}
+        COMMAND ${CMAKE_COMMAND}
+            -DYOSYS=${YOSYS_BINDIR}/yosys
+            -DPLUGIN=$<TARGET_FILE:wildebeest>
+            -DSCRIPT=${test_fullpath}
+            -DREL_DIR=${test_rel_dir}
+            -DSANDBOX=${TEST_SANDBOX_ROOT}/${sandbox_name}
+            -DDATA_DIR=${CMAKE_CURRENT_SOURCE_DIR}/unit/data
+            -DTOOLS_DIR=${CMAKE_CURRENT_SOURCE_DIR}/tools
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/run_yosys_test.cmake
     )
+    set_tests_properties(${test_script} PROPERTIES LABELS "${test_labels}")
+
+    # A '<script>.xfail' file next to a script marks a test that asserts the
+    # correct behaviour for a known functional bug (see tests/KNOWN_ISSUES.md)
+    # and is expected to fail until that bug is fixed.  The file holds the
+    # issue ID and a one-line reason.  Once the bug is fixed the test starts
+    # "failing", which is the cue to delete the .xfail file.
+    if(EXISTS ${test_fullpath}.xfail)
+        set_tests_properties(${test_script} PROPERTIES WILL_FAIL TRUE)
+        set_property(TEST ${test_script} APPEND PROPERTY LABELS xfail)
+    endif()
 endforeach()

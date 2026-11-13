@@ -20,6 +20,7 @@
 #include "zsimplemap.h"
 #include "kernel/ff.h"
 #include "kernel/sigtools.h"
+#include "yosys_compat.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

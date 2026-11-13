@@ -1,0 +1,11 @@
+# report_stat refuses to run on a partially selected design.
+
+read_verilog <<EOF
+module top (input a, b, output y);
+   assign y = a & b;
+endmodule
+EOF
+
+select w:a
+logger -expect error "only operates on fully selected designs" 1
+report_stat

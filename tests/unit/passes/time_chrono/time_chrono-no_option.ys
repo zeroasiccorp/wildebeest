@@ -1,0 +1,17 @@
+# Without -start or -end the pass only warns.  Unknown arguments are silently
+# ignored, so '-bogus' behaves the same as no option.
+
+read_verilog <<EOF
+module top (input a, output y);
+   assign y = a;
+endmodule
+EOF
+hierarchy -top top
+
+logger -expect warning "time_chrono command has no effect without an option" 2
+time_chrono
+time_chrono -bogus
+logger -check-expected
+
+scratchpad -assert-unset time_chrono_start
+scratchpad -assert-unset time_chrono_end

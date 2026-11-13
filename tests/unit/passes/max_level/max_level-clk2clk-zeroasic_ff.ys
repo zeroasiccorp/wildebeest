@@ -1,0 +1,23 @@
+# -clk2clk treats Zero Asic flip-flop instances (here 'dffr', given as a
+# blackbox) as cut points: the path from 'a' stops at the D pin of f1, which is
+# reported on the 'xx' line.
+
+read_verilog -lib <<EOF
+module dffr (input D, input C, input R, output Q);
+endmodule
+EOF
+read_verilog <<EOF
+module zt (input clk, rst, a, b, output y);
+   wire q1, q2;
+   dffr f1 (.D(a & b), .C(clk), .R(rst), .Q(q1));
+   dffr f2 (.D(q1 ^ a), .C(clk), .R(rst), .Q(q2));
+   assign y = ~q2;
+endmodule
+EOF
+hierarchy -top zt
+
+logger -expect log "Max logic level in zt .length=1.:" 1
+logger -expect log "   xx: .q1 .via f1." 1
+max_level -clk2clk
+logger -check-expected
+scratchpad -assert max_level.max_levels 1

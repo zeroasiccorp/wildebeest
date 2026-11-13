@@ -1,0 +1,19 @@
+# -wires also removes wires that are not observable.  Ports and (* keep *)
+# wires always stay.
+#
+# KNOWN-ISSUE OB2: the per-bit check compares raw bits against sigmapped
+# ones, so 'm' is removed even though z = m[0] uses it.  Yosys replaces
+# references to removed wires with $delete_wire placeholders, so only named
+# wires are checked here.
+
+read_rtlil ../../data/rtlil/obs_clean.il
+
+obs_clean -wires
+
+select -assert-count 1 w:t1
+select -assert-count 1 w:kw
+select -assert-count 1 w:p
+select -assert-count 8 w:a w:b w:c w:d w:y w:y2 w:z w:z2
+
+select -assert-none w:u1 w:u2 w:u3 w:kx w:dangling w:unused_w w:q
+select -assert-none w:m

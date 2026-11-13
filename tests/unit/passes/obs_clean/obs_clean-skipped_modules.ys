@@ -1,0 +1,25 @@
+# Modules that still have processes or memories are skipped with a warning.
+
+read_verilog <<EOF
+module pr (input clk, a, output reg q);
+   always @(posedge clk) q <= a;
+endmodule
+EOF
+
+logger -expect warning "Ignoring module pr because it contains processes" 1
+obs_clean
+logger -check-expected
+
+design -reset
+read_verilog <<EOF
+module mm (input clk, input [1:0] wa, ra, input [3:0] wd, input we, output [3:0] rd);
+   reg [3:0] mem [0:3];
+   always @(posedge clk) if (we) mem[wa] <= wd;
+   assign rd = mem[ra];
+endmodule
+EOF
+proc
+
+logger -expect warning "Ignoring module mm because it contains memories" 1
+obs_clean
+logger -check-expected

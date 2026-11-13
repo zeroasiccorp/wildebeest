@@ -1,0 +1,17 @@
+# -set_dff_init_value_to_zero runs zinit: the flop with init 1 is inverted
+# (Q and D through inverters) so every flop starts at 0; the inverters end up
+# in LUTs.
+
+read_verilog <<EOF
+module top (input clk, input [2:0] d, output reg q0, q1, q2);
+   initial q0 = 1'b0;
+   initial q1 = 1'b1;
+   always @(posedge clk) begin q0 <= d[0]; q1 <= d[1]; q2 <= d[2]; end
+endmodule
+EOF
+logger -expect log "Executing ZINIT pass" 1
+logger -expect log "DFF init value for cell .* = 1'0" 3
+synth_fpga -show_dff_init_value -set_dff_init_value_to_zero
+logger -check-expected
+select -assert-count 3 t:dff
+select -assert-count 2 t:$lut

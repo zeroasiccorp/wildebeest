@@ -1,0 +1,14 @@
+# With -continue_if_latch the latch is reported and left in the netlist as
+# an illegal cell, and synthesis completes.  (Which $_DLATCH_* variant is
+# used depends on the Yosys version.)
+
+read_verilog <<EOF
+module top (input en, d, output reg q);
+   always @* if (en) q = d;
+endmodule
+EOF
+logger -expect warning "CRITICAL: Continue synthesis even if LATCH is not supported." 1
+logger -expect warning "Found illegal cell .* .._DLATCH_" 1
+synth_fpga -continue_if_latch
+logger -check-expected
+select -assert-count 1 t:$_DLATCH_*

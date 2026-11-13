@@ -1,0 +1,13 @@
+# 'null' is not supported (unexpected 'n').
+# Fixture: data/config/json-null_value.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect error "Unexpected character 'n' in config file '" 1
+synth_fpga -config ../../data/config/json-null_value.json

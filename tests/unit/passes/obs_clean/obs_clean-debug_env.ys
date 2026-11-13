@@ -1,0 +1,10 @@
+# Setting DEBUG_OBS_CLEAN in the environment turns on the same logging as
+# -debug.  The variable is set by obs_clean-debug_env.ys.env (read by
+# tests/run_yosys_test.cmake).
+
+read_rtlil ../../data/rtlil/obs_clean.il
+
+logger -expect log "Processing module: .top" 1
+logger -expect log "Removing unused cells" 1
+obs_clean
+logger -check-expected

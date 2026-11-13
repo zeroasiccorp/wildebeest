@@ -1,0 +1,1 @@
+DSP7: the C-only register is absorbed into combinational efpga_mult_addc, losing a cycle of latency on c.

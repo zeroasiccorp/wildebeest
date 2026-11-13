@@ -1,0 +1,15 @@
+# A and B registers on different resets are not packed; the output
+# register is.
+
+read_verilog <<EOF
+module top (input clk, r1, r2, input signed [17:0] a, b, output reg signed [19:0] y);
+   reg signed [17:0] ar, br;
+   always @(posedge clk or negedge r1) if (!r1) ar <= 0; else ar <= a;
+   always @(posedge clk or negedge r2) if (!r2) br <= 0; else br <= b;
+   always @(posedge clk or negedge r1) if (!r1) y <= 0; else y <= ar + br;
+endmodule
+EOF
+synth_fpga -partname z1010
+select -assert-count 1 t:efpga_adder_rego
+select -assert-count 1 t:efpga_*
+select -assert-count 36 t:dff*

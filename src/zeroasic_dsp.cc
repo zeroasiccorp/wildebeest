@@ -18,6 +18,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include "kernel/sigtools.h"
 #include "kernel/yosys.h"
+#include "yosys_compat.h"
 #include <deque>
 
 USING_YOSYS_NAMESPACE
@@ -36,12 +37,12 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm) {
   // pack post-adder
   //
   if (st.postAdderStatic) {
-    cell->setParam(ID(POST_ADDER_STATIC), State::S1);
+    cell->setParam(WB_ID(cell, POST_ADDER_STATIC), State::S1);
     if (st.useFeedBack) {
-      cell->setParam(ID(USE_FEEDBACK), State::S1);
+      cell->setParam(WB_ID(cell, USE_FEEDBACK), State::S1);
       cell->setPort(ID(CDIN_FDBK_SEL), {State::S0, State::S1});
     } else {
-      cell->setParam(ID(USE_FEEDBACK), State::S0);
+      cell->setParam(WB_ID(cell, USE_FEEDBACK), State::S0);
       cell->setPort(ID::C, st.sigC);
     }
 
@@ -49,10 +50,10 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm) {
   }
 
   if (st.multHasReg) {
-    cell->setParam(ID(MULT_HAS_REG), State::S1);
+    cell->setParam(WB_ID(cell, MULT_HAS_REG), State::S1);
     pm.autoremove(st.ffMult);
   } else {
-    cell->setParam(ID(MULT_HAS_REG), State::S0);
+    cell->setParam(WB_ID(cell, MULT_HAS_REG), State::S0);
   }
   // pack registers
   //
@@ -101,14 +102,16 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm) {
     if (st.ffA && st.ffB) { // both A and B have to be registered
       SigSpec A = cell->getPort(ID::A);
       if (st.ffA) {
-        f(A, st.ffA, ID(A_EN), ID(A_ARST_N), ID(ALLOW_A_REG), ID(A_REG));
+        f(A, st.ffA, ID(A_EN), WB_ID(cell, A_ARST_N), WB_ID(cell, ALLOW_A_REG),
+          ID(A_REG));
       }
       pm.add_siguser(A, cell);
       cell->setPort(ID::A, A);
 
       SigSpec B = cell->getPort(ID::B);
       if (st.ffB) {
-        f(B, st.ffB, ID(B_EN), ID(B_ARST_N), ID(ALLOW_B_REG), ID(B_REG));
+        f(B, st.ffB, ID(B_EN), WB_ID(cell, B_ARST_N), WB_ID(cell, ALLOW_B_REG),
+          ID(B_REG));
       }
       pm.add_siguser(B, cell);
       cell->setPort(ID::B, B);
@@ -122,11 +125,11 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm) {
         SigSpec arst = st.ffA->getPort(ID::ARST);
         bool rstpol_n = !st.ffA->getParam(ID::ARST_POLARITY).as_bool();
         // active low async rst
-        cell->setPort(ID(resetn),
+        cell->setPort(WB_ID(cell, resetn),
                       rstpol_n ? arst : pm.module->Not(NEW_ID, arst));
       } else {
         // active low async/sync rst
-        cell->setPort(ID(resetn), State::S1);
+        cell->setPort(WB_ID(cell, resetn), State::S1);
       }
     } else {
       cell->setParam(ID(A_REG), State::S0);
@@ -135,14 +138,15 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm) {
 
     if (st.ffC) {
       SigSpec C = cell->getPort(ID::C);
-      f(C, st.ffC, ID(C_EN), ID(C_ARST_N), ID(ALLOW_C_REG), ID(C_REG));
+      f(C, st.ffC, ID(C_EN), ID(C_ARST_N), WB_ID(cell, ALLOW_C_REG), ID(C_REG));
 
       pm.add_siguser(C, cell);
       cell->setPort(ID::C, C);
     }
     if (st.ffP) {
       SigSpec P; // unused
-      f(P, st.ffP, ID(P_EN), ID(P_ARST_N), ID(ALLOW_P_REG), ID(P_REG));
+      f(P, st.ffP, ID(P_EN), WB_ID(cell, P_ARST_N), WB_ID(cell, ALLOW_P_REG),
+        WB_ID(cell, P_REG));
       st.ffP->connections_.at(ID::Q).replace(
           st.sigP, pm.module->addWire(NEW_ID, GetSize(st.sigP)));
 
@@ -162,10 +166,10 @@ void zeroasic_dsp_pack(zeroasic_dsp_pm &pm) {
         if (st.ffP->type.in(ID($adff), ID($adffe))) {
           SigSpec arst = st.ffP->getPort(ID::ARST);
           bool rstpol_n = !st.ffP->getParam(ID::ARST_POLARITY).as_bool();
-          cell->setPort(ID(resetn),
+          cell->setPort(WB_ID(cell, resetn),
                         rstpol_n ? arst : pm.module->Not(NEW_ID, arst));
         } else {
-          cell->setPort(ID(resetn), State::S1);
+          cell->setPort(WB_ID(cell, resetn), State::S1);
         }
       }
     }
@@ -255,16 +259,17 @@ void zeroasic_dsp_add_pack(zeroasic_dsp_pm &pm) {
     return sig;
   };
 
-  Cell *cell = module->addCell(NEW_ID, ID(MAE));
+  Cell *cell = module->addCell(NEW_ID, WB_ID(module, MAE));
 
-  cell->setParam(ID(ADD_ONLY), State::S1);
-  cell->setParam(ID(POST_ADDER_STATIC), State::S0);
-  cell->setParam(ID(MULT_HAS_REG), State::S0);
+  cell->setParam(WB_ID(cell, ADD_ONLY), State::S1);
+  cell->setParam(WB_ID(cell, POST_ADDER_STATIC), State::S0);
+  cell->setParam(WB_ID(cell, MULT_HAS_REG), State::S0);
   cell->setParam(ID(C_REG), State::S0);
-  cell->setParam(ID(USE_FEEDBACK), st.useFeedBack ? State::S1 : State::S0);
+  cell->setParam(WB_ID(cell, USE_FEEDBACK),
+                 st.useFeedBack ? State::S1 : State::S0);
   cell->setParam(ID(A_REG), ffA ? State::S1 : State::S0);
   cell->setParam(ID(B_REG), ffB ? State::S1 : State::S0);
-  cell->setParam(ID(P_REG), ffP ? State::S1 : State::S0);
+  cell->setParam(WB_ID(cell, P_REG), ffP ? State::S1 : State::S0);
 
   SigSpec A = operand(st.sigA, ffA, st.signedA);
   cell->setPort(ID::A, A);
@@ -293,7 +298,7 @@ void zeroasic_dsp_add_pack(zeroasic_dsp_pm &pm) {
       resetn = State::S1;
     else if (arstPolarity(rstFrom))
       resetn = module->Not(NEW_ID, resetn);
-    cell->setPort(ID(resetn), resetn);
+    cell->setPort(WB_ID(cell, resetn), resetn);
 
     log("  clock: %s (%s)\n", log_signal(st.clock), "posedge");
     if (ffA)

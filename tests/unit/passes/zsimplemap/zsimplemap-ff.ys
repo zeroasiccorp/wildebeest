@@ -1,0 +1,47 @@
+# zsimplemap splits every coarse storage cell into one fine cell per bit
+# (reset values are applied per bit, so a 2'10 reset gives one ..0 and one
+# ..1 cell).  A zero-width $dff produces nothing; $tribuf becomes $_TBUF_.
+#
+# Equivalence is proven for the clocked types.  $_TBUF_ has no SAT model, and
+# after async2sync the set/reset latches ($sr, $adlatch, $dlatchsr) cannot be
+# proven by induction, so those are checked by cell type only.
+
+read_rtlil ../../data/rtlil/zsimplemap_ff.il
+design -save pre
+select -assert-count 18 t:*
+
+zsimplemap
+
+select -assert-count 34 t:*
+select -assert-none t:* t:$_* %d
+select -assert-count 2 t:$_SR_PN_
+select -assert-count 2 t:$_FF_
+select -assert-count 2 t:$_DFF_P_
+select -assert-count 2 t:$_DFFE_PN_
+select -assert-count 2 t:$_DFFSR_NPP_
+select -assert-count 2 t:$_DFFSRE_PNPP_
+select -assert-count 1 t:$_DFF_PN0_
+select -assert-count 1 t:$_DFF_PN1_
+select -assert-count 1 t:$_SDFF_PP0_
+select -assert-count 1 t:$_SDFF_PP1_
+select -assert-count 2 t:$_DFFE_PP1P_
+select -assert-count 2 t:$_SDFFE_PN0P_
+select -assert-count 1 t:$_SDFFCE_PP0N_
+select -assert-count 1 t:$_SDFFCE_PP1N_
+select -assert-count 2 t:$_ALDFF_PP_
+select -assert-count 2 t:$_ALDFFE_NNP_
+select -assert-count 2 t:$_DLATCH_P_
+select -assert-count 1 t:$_DLATCH_PP0_
+select -assert-count 1 t:$_DLATCH_PP1_
+select -assert-count 2 t:$_DLATCHSR_NPN_
+select -assert-count 2 t:$_TBUF_
+
+rename top gate
+design -copy-from pre -as gold top
+delete gold/c:c_tribuf gold/c:c_sr gold/c:c_adlatch gold/c:c_dlatchsr
+delete gate/t:$_TBUF_ gate/t:$_SR_* gate/t:$_DLATCH_???_ gate/t:$_DLATCHSR_*
+async2sync
+equiv_make gold gate eq
+equiv_simple -seq 2 eq
+equiv_induct eq
+equiv_status -assert eq

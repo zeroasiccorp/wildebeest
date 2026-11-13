@@ -1,0 +1,13 @@
+# 'dsps.techmap_parameters' values must be strings or integers.
+# Fixture: data/config/config-dsp_techmap_parameters_value_type.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect error "Second element associated to dsps 'techmap_parameters' 'A_SIZE' must be either a string or an integer." 1
+synth_fpga -config ../../data/config/config-dsp_techmap_parameters_value_type.json

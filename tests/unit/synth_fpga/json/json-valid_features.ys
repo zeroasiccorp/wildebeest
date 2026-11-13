@@ -1,0 +1,17 @@
+# Leading whitespace, escapes in strings (\u with lower- and upper-case
+# hex digits, and an unknown escape), a newline between key and value,
+# negative and real numbers, a lone '-', true / false, separators left
+# out, unknown keys and text after the root value are all accepted.
+# Fixture: data/config/json-valid_features.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+synth_fpga -config ../../data/config/json-valid_features.json
+logger -check-expected
+select -assert-min 1 t:$lut

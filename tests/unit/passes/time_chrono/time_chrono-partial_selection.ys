@@ -1,0 +1,12 @@
+# The pass refuses to run on a partially selected design.
+
+read_verilog <<EOF
+module top (input a, output y);
+   assign y = a;
+endmodule
+EOF
+hierarchy -top top
+
+select w:a
+logger -expect error "only operates on fully selected designs" 1
+time_chrono -start

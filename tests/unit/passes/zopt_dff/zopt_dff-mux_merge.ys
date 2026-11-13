@@ -1,0 +1,66 @@
+# Reset and enable muxes in front of flip-flops are folded into sync-reset
+# and enable inputs (data/zopt_dff/mux_merge.v).  -nosdff, -nodffe and
+# -simple-dffe turn parts of this off; the same design is also run after
+# simplemap to cover fine cells.  Every run is proven equivalent.
+#
+# Only flip-flop cells are counted: the number of $mux / gate cells comes
+# from Yosys's proc / simplemap and may change between Yosys versions.
+
+read_verilog ../../data/zopt_dff/mux_merge.v
+proc
+opt_clean
+design -save orig
+
+logger -expect log "Adding SRST signal on .* .D = .d, Q = .q0, rval = 4'1010." 1
+logger -expect log "Adding EN signal on .* .D = .d, Q = .q1." 1
+logger -expect log "Adding SRST signal on .* Q = .q4 .1:0., rval = 2'00." 1
+logger -expect log "Adding SRST signal on .* Q = .q4 .3:2., rval = 2'00." 1
+logger -expect log "Adding SRST signal on .* .D = .d, Q = .q3, rval = 4'1111." 1
+logger -expect log "Adding EN signal on .* .D = .d, Q = .q2." 1
+equiv_opt -undef -assert -multiclock zopt_dff
+logger -check-expected
+design -load postopt
+select -assert-count 3 t:$dffe
+select -assert-count 3 t:$sdff
+select -assert-count 1 t:$sdffce
+select -assert-count 1 t:$sdffe
+select -assert-none t:$dff
+
+design -load orig
+logger -expect log "Adding EN signal" 5
+equiv_opt -undef -assert -multiclock zopt_dff -nosdff
+logger -check-expected
+design -load postopt
+select -assert-count 2 t:$dff
+select -assert-count 5 t:$dffe
+select -assert-none t:$sdff t:$sdffe t:$sdffce
+
+design -load orig
+logger -expect log "Adding SRST signal" 4
+equiv_opt -undef -assert -multiclock zopt_dff -nodffe
+logger -check-expected
+design -load postopt
+select -assert-count 4 t:$dff
+select -assert-count 4 t:$sdff
+select -assert-none t:$dffe t:$sdffe t:$sdffce
+
+design -load orig
+equiv_opt -undef -assert -multiclock zopt_dff -simple-dffe
+design -load postopt
+select -assert-count 2 t:$dff
+select -assert-count 1 t:$dffe
+select -assert-count 3 t:$sdff
+select -assert-count 1 t:$sdffce
+select -assert-count 1 t:$sdffe
+
+design -load orig
+simplemap
+equiv_opt -undef -assert -multiclock zopt_dff
+design -load postopt
+select -assert-count 12 t:$_DFFE_PP_
+select -assert-count 4 t:$_SDFFCE_PP1P_
+select -assert-count 4 t:$_SDFFE_PP0P_
+select -assert-count 4 t:$_SDFF_PN0_
+select -assert-count 2 t:$_SDFF_PP0_
+select -assert-count 2 t:$_SDFF_PP1_
+select -assert-none t:$_DFF_P_

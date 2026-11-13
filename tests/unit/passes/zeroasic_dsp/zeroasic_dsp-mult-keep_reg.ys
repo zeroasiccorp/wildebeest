@@ -1,0 +1,14 @@
+# A (* keep *) input register blocks input packing: A and B stay in the
+# fabric and only the output register is packed.
+
+read_verilog <<EOF
+module top (input clk, input signed [17:0] a, b, output reg [35:0] y);
+   (* keep *) reg signed [17:0] ar;
+   reg signed [17:0] br;
+   always @(posedge clk) begin ar <= a; br <= b; y <= ar * br; end
+endmodule
+EOF
+synth_fpga -partname z1010
+select -assert-count 1 t:efpga_mult_rego
+select -assert-count 1 t:efpga_*
+select -assert-count 36 t:dff*

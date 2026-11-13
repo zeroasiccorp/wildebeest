@@ -84,6 +84,26 @@ on:
         description: 'Yosys v0.66'
         type: boolean
         default: true
+      yosys_v0_67:
+        description: 'Yosys v0.67'
+        type: boolean
+        default: true
+      yosys_v0_68:
+        description: 'Yosys v0.68'
+        type: boolean
+        default: true
+      yosys_v0_69:
+        description: 'Yosys v0.69'
+        type: boolean
+        default: true
+      yosys_v0_70:
+        description: 'Yosys v0.70'
+        type: boolean
+        default: true
+      yosys_v0_71:
+        description: 'Yosys v0.71'
+        type: boolean
+        default: true
 
 concurrency:
   group: daily-${{ github.workflow }}-${{ github.ref }}
@@ -121,6 +141,11 @@ jobs:
           check "${{ inputs.yosys_v0_64 }}" && versions+=("v0.64")
           check "${{ inputs.yosys_v0_65 }}" && versions+=("v0.65")
           check "${{ inputs.yosys_v0_66 }}" && versions+=("v0.66")
+          check "${{ inputs.yosys_v0_67 }}" && versions+=("v0.67")
+          check "${{ inputs.yosys_v0_68 }}" && versions+=("v0.68")
+          check "${{ inputs.yosys_v0_69 }}" && versions+=("v0.69")
+          check "${{ inputs.yosys_v0_70 }}" && versions+=("v0.70")
+          check "${{ inputs.yosys_v0_71 }}" && versions+=("v0.71")
           if [ ${#versions[@]} -eq 0 ]; then
             echo "No Yosys versions selected" >&2
             exit 1
@@ -146,7 +171,7 @@ jobs:
 
       - name: Cache Yosys install
         id: cache-yosys
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: yosys-install
           key: ${{ runner.os }}-yosys-install-${{ matrix.yosys_version }}
@@ -163,6 +188,18 @@ jobs:
         shell: bash
         run: |
           cd yosys
-          make config-gcc
-          make -j$(nproc) PREFIX=${{ github.workspace }}/yosys-install
-          make install PREFIX=${{ github.workspace }}/yosys-install
+          if [ -f Makefile ]; then
+            # Yosys <= 0.66 uses a Makefile-based build
+            make config-gcc
+            make -j$(nproc) PREFIX=${{ github.workspace }}/yosys-install
+            make install PREFIX=${{ github.workspace }}/yosys-install
+          else
+            # Yosys >= 0.67 uses a CMake-based build
+            cmake -S . -B build \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/yosys-install \
+              -DYOSYS_ENABLE_UNIT_TESTS=OFF \
+              -DYOSYS_WITHOUT_SLANG=ON
+            cmake --build build --parallel $(nproc)
+            cmake --install build
+          fi

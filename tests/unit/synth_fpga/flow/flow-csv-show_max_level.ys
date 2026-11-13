@@ -1,0 +1,10 @@
+# -show_max_level prints the max_level / max_height report.
+# KNOWN-ISSUE SF10: together with -csv, the logic level column of stat.csv
+# is -1 instead of the measured level.
+
+read_verilog ../../data/designs/counter.v
+logger -expect log "   Max logic level = " 1
+logger -expect log "   Max height / Max levels    = " 1
+synth_fpga -csv -show_max_level
+logger -check-expected
+!grep -qE "^top,[0-9]+,8,-1,[0-9]+$" stat.csv

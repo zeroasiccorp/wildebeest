@@ -1,0 +1,7 @@
+# All optional steps off at once: no BRAM inference, no flip-flop
+# optimisations, and the (unused for this part) -no_sdff flag.
+
+read_verilog ../../data/designs/counter.v
+synth_fpga -no_bram -no_opt_sat_dff -no_opt_const_dff -no_sdff
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut
