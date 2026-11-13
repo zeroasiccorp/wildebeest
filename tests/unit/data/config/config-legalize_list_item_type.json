@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "partname": "z1000",
+  "lut_size": 4,
+  "flipflops": {
+    "features": [
+      "async_reset",
+      "async_set",
+      "flop_enable"
+    ],
+    "models": {},
+    "legalize_list": [
+      "$_DFF_P_",
+      2
+    ],
+    "techmap": "../z1000/tech_flops.v"
+  }
+}

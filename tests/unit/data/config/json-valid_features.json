@@ -1,0 +1,33 @@
+
+  	{
+  "version": 1,
+  "partname": "z\u0031000 \u004A \" \/ \\ \b \f \n \r \t \q",
+  "lut_size": 4,
+  "flipflops": {
+    "features": [
+      "async_reset",
+      "async_set",
+      "flop_enable"
+    ],
+    "models": {},
+    "legalize_list": [
+      "$_DFF_PN0_",
+      "$_DFF_P_",
+      "$_DFFE_PP_",
+      "$_DFFE_PN0P_"
+    ],
+    "techmap": "../z1000/tech_flops.v"
+  }
+,
+  "extra_newline"
+  :
+  1,
+  "extra_negative": -42,
+  "extra_minus": -,
+  "extra_real": -1.25,
+  "extra_false": false,
+  "extra_true": true,
+  "extra_list": [1 2 3],
+  "extra_dict": {"k" "v" "n": 7}
+}
+trailing text is ignored

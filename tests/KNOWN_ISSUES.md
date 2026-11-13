@@ -37,6 +37,8 @@ Line numbers refer to the source as of commit `6763981`.
 | SF13 | L | tests | `heartbeat-z1010-hardcode.ys` actually runs `-partname z1000`. Kept as the z1000 test; `heartbeat-z1010-hardcode-real.ys` covers z1010. |
 | SF14 | H | `abc_scripts/*.scr` | `LUT4/BEST/tiny_area_lut4.scr` and other scripts using `write_blif`/`read_blif` write a fixed-name file such as `tiny_area_lut4.blif` into the current directory and read it back. Two runs in the same directory corrupt each other's ABC input and segfault. The test runner works around it with one sandbox directory per test. |
 
+| SF15 | M | 594-701, 2710-2746 | `root_path` is applied inconsistently. `setup_options` builds the techmap/libmap paths as `root_path + "/" + file`, and a relative `root_path` is taken relative to the **current directory**, not the config file. `load_cell_models_from_config` reads the flip-flop and DSP model files relative to the **config file's directory** and ignores `root_path`. Any `root_path` other than one naming the config file's own directory (relative to where Yosys runs) therefore fails with "file not found". Found in Phase 2b. |
+
 ## zopt_dff / zopt_const_dff
 
 | ID | Sev | Where | Issue |

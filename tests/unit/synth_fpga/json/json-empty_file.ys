@@ -1,0 +1,13 @@
+# An empty file hits EOF before any value.
+# Fixture: data/config/json-empty_file.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect error "Unexpected EOF in JSON file." 1
+synth_fpga -config ../../data/config/json-empty_file.json
