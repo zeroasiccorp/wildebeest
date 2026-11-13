@@ -1,0 +1,8 @@
+# -abc_script_version BASIC selects the BASIC script directory.
+
+read_verilog ../../data/designs/counter.v
+logger -expect log "abc_scripts/LUT4/BASIC/tiny_area_lut4.scr" 1
+synth_fpga -abc_script_version BASIC
+logger -check-expected
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut

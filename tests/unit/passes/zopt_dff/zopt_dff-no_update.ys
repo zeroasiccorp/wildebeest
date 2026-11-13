@@ -1,0 +1,23 @@
+# Flip-flops that can never load D: enable never active, or constant clock
+# (data/zopt_dff/no_update.v).  The D path is removed and the flop keeps its
+# init value; an $sdffe whose enable is never active keeps only its sync
+# reset.  The init values make this provable with equiv_opt (without them
+# the output is undefined forever and no equivalence check can succeed;
+# Yosys's own opt_dff behaves the same).
+
+read_verilog -icells ../../data/zopt_dff/no_update.v
+design -save orig
+
+logger -expect log "Handling never-active EN on en_never .* .removing D path." 1
+logger -expect log "Handling const CLK on clk_const .* .removing D path." 1
+logger -expect log "Handling never-active EN on en_never_undef .* .connecting SRST instead." 1
+logger -expect log "Handling never-active EN on f_en_never .* .removing D path." 1
+equiv_opt -undef -assert -multiclock zopt_dff
+logger -check-expected
+design -load postopt
+select -assert-count 1 t:$dffe
+
+design -load orig
+equiv_opt -undef -assert -multiclock zopt_dff -keepdc
+design -load postopt
+select -assert-count 1 t:$dffe

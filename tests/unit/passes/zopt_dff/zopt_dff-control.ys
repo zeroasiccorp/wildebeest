@@ -1,0 +1,48 @@
+# Constant async-load, async/sync reset, enable and clock inputs
+# (data/zopt_dff/control.v, one cell per case named after the case).
+# Each run is proven equivalent with equiv_opt.
+
+read_verilog -icells ../../data/zopt_dff/control.v
+design -save orig
+
+logger -expect log "Removing never-active async load on al_never0 " 1
+logger -expect log "Removing never-active async load on al_neverx " 1
+logger -expect log "Handling always-active async load on al_always " 1
+logger -expect log "Handling always-active async load on al_always_en " 1
+logger -expect log "Changing const-value async load to async reset on al_const_ad " 1
+logger -expect log "Handling always-active async load on lat_arst_on " 1
+logger -expect log "Handling always-active async load on lat_on " 1
+logger -expect log "Removing never-active ARST on ar_never " 1
+logger -expect log "Handling always-active ARST on ar_always " 1
+logger -expect log "Removing never-active SRST on sr_never " 1
+logger -expect log "Handling always-active SRST on sr_always_e " 1
+logger -expect log "Handling always-active SRST on sr_always_ce " 1
+logger -expect log "Removing always-active EN on en_always " 1
+logger -expect log "Handling never-active EN on en_never_sdffe .* .connecting SRST instead." 1
+logger -expect log "Handling const CLK on clk_const_arst " 1
+logger -expect log "Removing never-active ARST on f_ar_never " 1
+logger -expect log "Handling always-active ARST on f_ar_always " 1
+logger -expect log "Handling always-active SRST on f_sr_always " 1
+logger -expect log "Removing always-active EN on f_en_always " 1
+logger -expect log "Handling always-active async load on f_al_always " 1
+logger -expect log "Handling always-active async load on f_lat_on " 1
+equiv_opt -undef -assert -multiclock zopt_dff
+logger -check-expected
+design -load postopt
+
+select -assert-count 5 t:$dff
+select -assert-count 1 t:$adff
+select -assert-count 2 t:$_DFF_P_
+select -assert-none t:$aldff t:$aldffe t:$adlatch t:$dlatch t:$sdff t:$sdffe t:$sdffce t:$dffe
+select -assert-none t:$_DFF_PP0_ t:$_DFF_PP1_ t:$_SDFF_* t:$_DFFE_* t:$_ALDFF_* t:$_DLATCH_*
+
+# -keepdc keeps the never-active 'x' async load and the enables.
+design -load orig
+equiv_opt -undef -assert -multiclock zopt_dff -keepdc
+design -load postopt
+
+select -assert-count 5 t:$dff
+select -assert-count 2 t:$adff
+select -assert-count 1 t:$aldff
+select -assert-count 2 t:$dffe
+select -assert-count 3 t:$_DFF_P_

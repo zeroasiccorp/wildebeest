@@ -1,0 +1,25 @@
+# KNOWN-ISSUE DSP7 (expected to fail, see the .xfail file): y = a*b + c_reg,
+# where only the C operand is registered.
+#
+# Today the C register is absorbed into efpga_mult_addc, which is purely
+# combinational (no clock input), and C is connected straight to the primary
+# input c: the cycle of latency on c is lost and the netlist computes
+# a*b + c instead of a*b + c_reg.
+#
+# This test asserts the correct behaviour (the C register survives somewhere),
+# so it fails today.  When DSP7 is fixed it will pass; then delete the .xfail
+# file.
+
+read_verilog <<EOF
+module top (input clk, input signed [17:0] a, b, input signed [35:0] c, output signed [37:0] y);
+   reg signed [35:0] cr;
+   always @(posedge clk) cr <= c;
+   assign y = a * b + cr;
+endmodule
+EOF
+synth_fpga -partname z1010
+select -assert-count 1 t:efpga_mult_addc
+
+# Correct behaviour: the 36-bit C register must still exist (in the fabric,
+# since efpga_mult_addc has no register).
+select -assert-min 36 t:dff*

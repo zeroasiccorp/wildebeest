@@ -1,0 +1,19 @@
+# memory_libmap_parameters, logic_cost_rom as an integer
+# and bram_with_init false are accepted.  A logic_cost_rom different from
+# -logic_cost_rom warns and the config value wins.
+# Fixture: data/config/config-brams_options.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect warning "logic_cost_rom" 1
+logger -expect log "  BRAM memory_libmap parameters : " 1
+logger -expect log "                       -no-auto-distributed" 1
+synth_fpga -config ../../data/config/config-brams_options.json -logic_cost_rom 0.7 -show_config
+logger -check-expected
+select -assert-min 1 t:$lut

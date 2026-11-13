@@ -1,0 +1,16 @@
+# A config lut_size different from -lut_size
+# wins, with a warning.
+# Fixture: data/config/config-lut_size_override.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect warning "Config file will change lut size value from 4 to 6." 1
+synth_fpga -config ../../data/config/config-lut_size_override.json -lut_size 4
+logger -check-expected
+select -assert-min 1 t:$lut

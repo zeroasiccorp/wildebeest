@@ -1,0 +1,31 @@
+# zeroasic_dsp called directly: the add-only pass packs a lone $add only if
+# at least -add_minwidth result bits are used (default 10).  A non-numeric
+# value falls back to the minimum of 2.  -no_add skips the add-only pass.
+
+read_verilog <<EOF
+module top (input [7:0] a, b, input [2:0] c, d, output [8:0] y, output [3:0] z);
+   assign y = a + b;
+   assign z = c + d;
+endmodule
+EOF
+design -save orig
+
+zeroasic_dsp
+select -assert-count 2 t:$add
+
+design -load orig
+zeroasic_dsp -add_minwidth 3
+select -assert-count 0 t:$add
+select -assert-count 2 t:*
+
+design -load orig
+zeroasic_dsp -add_minwidth abc
+select -assert-count 0 t:$add
+
+design -load orig
+zeroasic_dsp -no_add -add_minwidth 3
+select -assert-count 2 t:$add
+
+design -load orig
+logger -expect error "Unknown option or option in arguments" 1
+zeroasic_dsp -add_minwidth

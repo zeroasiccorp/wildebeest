@@ -1,0 +1,18 @@
+# $print and $check cells (from $display and assert) cannot be synthesized;
+# they are reported and left in the netlist.
+
+read_verilog -formal <<EOF
+module top (input clk, a, output reg q);
+   always @(posedge clk) begin
+      q <= a;
+      $display("a=%d", a);
+      assert(a == a);
+   end
+endmodule
+EOF
+logger -expect warning "Found non synthesizable cell .* ..check." 1
+logger -expect warning "Found non synthesizable cell .* ..print." 1
+synth_fpga
+logger -check-expected
+select -assert-count 1 t:$print
+select -assert-count 1 t:$check

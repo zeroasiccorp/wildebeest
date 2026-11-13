@@ -1,0 +1,19 @@
+# The flip-flop optimisation steps can be turned off one at a time.
+# -no_opt_sat_dff keeps only zopt_const_dff; -no_opt_const_dff keeps only
+# zopt_dff -sat.  (Default: zopt_const_dff, zopt_dff -sat, zopt_const_dff.)
+
+read_verilog ../../data/designs/counter.v
+design -save orig
+
+logger -expect log "Executing ZOPT_CONST_DFF pass" 1
+synth_fpga -no_opt_sat_dff
+logger -check-expected
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut
+
+design -load orig
+logger -expect log "Executing ZOPT_DFF pass" 1
+synth_fpga -no_opt_const_dff
+logger -check-expected
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut

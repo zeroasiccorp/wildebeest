@@ -1,0 +1,6 @@
+# An unknown -use_dsp_tech is rejected.
+
+read_verilog ../../data/designs/counter.v
+
+logger -expect error "Please select a correct DSP architecture." 1
+synth_fpga -use_dsp_tech foo

@@ -1,0 +1,6 @@
+# An unknown -opt mode is rejected.
+
+read_verilog ../../data/designs/counter.v
+
+logger -expect error "-opt option .speed. is unknown. Please see help." 1
+synth_fpga -opt speed

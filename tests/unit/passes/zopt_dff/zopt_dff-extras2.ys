@@ -1,0 +1,34 @@
+# Rarer shapes (data/zopt_dff/extras2.v): always-active async load (coarse
+# and fine), set/clear cells that cannot be simplified, $sdffce with D == Q
+# and an active-low enable (coarse and fine), an async-load register under
+# -sat, a sync reset whose mux has constants on both sides for some bits, and
+# a sync reset covering only part of a register.  Both runs are proven
+# equivalent.
+
+read_verilog -icells ../../data/zopt_dff/extras2.v
+proc
+opt_clean
+design -save orig
+
+logger -expect log "Handling always-active async load on al_ar0 " 1
+logger -expect log "Handling always-active async load on f_al_ar " 1
+logger -expect log "Handling D = Q on ce_dq .* .conecting SRST instead." 1
+logger -expect log "Handling D = Q on f_ce_dq .* .conecting SRST instead." 1
+logger -expect log "Adding SRST signal on .* Q = .q_part_srst .1:0., rval = 2'00." 1
+logger -expect log "Adding SRST signal on .* Q = .q_srst_mux .3:2., rval = 2'01." 1
+logger -expect log "Setting constant [01]-bit at position [0-3] on ce_dq " 4
+logger -expect log "Setting constant 0-bit at position 0 on f_ce_dq " 1
+equiv_opt -undef -assert -multiclock zopt_dff -sat
+logger -check-expected
+design -load postopt
+select -assert-count 1 t:$aldff
+select -assert-count 2 t:$dff
+select -assert-count 2 t:$dffsr
+select -assert-count 2 t:$sdff
+select -assert-none t:$sdffce t:$_SDFFCE_* t:$_ALDFF_*
+
+design -load orig
+equiv_opt -undef -assert -multiclock zopt_dff -keepdc
+design -load postopt
+select -assert-count 1 t:$dffe
+select -assert-count 1 t:$_DFFE_PP_

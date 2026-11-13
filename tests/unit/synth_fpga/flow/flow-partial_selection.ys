@@ -1,0 +1,6 @@
+# synth_fpga refuses to run on a partially selected design.
+
+read_verilog ../../data/designs/counter.v
+select w:q
+logger -expect error "This command only operates on fully selected designs" 1
+synth_fpga

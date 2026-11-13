@@ -1,0 +1,18 @@
+# KNOWN-ISSUE SF7 (expected to fail, see the .xfail file).
+#
+# (a8 ^ a9) ^ (a8 ^ a10) ^ (a11 ^ a12) equals a9 ^ a10 ^ a11 ^ a12, because
+# a8 cancels.  The XOR-tree rebalancing of -opt delay keeps the tree leaves in
+# a set, so the repeated leaf a8 is kept once instead of cancelling, and the
+# netlist computes a8 ^ a9 ^ a10 ^ a11 ^ a12.  The same design is proven
+# equivalent with -no_xor_tree_process and in the default (area) mode.
+#
+# This test asserts the correct behaviour (equivalence), so it fails today.
+
+read_verilog ../../data/designs/xor_repeat.v
+proc
+design -save rtl
+synth_fpga -opt delay
+rename top gate
+design -copy-from rtl -as gold top
+miter -equiv -flatten -make_assert gold gate miter
+sat -verify -prove-asserts miter

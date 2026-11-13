@@ -1,0 +1,29 @@
+# KNOWN-ISSUE ML2: every max_level run reads the LUT1..LUT6 blackbox models
+# into the design and runs 'hierarchy -auto-top', which deletes modules that
+# the chosen top doesn't use.  'top' instantiates 'sub', so it is the clear top;
+# the standalone 'unused' is deleted and the six LUT blackboxes are added.
+
+read_verilog <<EOF
+module sub (input a, output y);
+   assign y = ~a;
+endmodule
+module top (input a, b, output y);
+   wire t;
+   sub u (.a(a & b), .y(t));
+   assign y = t ^ a;
+endmodule
+module unused (input a, output y);
+   assign y = a;
+endmodule
+EOF
+select -assert-mod-count 3 =*
+
+logger -expect log "Removing unused module ..unused'" 1
+max_level
+logger -check-expected
+
+select -assert-mod-count 8 =*
+select -assert-mod-count 1 =top
+select -assert-mod-count 1 =sub
+select -assert-mod-count 1 =LUT1
+select -assert-mod-count 1 =LUT6

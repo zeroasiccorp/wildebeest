@@ -1,0 +1,30 @@
+# max_height -dot writes dot_cells.vlg, dot_expr.vlg and cp.dot into the
+# current directory and starts 'xdot' (a stub under ctest).  The run works on
+# a copy of the design, so the design is unchanged afterwards.
+#
+# KNOWN-ISSUE MH5: '-dot' crashes (uncaught std::out_of_range) when a LUT on
+# the critical path has a constant input, so the constant input of l3 in
+# lut_network.il is tied to a signal here.
+
+read_rtlil ../../data/rtlil/lut_network.il
+cd top
+connect -set k d
+cd ..
+select -assert-mod-count 1 =*
+
+logger -expect log "Dumped 'cp.dot' file" 1
+logger -expect log "   Max height / Max levels    = 3" 1
+max_height -dot
+logger -check-expected
+scratchpad -assert max_height.max_height 3
+
+select -assert-mod-count 1 =*
+
+!grep -q "digraph cp" cp.dot
+!grep -q "module top" dot_cells.vlg
+!grep -q "module top" dot_expr.vlg
+
+# Names are legalized for dot: '$ \ [ ] . :' all become '_'.
+!grep -q "^l1_x_y_z_0_ " cp.dot
+!grep -q "^l2_q " cp.dot
+!grep -q "^_n1 .color=.red" cp.dot

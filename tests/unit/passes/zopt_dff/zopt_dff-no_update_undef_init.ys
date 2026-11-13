@@ -1,0 +1,19 @@
+# A constant-clock flip-flop with a partly undefined init (1x0x).
+#
+# Without -keepdc the undefined init bits are don't-care and may be replaced
+# by any constant, which an '-undef' equivalence check cannot accept; so that
+# run is checked by structure only.  With -keepdc the flop is kept whole
+# and the result is proven equivalent.
+
+read_verilog -icells ../../data/zopt_dff/no_update_undef.v
+design -save orig
+
+logger -expect log "Handling const CLK on clk_const_undef .* .removing D path." 1
+zopt_dff
+logger -check-expected
+select -assert-none t:$dff
+
+design -load orig
+equiv_opt -undef -assert -multiclock zopt_dff -keepdc
+design -load postopt
+select -assert-count 1 t:$dff r:WIDTH=4 %i

@@ -18,3 +18,16 @@ help obs_clean
 
 logger -expect log ".* max_height.*options.*" 1
 help max_height
+
+logger -expect log ".* max_level .options. .selection." 1
+help max_level
+
+logger -expect log ".* zsimplemap .selection." 1
+help zsimplemap
+
+# KNOWN-ISSUE OC4: the help text names the command 'opt_const_dff'.
+logger -expect log "    opt_const_dff" 1
+help zopt_const_dff
+
+logger -expect log ".* zeroasic_dsp .options. .selection." 1
+help zeroasic_dsp

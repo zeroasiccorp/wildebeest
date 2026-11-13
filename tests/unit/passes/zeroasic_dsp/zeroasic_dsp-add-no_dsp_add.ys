@@ -1,0 +1,10 @@
+# synth_fpga -no_dsp_add passes -no_add: the adder stays in logic.
+
+read_verilog <<EOF
+module top (input signed [17:0] a, b, output signed [19:0] y);
+   assign y = a + b;
+endmodule
+EOF
+synth_fpga -partname z1010 -no_dsp_add
+select -assert-none t:efpga_*
+select -assert-none t:dff*

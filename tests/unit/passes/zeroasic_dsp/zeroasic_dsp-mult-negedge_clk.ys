@@ -1,0 +1,13 @@
+# Registers on a negative clock edge are not packed.
+
+read_verilog <<EOF
+module top (input clk, input signed [17:0] a, b, output [35:0] y);
+   reg signed [17:0] ar, br;
+   always @(negedge clk) begin ar <= a; br <= b; end
+   assign y = ar * br;
+endmodule
+EOF
+synth_fpga -partname z1010
+select -assert-count 1 t:efpga_mult
+select -assert-count 1 t:efpga_*
+select -assert-count 36 t:dff*

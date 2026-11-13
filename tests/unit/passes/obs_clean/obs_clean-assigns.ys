@@ -1,0 +1,14 @@
+# -assigns also removes assigns that drive nothing observable.  Only
+# 'dangling = u1' goes: 'm = {a, b}' stays because one of its bits is used,
+# and '{p, q} = d' stays because p is used.
+
+read_rtlil ../../data/rtlil/obs_clean.il
+
+obs_clean -assigns
+
+write_rtlil after.il
+!! grep -Eq "(connect|#) .dangling " after.il
+!grep -Eq "(connect|#) .y2 .t1$" after.il
+!grep -Eq "(connect|#) .m [{] .a .b [}]$" after.il
+!grep -Eq "(connect|#) [{] .p .q [}] .d$" after.il
+!grep -Eq "(connect|#) .z2 .p$" after.il

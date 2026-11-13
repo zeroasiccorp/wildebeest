@@ -1,0 +1,16 @@
+# KNOWN-ISSUE OB1: the fan-in analysis only sees the selected cells, but the
+# removal loop goes over every cell in the module.  With only the $or cells
+# selected, the live cells g_t1 and g_kw are deleted along with the dead ones;
+# only g_y (selected and observable) and kept_x (keep) survive.
+
+read_rtlil ../../data/rtlil/obs_clean.il
+
+logger -expect log "      o Removed 3 '.and' cells" 1
+logger -expect log "      o Removed 1 '.or' cells" 1
+logger -expect log "      o Removed 1 '.not' cells" 1
+obs_clean t:$or
+logger -check-expected
+
+select -assert-count 2 t:*
+select -assert-count 1 c:g_y
+select -assert-count 1 c:kept_x

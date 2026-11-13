@@ -1,0 +1,19 @@
+# -show_dff_init_value lists flip-flops by init value: one with 0, one with
+# 1 and one without an init value.
+
+read_verilog <<EOF
+module top (input clk, input [2:0] d, output reg q0, q1, q2);
+   initial q0 = 1'b0;
+   initial q1 = 1'b1;
+   always @(posedge clk) begin q0 <= d[0]; q1 <= d[1]; q2 <= d[2]; end
+endmodule
+EOF
+logger -expect log "DFFs with Initial value '0' :" 1
+logger -expect log "DFFs with Initial value '1' :" 1
+logger -expect log "DFFs with Un-initialized value" 1
+logger -expect log "DFF init value for cell .* = 1'0" 1
+logger -expect log "DFF init value for cell .* = 1'1" 1
+logger -expect log "DFF init value for cell .* = 1'x" 1
+synth_fpga -show_dff_init_value
+logger -check-expected
+select -assert-count 3 t:dff

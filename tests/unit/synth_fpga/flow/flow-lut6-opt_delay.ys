@@ -1,0 +1,9 @@
+# 6-input LUTs with -opt delay: the LUT6 delay script is used.
+
+read_verilog ../../data/designs/counter.v
+logger -expect log "Calling ABC script in 'tiny_delay' mode" 1
+logger -expect log "abc_scripts/LUT6/BEST/tiny_delay_lut6.scr" 1
+synth_fpga -lut_size 6 -opt delay
+logger -check-expected
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut

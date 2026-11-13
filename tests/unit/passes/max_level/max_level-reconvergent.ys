@@ -1,0 +1,16 @@
+# Reconvergent paths: n1 and n2 both feed n3 and y, so the longest-path search
+# revisits nodes that already have a longer level and must prune them.
+
+read_verilog <<EOF
+module rc (input a, b, output y);
+   wire n1 = a & b;
+   wire n2 = n1 | a;
+   wire n3 = n1 ^ n2;
+   assign y = n3 & n2;
+endmodule
+EOF
+
+logger -expect log "Max logic level in rc .length=4.:" 1
+max_level
+logger -check-expected
+scratchpad -assert max_level.max_levels 4

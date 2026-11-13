@@ -1,0 +1,18 @@
+# An empty 'brams' section: missing memory_libmap and
+# techmap each give two warnings and BRAM inference is off.
+# Fixture: data/config/config-brams_empty.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect warning "'memory_libmap' from 'brams' is missing in config file '" 1
+logger -expect warning "'techmap' from 'brams' is missing in config file '" 1
+logger -expect warning "Assuming that this technology has no BRAM support." 2
+synth_fpga -config ../../data/config/config-brams_empty.json
+logger -check-expected
+select -assert-min 1 t:$lut

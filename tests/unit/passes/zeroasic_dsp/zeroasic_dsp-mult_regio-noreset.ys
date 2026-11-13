@@ -1,0 +1,12 @@
+# A, B and P registers without reset are all packed (resetn tied off).
+
+read_verilog <<EOF
+module top (input clk, input signed [17:0] a, b, output reg [35:0] y);
+   reg signed [17:0] ar, br;
+   always @(posedge clk) begin ar <= a; br <= b; y <= ar * br; end
+endmodule
+EOF
+synth_fpga -partname z1010
+select -assert-count 1 t:efpga_mult_regio
+select -assert-count 1 t:efpga_*
+select -assert-none t:dff*

@@ -1,0 +1,13 @@
+# 'tru' followed by something else.
+# Fixture: data/config/json-true_misspelled.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect error "Expected 'true' in config file '" 1
+synth_fpga -config ../../data/config/json-true_misspelled.json

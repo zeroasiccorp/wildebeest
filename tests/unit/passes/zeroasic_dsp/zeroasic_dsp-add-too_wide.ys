@@ -1,0 +1,10 @@
+# A 48-bit adder does not fit the 40-bit DSP adder and stays in logic.
+
+read_verilog <<EOF
+module top (input [47:0] a, b, output [47:0] y);
+   assign y = a + b;
+endmodule
+EOF
+synth_fpga -partname z1010
+select -assert-none t:efpga_*
+select -assert-none t:dff*

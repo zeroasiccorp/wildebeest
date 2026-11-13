@@ -1,0 +1,13 @@
+# A dictionary key that is not a string.
+# Fixture: data/config/json-non_string_key.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect error "Unexpected non-string key in JSON dict at line 1." 1
+synth_fpga -config ../../data/config/json-non_string_key.json

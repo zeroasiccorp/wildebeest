@@ -1,0 +1,46 @@
+# zopt_const_dff replaces fine flip-flops ($_DFF*, $_SDFF*) whose D input is a
+# constant by that constant, unless the init value or a reset conflicts.
+# data/rtlil/const_dff.il has one flip-flop per case (see its header).
+#
+# KNOWN-ISSUE OC2: with no init value, 'x' counts as 1.  f_d0_nx (D=0) gets
+# a spurious conflict warning, and f_d1_nx (D=1) is "replaced" with Q tied
+# to 'x'.
+# KNOWN-ISSUE OC3: the reset value is not compared with D, so f_ar1_d0 (reset
+# to 1, D=0) is replaced by 0.
+
+read_rtlil ../../data/rtlil/const_dff.il
+select -assert-count 15 t:*
+
+logger -expect log "Replacing DFF by constant '0' at position 0 on f_d0_i0 " 1
+logger -expect log "Replacing DFF by constant '1' at position 0 on f_d1_i1 " 1
+logger -expect log "Replacing DFF by constant '1' at position 0 on f_d1_nx " 1
+logger -expect log "Replacing DFF by constant '1' at position 0 on f_ar_off " 1
+logger -expect log "Replacing DFF by constant '0' at position 0 on f_ar1_d0 " 1
+logger -expect log "Replacing DFF by constant '1' at position 0 on f_sr_off " 1
+logger -expect log "Replacing DFF by constant '0' at position 0 on f_ce " 1
+logger -expect warning "Conflicting init val '0' for f_d1_i0 .* driven by '1'" 1
+logger -expect warning "Conflicting init val '1' for f_d0_i1 .* driven by '0'" 1
+logger -expect warning "Conflicting init val '1' for f_d0_nx .* driven by '0'" 1
+logger -expect log "NOTE: DFF with S/R is driven by constant" 1
+zopt_const_dff
+logger -check-expected
+
+# Kept: conflicts, non-constant D, coarse $dff, active resets, DFFSR.
+select -assert-count 8 t:*
+select -assert-count 1 c:f_d1_i0
+select -assert-count 1 c:f_d0_i1
+select -assert-count 1 c:f_d0_nx
+select -assert-count 1 c:f_d_sig
+select -assert-count 1 c:c_dff
+select -assert-count 1 c:f_ar_d1
+select -assert-count 1 c:f_sr_d1
+select -assert-count 1 c:f_dffsr
+
+write_rtlil after.il
+!grep -Eq "(connect|#) .q_d0_i0 1'0$" after.il
+!grep -Eq "(connect|#) .q_d1_i1 1'1$" after.il
+!grep -Eq "(connect|#) .q_d1_nx 1'x$" after.il
+!grep -Eq "(connect|#) .q_ar_off 1'1$" after.il
+!grep -Eq "(connect|#) .q_ar1_d0 1'0$" after.il
+!grep -Eq "(connect|#) .q_sr_off 1'1$" after.il
+!grep -Eq "(connect|#) .q_ce 1'0$" after.il

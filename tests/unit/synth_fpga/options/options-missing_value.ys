@@ -1,0 +1,7 @@
+# An option that needs a value, given last without one, is
+# rejected as unknown.
+
+read_verilog ../../data/designs/counter.v
+
+logger -expect error "Unknown option : -partname" 1
+synth_fpga -partname

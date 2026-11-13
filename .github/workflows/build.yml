@@ -102,7 +102,10 @@ jobs:
       - name: Run tests
         run: |
           export PATH="${{ github.workspace }}/yosys-install/bin:$PATH"
-          cd build && ctest --output-on-failure
+          # Each test runs in its own sandbox (tests/run_yosys_test.cmake), so
+          # tests can run in parallel.  Tests labelled 'slow' only run in the
+          # coverage job.
+          cd build && ctest -j$(nproc) -LE slow --output-on-failure
 
       - name: Pack build
         shell: bash
@@ -115,3 +118,158 @@ jobs:
           name: build-${{ matrix.yosys_version }}.tar.gz
           path: build.tar.gz
           retention-days: 1
+
+  # Instrumented build + full test suite.  Two Yosys versions are used because
+  # the sources contain '#if YOSYS_MINOR <= 57' and '>= 71' arms: each build
+  # compiles only one side, and the merged report counts both.
+  coverage:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        yosys_version:
+          - "v0.57"
+          - "v0.71"
+    steps:
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git build-essential pkg-config cmake ccache gperf bison flex \
+            libreadline-dev gawk tcl-dev libffi-dev graphviz xdot python3 \
+            libboost-system-dev libboost-python-dev libboost-filesystem-dev \
+            zlib1g-dev libfl-dev libsodium-dev nlohmann-json3-dev
+          pipx install gcovr==8.8
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Same cache key as the 'build' job, so no extra Yosys builds.
+      - name: Restore Yosys install
+        id: cache-yosys
+        uses: actions/cache@v6
+        with:
+          path: yosys-install
+          key: ${{ runner.os }}-yosys-install-${{ matrix.yosys_version }}
+
+      - if: ${{ steps.cache-yosys.outputs.cache-hit != 'true' }}
+        name: Pull Yosys
+        run: |
+          git clone --depth 1 --recursive \
+            --branch ${{ matrix.yosys_version }} \
+            -- https://github.com/YosysHQ/yosys.git yosys
+
+      - if: ${{ steps.cache-yosys.outputs.cache-hit != 'true' }}
+        name: Build and install Yosys
+        shell: bash
+        run: |
+          cd yosys
+          if [ -f Makefile ]; then
+            # Yosys <= 0.66 uses a Makefile-based build
+            make config-gcc
+            make -j$(nproc) PREFIX=${{ github.workspace }}/yosys-install
+            make install PREFIX=${{ github.workspace }}/yosys-install
+          else
+            # Yosys >= 0.67 uses a CMake-based build
+            cmake -S . -B build \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/yosys-install \
+              -DYOSYS_ENABLE_UNIT_TESTS=OFF \
+              -DYOSYS_WITHOUT_SLANG=ON
+            cmake --build build --parallel $(nproc)
+            cmake --install build
+          fi
+
+      - name: Build wildebeest with coverage
+        run: |
+          export PATH="${{ github.workspace }}/yosys-install/bin:$PATH"
+          cmake -S . -B build -D YOSYS_PATH="${{ github.workspace }}/yosys-install" \
+            -D WILDEBEEST_COVERAGE=ON -D CMAKE_BUILD_TYPE=Debug
+          cmake --build build -j$(nproc)
+          cmake --install build
+
+      - name: Run all tests (including slow)
+        run: |
+          export PATH="${{ github.workspace }}/yosys-install/bin:$PATH"
+          cd build && ctest -j$(nproc) --output-on-failure
+
+      - name: Collect coverage
+        if: ${{ !cancelled() }}
+        run: |
+          gcovr --object-directory build --json coverage-${{ matrix.yosys_version }}.json
+          # Informational only: the pmgen-generated DSP matcher.
+          (cd build && gcovr --root . --object-directory . --filter 'architecture/' \
+            --print-summary --txt /dev/null) | tee generated-${{ matrix.yosys_version }}.txt
+
+      - name: Store coverage data
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-${{ matrix.yosys_version }}
+          path: |
+            coverage-${{ matrix.yosys_version }}.json
+            generated-${{ matrix.yosys_version }}.txt
+          retention-days: 7
+
+  # Merges the per-version coverage, publishes it, and enforces the ratchet
+  # in tests/coverage/thresholds.json.
+  coverage-report:
+    needs: coverage
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install gcovr
+        run: pipx install gcovr==8.8
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          merge-multiple: true
+          path: coverage-data
+
+      - name: Merge coverage
+        run: |
+          mkdir -p coverage-html
+          # gcovr.cfg's exclusions were applied when each tracefile was
+          # written; skip the config here, where they would only warn.
+          gcovr --config /dev/null --print-summary \
+            --add-tracefile 'coverage-data/coverage-*.json' \
+            --merge-mode-functions=separate \
+            --html-details coverage-html/index.html \
+            --markdown coverage.md \
+            --json-summary coverage-summary.json
+          {
+            cat coverage.md
+            echo
+            echo "<details><summary>Generated DSP matcher (informational, not gated)</summary>"
+            echo
+            echo '```'
+            cat coverage-data/generated-*.txt
+            echo '```'
+            echo "</details>"
+          } > coverage-comment.md
+          cat coverage-comment.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Store HTML report
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-html
+          path: coverage-html
+          retention-days: 14
+
+      # Fork PRs get a read-only token, so the comment is best-effort.
+      - name: Comment on PR
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        continue-on-error: true
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: coverage
+          path: coverage-comment.md
+
+      - name: Enforce coverage ratchet
+        run: python3 tests/coverage/check_ratchet.py coverage-summary.json
