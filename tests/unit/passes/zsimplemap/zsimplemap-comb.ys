@@ -1,0 +1,24 @@
+# zsimplemap maps coarse combinational cells to gate primitives.
+# data/rtlil/zsimplemap_comb.il has one cell of each mapped type plus width
+# edge cases.  Every cell is mapped and removed; only $sop leaves coarse cells
+# behind (it builds $eq / $reduce_or, like upstream simplemap).  The result is
+# proven equivalent to the original with SAT.
+
+read_rtlil ../../data/rtlil/zsimplemap_comb.il
+design -save pre
+select -assert-count 38 t:*
+
+logger -expect log "Mapping top.c_" 38
+zsimplemap
+logger -check-expected
+
+select -assert-count 0 t:* t:$_* t:$eq %u t:$reduce_or %u %d
+# sop: one $eq per non-empty product (1 + 2) and one $reduce_or per cell.
+select -assert-count 3 t:$eq
+select -assert-count 2 t:$reduce_or
+select -assert-count 129 t:$_*
+
+rename top gate
+design -copy-from pre -as gold top
+miter -equiv -flatten -make_assert gold gate miter
+sat -verify -prove-asserts miter

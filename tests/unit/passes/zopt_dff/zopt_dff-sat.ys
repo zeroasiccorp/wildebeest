@@ -1,0 +1,39 @@
+# zopt_dff -sat proves flip-flop bits that can never leave their init value
+# and replaces them by constants (data/zopt_dff/sat_const.v).
+#
+# Proven stuck at 0: q0 (q0 & a), q4 (deep cone), q5 (shares q0's cone),
+# bit 1 of q7 (partial slice), q8 / q9 / q10 (cones with an adder, shifter
+# and multiplier), and q6 (sel[0] & sel[1], only because 'sel' is marked
+# onehot).  q1 can change (SAT finds a counterexample), q2's D is a primary
+# input, q3 has no init value.  Flop names come from proc and vary between
+# Yosys versions, so only the messages are counted.
+
+read_verilog ../../data/zopt_dff/sat_const.v
+proc
+opt_clean
+design -save orig
+select -assert-count 11 t:$dff
+
+# Without -sat nothing is proven constant.
+zopt_dff
+select -assert-count 11 t:$dff
+
+# With -sat and the onehot attribute: 8 bits.  The q6 result relies on the
+# onehot promise, which an equivalence check does not know, so this run is
+# checked by structure only.
+design -load orig
+logger -expect log "Setting constant 0-bit at position 0 on " 7
+logger -expect log "Setting constant 0-bit at position 1 on " 1
+zopt_dff -sat
+logger -check-expected
+select -assert-count 4 t:$dff
+
+# Without the attribute q6 stays, and the result is proven equivalent.
+design -load orig
+setattr -unset onehot w:sel
+logger -expect log "Setting constant 0-bit at position 0 on " 6
+logger -expect log "Setting constant 0-bit at position 1 on " 1
+equiv_opt -undef -assert -multiclock zopt_dff -sat
+logger -check-expected
+design -load postopt
+select -assert-count 5 t:$dff

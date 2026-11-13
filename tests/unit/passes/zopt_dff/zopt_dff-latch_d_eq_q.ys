@@ -1,0 +1,15 @@
+# A latch whose D is its own Q never changes: zopt_dff treats D as the
+# async-load value and removes the latch.
+# Yosys 'check' sees such a latch as a logic loop, so equiv_opt cannot be
+# used; the result is checked by structure.
+
+read_verilog -icells <<EOF
+module top (input en, output [3:0] q);
+  $dlatch #(.EN_POLARITY(1'b1), .WIDTH(4)) lat_dq (.EN(en), .D(q), .Q(q));
+endmodule
+EOF
+
+logger -expect log "Handling AD = Q on lat_dq .* .removing async load path." 1
+zopt_dff
+logger -check-expected
+select -assert-none t:$dlatch

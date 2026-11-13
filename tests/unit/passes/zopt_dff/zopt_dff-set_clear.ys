@@ -1,0 +1,43 @@
+# Constant SET / CLR inputs (data/zopt_dff/set_clear.v).
+#
+# Bits whose CLR or SET is always active become constant drivers or
+# combinational logic; bits with only never-active / x inputs keep a flop.
+# A cell whose CLR is never active and whose SET is one signal on all bits
+# becomes an async-reset flop ($adff), and likewise with SET never active.
+# With -keepdc, 'x' inputs count as possibly active, so more bits stay.
+# Each run is proven equivalent with equiv_opt.
+
+read_verilog -icells ../../data/zopt_dff/set_clear.v
+design -save orig
+
+logger -expect log "Handling always-active CLR at position 0 on ff0 " 1
+logger -expect log "Handling always-active SET at position 3 on ff0 " 1
+logger -expect log "Handling always-active CLR at position 1 on ff1 " 1
+logger -expect log "Handling always-active SET at position 4 on ff2 " 1
+logger -expect log "Handling always-active SET at position 5 on ff3 " 1
+logger -expect log "Removing never-active CLR on ff4 " 1
+logger -expect log "Removing never-active SET on ff5 " 1
+logger -expect log "Converting CLR/SET to ARST on ff6 " 1
+logger -expect log "Handling always-active CLR at position 0 on ff7 " 1
+logger -expect log "Handling always-active SET at position 0 on ff8 " 1
+logger -expect log "Removing never-active ARST on ff9 " 1
+equiv_opt -undef -assert -multiclock zopt_dff
+logger -check-expected
+design -load postopt
+
+select -assert-count 1 t:$dffsr r:WIDTH=2 %i
+select -assert-count 1 t:$dffsre r:WIDTH=2 %i
+select -assert-count 1 t:$dlatchsr r:WIDTH=2 %i
+select -assert-none t:$sr
+select -assert-count 3 t:$adff
+select -assert-none t:$_DFFSR_* t:$_SR_*
+
+design -load orig
+equiv_opt -undef -assert -multiclock zopt_dff -keepdc
+design -load postopt
+
+select -assert-count 1 t:$dffsr r:WIDTH=4 %i
+select -assert-count 1 t:$dffsre r:WIDTH=4 %i
+select -assert-count 1 t:$dlatchsr r:WIDTH=4 %i
+select -assert-count 1 t:$sr r:WIDTH=4 %i
+select -assert-count 3 t:$adff

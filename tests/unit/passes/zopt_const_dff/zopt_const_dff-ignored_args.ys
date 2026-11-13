@@ -1,0 +1,11 @@
+# KNOWN-ISSUE OC1: the option loop swallows every argument, so an unknown
+# option is accepted and a selection is ignored: selecting only f_d_sig still
+# replaces all seven removable flip-flops of const_dff.il.
+
+read_rtlil ../../data/rtlil/const_dff.il
+
+logger -expect log "Replacing DFF by constant" 7
+zopt_const_dff -bogus c:f_d_sig
+logger -check-expected
+
+select -assert-count 8 t:*

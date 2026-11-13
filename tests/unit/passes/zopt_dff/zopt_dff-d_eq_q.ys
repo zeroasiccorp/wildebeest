@@ -1,0 +1,23 @@
+# Flip-flops whose D is (partly) their own Q (data/zopt_dff/d_eq_q.v).
+#
+# Bits with D == Q get an enable or lose their D path; with a sync reset the
+# reset becomes the only way the value changes.
+#
+# The equivalence check runs without -undef: with -undef, Yosys's
+# equiv_induct hits an internal assertion on this netlist (ezsat.cc vec_or),
+# with Yosys's own opt_dff just the same.
+
+read_verilog -icells ../../data/zopt_dff/d_eq_q.v
+
+logger -expect log "Adding EN signal on dq .* .D = .q0 .3:2., Q = .q0 .3:2.." 1
+logger -expect log "Handling D = Q on dq_srst .* .conecting SRST instead." 1
+logger -expect log "Handling D = Q on dq_srst_en .* .conecting SRST instead." 1
+logger -expect log "Handling D = Q on dq_arst .* .removing D path." 1
+logger -expect log "Handling D = Q on f_dq_srst .* .conecting SRST instead." 1
+logger -expect log "Handling D = Q on f_dq_srst_en .* .conecting SRST instead." 1
+equiv_opt -assert -multiclock zopt_dff
+logger -check-expected
+design -load postopt
+
+select -assert-count 1 t:$dff
+select -assert-none t:$sdff t:$sdffe t:$adff t:$dffe t:$_SDFF_* t:$_SDFFE_*

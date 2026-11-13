@@ -1,0 +1,14 @@
+# Only one adder operand is registered and there is no accumulator: the
+# register is left in the fabric.
+
+read_verilog <<EOF
+module top (input clk, input signed [17:0] a, b, output signed [19:0] y);
+   reg signed [17:0] ar;
+   always @(posedge clk) ar <= a;
+   assign y = ar + b;
+endmodule
+EOF
+synth_fpga -partname z1010
+select -assert-count 1 t:efpga_adder
+select -assert-count 1 t:efpga_*
+select -assert-count 18 t:dff*
