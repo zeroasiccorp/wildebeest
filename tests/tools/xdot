@@ -1,0 +1,4 @@
+#!/bin/sh
+# Test stub: 'max_height -dot' and 'report_stat -dot' launch the xdot viewer.
+# Under ctest this stub is first on PATH so no GUI is opened.
+exit 0

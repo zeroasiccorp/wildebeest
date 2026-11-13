@@ -1,0 +1,5 @@
+{
+  "_comment": "Coverage floor enforced in CI by check_ratchet.py. Raise these numbers whenever a change adds coverage; never lower them without a stated reason.",
+  "line": 38.0,
+  "branch": 22.0
+}
