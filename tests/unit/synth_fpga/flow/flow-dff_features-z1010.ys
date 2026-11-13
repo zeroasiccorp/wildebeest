@@ -1,0 +1,8 @@
+# On platypus parts the flip-flop feature flags change the legal flop list:
+# without enable and async reset but with async set, the counter is built
+# from 8 'dffs' cells (enable and reset in LUTs).
+
+read_verilog ../../data/designs/counter.v
+synth_fpga -partname z1010 -no_dff_enable -no_dff_async_reset -dff_async_set
+select -assert-count 8 t:dffs
+select -assert-none t:dffer t:dffr t:dffe

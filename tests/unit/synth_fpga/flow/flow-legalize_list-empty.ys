@@ -1,0 +1,6 @@
+# KNOWN-ISSUE SF4: with an empty legalize_list the dfflegalize command is
+# built without a space ('dfflegalize-cell ...'), which is not a command.
+
+read_verilog ../../data/designs/counter.v
+logger -expect error "dfflegalize-cell" 1
+synth_fpga -config ../../data/config/flow-legalize_list_empty.json

@@ -1,0 +1,6 @@
+# An unknown -use_bram_tech is rejected.
+
+read_verilog ../../data/designs/counter.v
+
+logger -expect error "Please select a correct BRAM architecture." 1
+synth_fpga -use_bram_tech foo

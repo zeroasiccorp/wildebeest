@@ -1,0 +1,6 @@
+# Only LUT sizes 4, 5 and 6 are accepted.
+
+read_verilog ../../data/designs/counter.v
+
+logger -expect error "Lut sizes can be only 4, 5 or 6." 1
+synth_fpga -lut_size 7

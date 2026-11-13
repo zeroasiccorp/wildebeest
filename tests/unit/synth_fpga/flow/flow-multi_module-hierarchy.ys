@@ -1,0 +1,18 @@
+# After 'hierarchy -top' the design has a top; synth_fpga flattens 'sub'
+# into it and 'other' is gone.
+
+read_verilog <<EOF
+module top (input a, output y);
+   sub u (.a(a), .y(y));
+endmodule
+module sub (input a, output y);
+   assign y = ~a;
+endmodule
+module other (input a, output y);
+   assign y = a;
+endmodule
+EOF
+hierarchy -top top
+synth_fpga
+select -assert-mod-count 1 =*
+select -assert-count 1 top/t:$lut

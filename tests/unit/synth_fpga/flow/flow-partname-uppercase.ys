@@ -1,0 +1,9 @@
+# Part names are case-insensitive: Z1010 selects the z1010 flow (the MAE
+# models of z1010 are loaded).
+
+read_verilog ../../data/designs/counter.v
+logger -expect log "Executing Verilog-2005 frontend: .*architecture/z1010/models/tech_mae.v" 1
+synth_fpga -partname Z1010
+logger -check-expected
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut

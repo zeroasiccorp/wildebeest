@@ -1,0 +1,8 @@
+# With -stop_if_undriven_nets the undriven nets left by -resynthesis stop the
+# flow (and the netlist is written to netlist_synth_fpga.verilog first).
+# KNOWN-ISSUE SF17: those nets are dangling internals of the techmapped
+# adder that drive nothing, so this stop is a false positive.
+
+read_verilog ../../data/designs/counter.v
+logger -expect error "Stop synthesis .-stop_if_undriven_nets is ON. : Final netlist has '7' undriven nets" 1
+synth_fpga -resynthesis -stop_if_undriven_nets

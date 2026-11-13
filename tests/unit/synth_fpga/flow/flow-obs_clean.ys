@@ -1,0 +1,11 @@
+# -obs_clean replaces opt_clean by the observability-based cleanup.  On z1000
+# the flip-flop models are loaded as blackboxes first.
+# KNOWN-ISSUE SF2: on z1010 (the default part) the same option blackboxes the
+# whole design and synth_fpga then crashes, so this test uses z1000.
+
+read_verilog ../../data/designs/counter.v
+logger -expect log "Running obs_clean pass" 1
+synth_fpga -partname z1000 -obs_clean
+logger -check-expected
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut

@@ -1,0 +1,6 @@
+# -use_bram_tech zeroasic is the default and accepted explicitly.
+
+read_verilog ../../data/designs/counter.v
+synth_fpga -use_bram_tech zeroasic
+select -assert-count 8 t:dffer
+select -assert-min 1 t:$lut

@@ -1,0 +1,13 @@
+# -use_dsp_tech bare_mult maps the multiplier to a plain efpga_mult without
+# packing the registers around it.
+
+read_verilog <<EOF
+module top (input clk, input signed [17:0] a, b, output reg [35:0] y);
+   always @(posedge clk) y <= a * b;
+endmodule
+EOF
+logger -expect log "DSP Style  : bare_mult" 1
+synth_fpga -partname z1010 -use_dsp_tech bare_mult
+logger -check-expected
+select -assert-count 1 t:efpga_mult
+select -assert-count 36 t:dff

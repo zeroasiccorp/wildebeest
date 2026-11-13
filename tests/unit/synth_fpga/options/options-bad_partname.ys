@@ -1,0 +1,6 @@
+# An unknown -partname is rejected.
+
+read_verilog ../../data/designs/counter.v
+
+logger -expect error "Please select a correct partname." 1
+synth_fpga -partname z9999

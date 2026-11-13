@@ -1,0 +1,13 @@
+# -use_dsp_tech mae is accepted but has no hardcoded settings on z1010: a
+# warning, and the multiplier is built from LUTs.
+
+read_verilog <<EOF
+module top (input clk, input signed [17:0] a, b, output reg [35:0] y);
+   always @(posedge clk) y <= a * b;
+endmodule
+EOF
+logger -expect warning "Could not find any specific DSP tech settings with 'dsp_tech' = 'mae'" 1
+synth_fpga -partname z1010 -use_dsp_tech mae
+logger -check-expected
+select -assert-none t:efpga_*
+select -assert-count 36 t:dff
