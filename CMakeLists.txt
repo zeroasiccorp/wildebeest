@@ -29,6 +29,10 @@ endif()
 
 set(YOSYS_SHARE_DIR ${YOSYS_DATDIR}/plugins/${OUTPUT_NAME})
 
+# Build the plugin with gcov instrumentation so the test suite can report
+# code coverage (see gcovr.cfg and the 'coverage' job in .github/workflows).
+option(WILDEBEEST_COVERAGE "Instrument the plugin for code coverage" OFF)
+
 add_subdirectory(src)
 add_subdirectory(architecture)
 
