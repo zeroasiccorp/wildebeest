@@ -1,6 +1,7 @@
 # zeroasic_dsp called directly: the add-only pass packs a lone $add only if
 # at least -add_minwidth result bits are used (default 10).  A non-numeric
-# value falls back to the minimum of 2.  -no_add skips the add-only pass.
+# value falls back to the minimum of 2.  -no_add skips the add-only pass,
+# also under -add_only.
 
 read_verilog <<EOF
 module top (input [7:0] a, b, input [2:0] c, d, output [8:0] y, output [3:0] z);
@@ -25,6 +26,23 @@ select -assert-count 0 t:$add
 design -load orig
 zeroasic_dsp -no_add -add_minwidth 3
 select -assert-count 2 t:$add
+
+# -add_only with -no_add is a no-op.
+design -load orig
+zeroasic_dsp -add_only -no_add -add_minwidth 3
+select -assert-count 2 t:$add
+
+# -add_only on its own packs both adds.
+design -load orig
+zeroasic_dsp -add_only -add_minwidth 3
+select -assert-count 0 t:$add
+
+# The scratchpad flag zeroasic_dsp.multonly disables packing in every phase.
+design -load orig
+scratchpad -set zeroasic_dsp.multonly 1
+zeroasic_dsp -add_only -add_minwidth 3
+select -assert-count 2 t:$add
+scratchpad -unset zeroasic_dsp.multonly
 
 design -load orig
 logger -expect error "Unknown option or option in arguments" 1
