@@ -22,6 +22,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 namespace wbtest {
 
@@ -63,10 +65,13 @@ struct ErrorHook {
 };
 
 // Makes yosys_get_design() return null, to reach "no design" guards.
+// yosys_design is a raw pointer before Yosys 0.71 and a shared_ptr from 0.71.
 struct NullDesign {
-  Yosys::RTLIL::Design *previous;
-  NullDesign() : previous(Yosys::yosys_design) { Yosys::yosys_design = nullptr; }
-  ~NullDesign() { Yosys::yosys_design = previous; }
+  std::remove_reference_t<decltype(Yosys::yosys_design)> previous;
+  NullDesign() : previous(std::move(Yosys::yosys_design)) {
+    Yosys::yosys_design = nullptr;
+  }
+  ~NullDesign() { Yosys::yosys_design = std::move(previous); }
 };
 
 // One stream that receives all log output from the first LogCapture on.

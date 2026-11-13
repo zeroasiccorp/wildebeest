@@ -37,10 +37,10 @@ select -assert-count 1 c:f_sr_d1
 select -assert-count 1 c:f_dffsr
 
 write_rtlil after.il
-!grep -q "connect .q_d0_i0 1'0" after.il
-!grep -q "connect .q_d1_i1 1'1" after.il
-!grep -q "connect .q_d1_nx 1'x" after.il
-!grep -q "connect .q_ar_off 1'1" after.il
-!grep -q "connect .q_ar1_d0 1'0" after.il
-!grep -q "connect .q_sr_off 1'1" after.il
-!grep -q "connect .q_ce 1'0" after.il
+!grep -Eq "(connect|#) .q_d0_i0 1'0$" after.il
+!grep -Eq "(connect|#) .q_d1_i1 1'1$" after.il
+!grep -Eq "(connect|#) .q_d1_nx 1'x$" after.il
+!grep -Eq "(connect|#) .q_ar_off 1'1$" after.il
+!grep -Eq "(connect|#) .q_ar1_d0 1'0$" after.il
+!grep -Eq "(connect|#) .q_sr_off 1'1$" after.il
+!grep -Eq "(connect|#) .q_ce 1'0$" after.il

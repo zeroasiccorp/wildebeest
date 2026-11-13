@@ -7,8 +7,8 @@ read_rtlil ../../data/rtlil/obs_clean.il
 obs_clean -assigns
 
 write_rtlil after.il
-!! grep -q "connect .dangling" after.il
-!grep -q "connect .y2 .t1" after.il
-!grep -q "connect .m { .a .b }" after.il
-!grep -q "connect { .p .q } .d" after.il
-!grep -q "connect .z2 .p" after.il
+!! grep -Eq "(connect|#) .dangling " after.il
+!grep -Eq "(connect|#) .y2 .t1$" after.il
+!grep -Eq "(connect|#) .m [{] .a .b [}]$" after.il
+!grep -Eq "(connect|#) [{] .p .q [}] .d$" after.il
+!grep -Eq "(connect|#) .z2 .p$" after.il
