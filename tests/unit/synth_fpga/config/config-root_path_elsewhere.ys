@@ -1,0 +1,16 @@
+# KNOWN-ISSUE SF15: 'root_path' is used for the techmap commands but
+# not when the flip-flop / DSP model files are read, which always uses the
+# config file's directory.  With root_path pointing elsewhere the model
+# file is looked up next to the config file and is not found.
+# Fixture: data/config/config-root_path_elsewhere.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect error "data/config/tech_flops.v" 1
+synth_fpga -config ../../data/config/config-root_path_elsewhere.json

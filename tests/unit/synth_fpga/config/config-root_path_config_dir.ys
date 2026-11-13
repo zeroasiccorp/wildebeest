@@ -1,0 +1,17 @@
+# An explicit 'root_path' naming the config file's own directory
+# works like no 'root_path' at all.  KNOWN-ISSUE SF15: a relative root_path
+# is resolved against the current directory, not the config file, so it
+# must be spelled relative to where yosys runs ('.' would not work).
+# Fixture: data/config/config-root_path_config_dir.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+synth_fpga -config ../../data/config/config-root_path_config_dir.json
+logger -check-expected
+select -assert-min 1 t:$lut

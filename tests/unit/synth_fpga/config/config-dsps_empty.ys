@@ -1,0 +1,21 @@
+# An empty 'dsps' section: each missing key warns and DSP
+# inference is off.
+# Fixture: data/config/config-dsps_empty.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect warning "'family' from 'dsps' is missing in config file '" 1
+logger -expect warning "'techmap' from 'dsps' is missing in config file '" 1
+logger -expect warning "'techmap_parameters' from 'dsps' is missing in config file '" 1
+logger -expect warning "'pack_command' from 'dsps' is missing in config file '" 1
+logger -expect warning "Assuming that this technology has no DSP support." 3
+logger -expect warning "Assuming that this technology has no DSP packing support." 1
+synth_fpga -config ../../data/config/config-dsps_empty.json
+logger -check-expected
+select -assert-min 1 t:$lut

@@ -1,0 +1,17 @@
+# Entries in 'flipflops.models' are read but only
+# warned about: models must come from 'techmap'.
+# Fixture: data/config/config-models_entries.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect warning "Not reading dff_models from the flipflops 'models' entry. Please use 'techmap'." 2
+logger -expect log "                       dffr ffs/dffr.v" 1
+synth_fpga -config ../../data/config/config-models_entries.json -show_config
+logger -check-expected
+select -assert-min 1 t:$lut

@@ -1,0 +1,13 @@
+# 'brams.bram_with_init' must be a boolean.
+# Fixture: data/config/config-bram_with_init_type.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect error "'bram_with_init' associated to 'brams' must be a boolean." 1
+synth_fpga -config ../../data/config/config-bram_with_init_type.json

@@ -1,0 +1,13 @@
+# 'dsps.family' must be a string.
+# Fixture: data/config/config-dsp_family_type.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect error "'family' associated to 'dsps' must be a string." 1
+synth_fpga -config ../../data/config/config-dsp_family_type.json

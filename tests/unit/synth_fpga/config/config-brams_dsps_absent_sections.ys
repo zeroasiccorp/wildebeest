@@ -1,0 +1,19 @@
+# 'brams' and 'dsps' sections are optional: a missing section warns, then
+# behaves like an empty one (every key in it warns as missing).
+# Fixture: data/config/config-brams_dsps_absent_sections.json
+
+read_verilog <<EOF
+module top (input clk, nreset, input [3:0] d, output reg [3:0] q);
+   always @(posedge clk or negedge nreset)
+      if (!nreset) q <= 4'b0000;
+      else q <= q + d;
+endmodule
+EOF
+
+logger -expect warning "^'brams' is missing in config file '" 1
+logger -expect warning "^'dsps' is missing in config file '" 1
+logger -expect warning "'family' from 'dsps' is missing in config file '" 1
+logger -expect warning "'memory_libmap' from 'brams' is missing in config file '" 1
+synth_fpga -config ../../data/config/config-brams_dsps_absent_sections.json
+logger -check-expected
+select -assert-min 1 t:$lut
