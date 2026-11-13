@@ -113,6 +113,20 @@ inline Yosys::RTLIL::Module *load(Yosys::RTLIL::Design *design,
   return design->top_module();
 }
 
+// The IdString for the public name "\<name>" in owner's design (a Design,
+// Module, Cell or Wire pointer).  From Yosys 0.71 on, ID(x) only accepts
+// Yosys builtin names and other names live in a per-design pool (see
+// src/yosys_compat.h); before that, owner is ignored.
+template <typename Owner>
+inline Yosys::RTLIL::IdString name(Owner *owner, const std::string &name) {
+#if YOSYS_MAJOR > 0 || YOSYS_MINOR >= 71
+  return owner->twines().add("\\" + name);
+#else
+  (void)owner;
+  return Yosys::RTLIL::IdString("\\" + name);
+#endif
+}
+
 inline std::string where(const char *file, int line) {
   return std::string(file) + ":" + std::to_string(line) + ": ";
 }

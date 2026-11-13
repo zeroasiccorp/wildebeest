@@ -34,8 +34,8 @@ WB_TEST(synth_fpga_xor_tree_needs_two_leaves) {
   RTLIL::Design *design = yosys_get_design();
   RTLIL::Module *top = load(design, "module top(input a, output y); assign y = a; endmodule");
   dict<RTLIL::SigSpec, Cell *> y2xor;
-  RTLIL::SigSpec y = top->wire(ID(y)), new_y;
-  vector<RTLIL::SigSpec> leaves = {RTLIL::SigSpec(top->wire(ID(a)))};
+  RTLIL::SigSpec y = top->wire(wbtest::name(top, "y")), new_y;
+  vector<RTLIL::SigSpec> leaves = {RTLIL::SigSpec(top->wire(wbtest::name(top, "a")))};
   WB_CHECK_LOG_ERROR(
       SynthFpgaPass.build_binary_xor_tree_rec(top, y, y2xor, new_y, leaves));
 }
@@ -44,7 +44,7 @@ WB_TEST(synth_fpga_show_sig) {
   RTLIL::Design *design = yosys_get_design();
   RTLIL::Module *top = load(design,
       "module top(input [7:0] a, input [0:3] b, output y); assign y = a[0]; endmodule");
-  RTLIL::SigSpec a = top->wire(ID(a)), b = top->wire(ID(b));
+  RTLIL::SigSpec a = top->wire(wbtest::name(top, "a")), b = top->wire(wbtest::name(top, "b"));
   wbtest::LogCapture log;
   SynthFpgaPass.show_sig(RTLIL::SigSpec());               // empty
   SynthFpgaPass.show_sig(a);                              // whole wire
@@ -90,7 +90,9 @@ WB_TEST(synth_fpga_sort_helpers) {
   second.Id = 2;
   WB_CHECK(SynthFpgaPass::cmpId(&first, &second));
   WB_CHECK(!SynthFpgaPass::cmpId(&second, &first));
-  WB_CHECK_EQ(SynthFpgaPass::id(ID(foo)), std::string("\\foo"));
+  RTLIL::Design *design = yosys_get_design();
+  RTLIL::Module *top = load(design, "module foo(input a, output y); assign y = a; endmodule");
+  WB_CHECK_EQ(SynthFpgaPass::id(top->name), std::string("\\foo"));
 }
 
 // Without -partname z1000 or a platypus part (impossible from the command
@@ -147,19 +149,19 @@ WB_TEST(synth_fpga_undriven_report_only) {
 WB_TEST(synth_fpga_dff_counter_sync_set_reset_cells) {
   RTLIL::Design *design = yosys_get_design();
   Pass::call(design, "design -reset");
-  RTLIL::Module *top = design->addModule(ID(top));
+  RTLIL::Module *top = design->addModule(wbtest::name(design, "top"));
   top->set_bool_attribute(ID::top);
-  top->addCell(ID(f0), ID(dffh));
-  top->addCell(ID(f1), ID(dffehl));
-  top->addCell(ID(f2), ID(dffer));
+  top->addCell(wbtest::name(top, "f0"), wbtest::name(top, "dffh"));
+  top->addCell(wbtest::name(top, "f1"), wbtest::name(top, "dffehl"));
+  top->addCell(wbtest::name(top, "f2"), wbtest::name(top, "dffer"));
   WB_CHECK_EQ(SynthFpgaPass.getNumberOfDffs(), 3);
 }
 
 WB_TEST(synth_fpga_csv_without_top) {
   RTLIL::Design *design = yosys_get_design();
   Pass::call(design, "design -reset");
-  design->addModule(ID(m1));
-  design->addModule(ID(m2));
+  design->addModule(wbtest::name(design, "m1"));
+  design->addModule(wbtest::name(design, "m2"));
   WB_CHECK(design->top_module() == nullptr);
   wbtest::LogCapture log;
   SynthFpgaPass.dump_csv_file("unused.csv", 0);
@@ -171,11 +173,12 @@ WB_TEST(synth_fpga_csv_without_top) {
 WB_TEST(synth_fpga_illegal_cells) {
   RTLIL::Design *design = yosys_get_design();
   Pass::call(design, "design -reset");
-  RTLIL::Module *top = design->addModule(ID(top));
+  RTLIL::Module *top = design->addModule(wbtest::name(design, "top"));
   top->set_bool_attribute(ID::top);
-  RTLIL::Wire *a = top->addWire(ID(a)), *b = top->addWire(ID(b));
+  RTLIL::Wire *a = top->addWire(wbtest::name(top, "a")), *b = top->addWire(wbtest::name(top, "b"));
   for (int i = 0; i < 13; i++)
-    top->addAnd(stringf("\\g%d", i), a, b, top->addWire(stringf("\\y%d", i)));
+    top->addAnd(wbtest::name(top, stringf("g%d", i)), a, b,
+                top->addWire(wbtest::name(top, stringf("y%d", i))));
   wbtest::LogCapture log;
   SynthFpgaPass.continue_if_latch = false;
   WB_CHECK_LOG_ERROR(SynthFpgaPass.check_illegal_cells());

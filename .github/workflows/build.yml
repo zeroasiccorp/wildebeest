@@ -120,8 +120,8 @@ jobs:
           retention-days: 1
 
   # Instrumented build + full test suite.  Two Yosys versions are used because
-  # the sources contain '#if YOSYS_MINOR <= 57' arms: each build compiles only
-  # one side, and the merged report counts both.
+  # the sources contain '#if YOSYS_MINOR <= 57' and '>= 71' arms: each build
+  # compiles only one side, and the merged report counts both.
   coverage:
     runs-on: ubuntu-24.04
     strategy:
@@ -129,7 +129,7 @@ jobs:
       matrix:
         yosys_version:
           - "v0.57"
-          - "v0.66"
+          - "v0.71"
     steps:
       - name: Install dependencies
         shell: bash
@@ -141,14 +141,14 @@ jobs:
             zlib1g-dev libfl-dev libsodium-dev nlohmann-json3-dev
           pipx install gcovr==8.8
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       # Same cache key as the 'build' job, so no extra Yosys builds.
       - name: Restore Yosys install
         id: cache-yosys
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: yosys-install
           key: ${{ runner.os }}-yosys-install-${{ matrix.yosys_version }}
@@ -165,9 +165,21 @@ jobs:
         shell: bash
         run: |
           cd yosys
-          make config-gcc
-          make -j$(nproc) PREFIX=${{ github.workspace }}/yosys-install
-          make install PREFIX=${{ github.workspace }}/yosys-install
+          if [ -f Makefile ]; then
+            # Yosys <= 0.66 uses a Makefile-based build
+            make config-gcc
+            make -j$(nproc) PREFIX=${{ github.workspace }}/yosys-install
+            make install PREFIX=${{ github.workspace }}/yosys-install
+          else
+            # Yosys >= 0.67 uses a CMake-based build
+            cmake -S . -B build \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/yosys-install \
+              -DYOSYS_ENABLE_UNIT_TESTS=OFF \
+              -DYOSYS_WITHOUT_SLANG=ON
+            cmake --build build --parallel $(nproc)
+            cmake --install build
+          fi
 
       - name: Build wildebeest with coverage
         run: |
@@ -192,7 +204,7 @@ jobs:
 
       - name: Store coverage data
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-${{ matrix.yosys_version }}
           path: |
@@ -209,7 +221,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install gcovr
         run: pipx install gcovr==8.8
@@ -223,7 +235,10 @@ jobs:
       - name: Merge coverage
         run: |
           mkdir -p coverage-html
-          gcovr --add-tracefile 'coverage-data/coverage-*.json' \
+          # gcovr.cfg's exclusions were applied when each tracefile was
+          # written; skip the config here, where they would only warn.
+          gcovr --config /dev/null --print-summary \
+            --add-tracefile 'coverage-data/coverage-*.json' \
             --merge-mode-functions=separate \
             --html-details coverage-html/index.html \
             --markdown coverage.md \
@@ -241,7 +256,7 @@ jobs:
           cat coverage-comment.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Store HTML report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-html
           path: coverage-html

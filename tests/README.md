@@ -45,7 +45,7 @@ source tree.  stdin is empty and `tools/` (a stub `xdot`) comes first on
   (`KEY=VALUE` lines).
 - **Slow tests** are named `*-slow.ys`; they get the label `slow` and run only
   in the coverage job.
-- **Version-independent checks**: Yosys versions 0.47-0.66 are tested in CI.
+- **Version-independent checks**: Yosys versions 0.47-0.71 are tested in CI.
   Avoid asserting cell names created by `proc` (`$procdff$NN`) or counts of
   cells that come from `proc`, `simplemap` or ABC; count flip-flops and use
   `-assert-min 1` for LUTs.  Inside quoted `logger` patterns use `.` instead
@@ -91,7 +91,7 @@ python3 tests/coverage/check_ratchet.py summary.json   # after --json-summary su
 ```
 
 CI (`.github/workflows/build.yml`, jobs `coverage` and `coverage-report`)
-measures on Yosys v0.57 and v0.66, merges the results, posts an HTML report,
+measures on Yosys v0.57 and v0.71, merges the results, posts an HTML report,
 a job summary and a PR comment, and fails if coverage drops below
 `coverage/thresholds.json`.  Raise those numbers when a change adds coverage.
 `coverage/UNREACHABLE.md` lists every line that is not covered and why.

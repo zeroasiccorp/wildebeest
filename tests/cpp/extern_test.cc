@@ -51,14 +51,14 @@ WB_TEST(zqcsat_import_and_limits) {
   ModWalker modwalker(design, top);
 
   ZQuickConeSat unlimited(modwalker);
-  unlimited.importSig(top->wire(ID(y)));
+  unlimited.importSig(top->wire(wbtest::name(top, "y")));
   unlimited.prepare();
   WB_CHECK(unlimited.nbImportedCells() >= 3);
 
   // The 2-output $add is skipped when cells may have at most one output.
   ZQuickConeSat few_outputs(modwalker);
   few_outputs.max_cell_outs = 1;
-  few_outputs.importSig(top->wire(ID(y)));
+  few_outputs.importSig(top->wire(wbtest::name(top, "y")));
   few_outputs.prepare();
   WB_CHECK(few_outputs.nbImportedCells() < unlimited.nbImportedCells());
 
@@ -66,7 +66,7 @@ WB_TEST(zqcsat_import_and_limits) {
 // cells deep, import stops early.
   ZQuickConeSat few_cells(modwalker);
   few_cells.max_cell_count = 1;
-  few_cells.importSig(top->wire(ID(y)));
+  few_cells.importSig(top->wire(wbtest::name(top, "y")));
   few_cells.prepare();
   WB_CHECK(few_cells.nbImportedCells() < unlimited.nbImportedCells());
 
@@ -156,13 +156,13 @@ WB_TEST(max_height_partial_selection_throws) {
 WB_TEST(max_height_dot_constant_input_throws) {
   RTLIL::Design *design = yosys_get_design();
   Pass::call(design, "design -reset");
-  RTLIL::Module *top = design->addModule(ID(top));
-  RTLIL::Wire *a = top->addWire(ID(a)), *b = top->addWire(ID(b));
-  RTLIL::Wire *n = top->addWire(ID(n)), *y = top->addWire(ID(y));
+  RTLIL::Module *top = design->addModule(wbtest::name(design, "top"));
+  RTLIL::Wire *a = top->addWire(wbtest::name(top, "a")), *b = top->addWire(wbtest::name(top, "b"));
+  RTLIL::Wire *n = top->addWire(wbtest::name(top, "n")), *y = top->addWire(wbtest::name(top, "y"));
   a->port_input = b->port_input = true;
   y->port_output = true;
   top->fixup_ports();
-  top->addLut(ID(l1), {a, b}, n, RTLIL::Const(8, 4));
-  top->addLut(ID(l2), {n, RTLIL::SigSpec(RTLIL::State::S1)}, y, RTLIL::Const(6, 4));
+  top->addLut(wbtest::name(top, "l1"), {a, b}, n, RTLIL::Const(8, 4));
+  top->addLut(wbtest::name(top, "l2"), {n, RTLIL::SigSpec(RTLIL::State::S1)}, y, RTLIL::Const(6, 4));
   WB_CHECK_THROWS(std::out_of_range, Pass::call(design, "max_height -dot"));
 }
