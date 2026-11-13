@@ -18,6 +18,7 @@
 
 #include "kernel/sigtools.h"
 #include "kernel/yosys.h"
+#include "yosys_compat.h"
 #include <chrono>
 #include <set>
 
@@ -154,7 +155,7 @@ void observabilityClean(
       // Can't perform the analysis correctly.
       log_warning(
           "Module %s contains some logic that prevents obs_clean analysis\n",
-          module->name.c_str());
+          module->name.str().c_str());
       log_flush();
       return;
     }
@@ -184,7 +185,7 @@ void observabilityClean(
       // Can't perform the analysis correctly.
       log_warning(
           "Module %s contains some logic that prevents obs_clean analysis\n",
-          module->name.c_str());
+          module->name.str().c_str());
       log_flush();
       return;
     }
@@ -352,7 +353,7 @@ struct ObsClean : public ScriptPass {
       if (module->has_memories_warn())
         continue;
       if (debug) {
-        log("Processing module: %s\n", module->name.c_str());
+        log("Processing module: %s\n", module->name.str().c_str());
         log_flush();
       }
       SigMap sigmap(module);
@@ -377,7 +378,8 @@ struct ObsClean : public ScriptPass {
                          unused_wires, unused_assigns, debug, cells2rm);
     }
     for (auto cell : cells2rm) {
-      log("      o Removed %d '%s' cells\n", cell.second, log_id(cell.first));
+      log("      o Removed %d '%s' cells\n", cell.second,
+          wb_log_id(design, cell.first));
     }
     log_header(design, "End obs_clean pass\n");
 

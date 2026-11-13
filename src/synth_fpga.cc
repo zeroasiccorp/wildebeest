@@ -28,6 +28,7 @@
 #include "kernel/yosys.h"
 #include "version.h"
 #include "synth_fpga_version.h"
+#include "yosys_compat.h"
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -1848,9 +1849,10 @@ struct SynthFpgaPass : public ScriptPass {
   // id
   // -------------------------
   //
-  static std::string id(RTLIL::IdString internal_id) {
-    const char *str = internal_id.c_str();
-    return std::string(str);
+  // Takes the name field itself rather than an IdString: from Yosys 0.71 on,
+  // only the field knows the pool needed to turn the id into a string.
+  template <typename Name> static std::string id(const Name &internal_id) {
+    return internal_id.str();
   }
 
   // -------------------------
@@ -2612,13 +2614,15 @@ struct SynthFpgaPass : public ScriptPass {
 
     for (auto cell : yosys_get_design()->top_module()->cells()) {
 
-      if (cell->type.in(ID(dffer), ID(dffes), ID(dffe), ID(dffr), ID(dffs),
+      if (cell->type.in(WB_ID(cell, dffer), WB_ID(cell, dffes),
+                        WB_ID(cell, dffe), WB_ID(cell, dffr), WB_ID(cell, dffs),
                         ID(dff))) {
         nb++;
       }
 
-      if (cell->type.in(ID(dffh), ID(dffeh), ID(dffl), ID(dffel), ID(dffhl),
-                        ID(dffehl))) {
+      if (cell->type.in(WB_ID(cell, dffh), WB_ID(cell, dffeh),
+                        WB_ID(cell, dffl), WB_ID(cell, dffel),
+                        WB_ID(cell, dffhl), WB_ID(cell, dffehl))) {
         nb++;
       }
     }
