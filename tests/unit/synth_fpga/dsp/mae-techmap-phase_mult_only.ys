@@ -32,7 +32,7 @@ wreduce
 opt_clean
 
 memory_dff
-techmap -map +/mul2dsp.v -map ../../../architecture/z1010/dsp/zeroasic_dsp_map.v -D DSP_A_MAXWIDTH=18 -D DSP_B_MAXWIDTH=18 -D DSP_A_MAXWIDTH_PARTIAL=18 -D DSP_A_MINWIDTH=2 -D DSP_B_MINWIDTH=2 -D DSP_Y_MINWIDTH=8 -D DSP_SIGNEDONLY=1 -D DSP_NAME=$__MAE__
+techmap -map +/mul2dsp.v -map +/plugins/wildebeest/architecture/z1010/dsp/zeroasic_dsp_map.v -D DSP_A_MAXWIDTH=18 -D DSP_B_MAXWIDTH=18 -D DSP_A_MAXWIDTH_PARTIAL=18 -D DSP_A_MINWIDTH=2 -D DSP_B_MINWIDTH=2 -D DSP_Y_MINWIDTH=8 -D DSP_SIGNEDONLY=1 -D DSP_NAME=$__MAE__
 select a:mul2dsp
 setattr -unset mul2dsp
 opt_expr -fine
@@ -40,7 +40,7 @@ wreduce
 select -clear
 
 zeroasic_dsp -mult_only
-techmap -map ../../../architecture/z1010/dsp/zeroasic_dsp_map_mode.v
+techmap -map +/plugins/wildebeest/architecture/z1010/dsp/zeroasic_dsp_map_mode.v
 
 select -assert-count 1 */t:efpga_mult
 select -assert-count 1 */t:efpga_mult_addc

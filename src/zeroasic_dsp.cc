@@ -431,6 +431,12 @@ struct ZeroAsicDspPass : public Pass {
       log_cmd_error("Options -mult_only and -add_only are mutually "
                     "exclusive.\n");
 
+    // With the scratchpad flag 'zeroasic_dsp.multonly' set, nothing is packed
+    // or inferred, whichever phase is requested.
+    //
+    if (design->scratchpad_get_bool("zeroasic_dsp.multonly"))
+      return;
+
     // No phase requested: both passes, one module at a time.
     //
     if (!mult_only && !add_only) {
