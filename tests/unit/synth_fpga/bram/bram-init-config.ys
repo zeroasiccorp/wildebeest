@@ -46,6 +46,6 @@ logger -expect log "BRAM bram_with_init" 1
 logger -expect log "BRAM logic_cost_rom" 1
 logger -expect log "BRAM INIT: spram_4096x4 .*: width 16384, 32 set bits, lowest 0, highest 63" 1
 
-synth_fpga -config ../data/bram/bram_init.json -show_config
+synth_fpga -config ../../data/bram/bram_init.json -show_config
 
 select -assert-count 1 */t:spram_4096x4

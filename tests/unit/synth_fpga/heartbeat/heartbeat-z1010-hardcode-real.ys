@@ -1,4 +1,9 @@
-# yosys -m wildebeest -s heartbeat-z1000-config.ys
+# yosys -m wildebeest -s heartbeat-z1010-hardcode-real.ys
+#
+# Hardcoded (no -config) z1010 flow.  heartbeat-z1010-hardcode.ys, despite its
+# name, runs '-partname z1000' (KNOWN-ISSUE SF13) and is kept as is for the
+# z1000 path.  The cell counts are the same for both parts, so the z1010-only
+# MAE model load is asserted to prove which path ran.
 read_verilog <<EOF
 module heartbeat #(
     parameter N = 8
@@ -25,6 +30,8 @@ module heartbeat #(
 endmodule
 EOF
 
-synth_fpga -config data/z1000/z1000.json -show_config
+logger -expect log "Executing Verilog-2005 frontend: .*/architecture/z1010/models/tech_mae.v" 1
+synth_fpga -partname z1010
 select -assert-count 9 */t:dffr
 select -assert-count 11 */t:$lut
+select -assert-count 20 */t:*

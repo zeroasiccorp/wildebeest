@@ -3,7 +3,7 @@
 #A signed adder maps onto the hard carry chain just like the unsigned one :
 #the sign extension is absorbed by the '$pos' conversions of the techmap.
 
-read_verilog -lib ../data/carrychain/models/tech_carry.v
+read_verilog -lib ../../data/carrychain/models/tech_carry.v
 
 read_verilog <<EOF
 module carrychain_add_signed
@@ -21,7 +21,7 @@ module carrychain_add_signed
 endmodule
 EOF
 
-synth_fpga -config ../data/carrychain/carrychain.json
+synth_fpga -config ../../data/carrychain/carrychain.json
 
 #The whole adder is in the carry chain : no '$alu' survived and no soft
 #logic was needed.

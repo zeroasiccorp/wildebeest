@@ -4,7 +4,7 @@
 #describes both, the multiply goes to the DSP and the unrelated adder to the
 #hard carry chain.
 
-read_verilog -lib ../data/carrychain/models/tech_carry.v
+read_verilog -lib ../../data/carrychain/models/tech_carry.v
 
 read_verilog <<EOF
 module carrychain_with_dsp
@@ -26,7 +26,7 @@ module carrychain_with_dsp
 endmodule
 EOF
 
-synth_fpga -config ../data/carrychain/carrychain_dsp.json
+synth_fpga -config ../../data/carrychain/carrychain_dsp.json
 
 select -assert-count 1 */t:DSP48
 select -assert-count 9 */t:efpga_carry

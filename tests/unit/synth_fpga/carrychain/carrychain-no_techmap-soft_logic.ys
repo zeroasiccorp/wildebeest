@@ -4,7 +4,7 @@
 #no 'adders' section, stays in soft logic.  That config differs from
 #'carrychain.json' by that section only.
 
-read_verilog -lib ../data/carrychain/models/tech_carry.v
+read_verilog -lib ../../data/carrychain/models/tech_carry.v
 
 read_verilog <<EOF
 module carrychain_no_techmap
@@ -22,7 +22,7 @@ module carrychain_no_techmap
 endmodule
 EOF
 
-synth_fpga -config ../data/carrychain/carrychain_no_adders.json
+synth_fpga -config ../../data/carrychain/carrychain_no_adders.json
 
 select -assert-count 0 */t:efpga_carry
 select -assert-count 0 */t:$alu

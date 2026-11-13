@@ -3,7 +3,7 @@
 #'-no_dsp' disables DSP inference only : the multiply falls back to soft
 #logic while the adder must still be mapped onto the hard carry chain.
 
-read_verilog -lib ../data/carrychain/models/tech_carry.v
+read_verilog -lib ../../data/carrychain/models/tech_carry.v
 
 read_verilog <<EOF
 module carrychain_with_no_dsp
@@ -25,7 +25,7 @@ module carrychain_with_no_dsp
 endmodule
 EOF
 
-synth_fpga -config ../data/carrychain/carrychain_dsp.json -no_dsp
+synth_fpga -config ../../data/carrychain/carrychain_dsp.json -no_dsp
 
 select -assert-count 0 */t:DSP48
 select -assert-count 9 */t:efpga_carry

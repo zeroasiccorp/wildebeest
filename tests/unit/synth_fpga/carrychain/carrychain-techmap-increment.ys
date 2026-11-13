@@ -3,7 +3,7 @@
 #An incrementer is an '$alu' with a constant operand : it must be mapped onto
 #the hard carry chain rather than onto soft logic.
 
-read_verilog -lib ../data/carrychain/models/tech_carry.v
+read_verilog -lib ../../data/carrychain/models/tech_carry.v
 
 read_verilog <<EOF
 module carrychain_increment
@@ -20,7 +20,7 @@ module carrychain_increment
 endmodule
 EOF
 
-synth_fpga -config ../data/carrychain/carrychain.json
+synth_fpga -config ../../data/carrychain/carrychain.json
 
 #The whole adder is in the carry chain : no '$alu' survived and no soft
 #logic was needed.

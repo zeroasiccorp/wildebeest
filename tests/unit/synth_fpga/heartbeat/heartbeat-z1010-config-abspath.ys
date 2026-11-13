@@ -25,6 +25,6 @@ module heartbeat #(
 endmodule
 EOF
 
-synth_fpga -config data/z1010/z1010_abspath.json -show_config
+synth_fpga -config ../../data/z1010/z1010_abspath.json -show_config
 select -assert-count 9 */t:dffr
 select -assert-count 11 */t:$lut

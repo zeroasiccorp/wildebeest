@@ -4,7 +4,7 @@
 #them to the generic '+/techmap.v' soft logic mapping : a 4 bit adder gets no
 #carry cell at all.
 
-read_verilog -lib ../data/carrychain/models/tech_carry.v
+read_verilog -lib ../../data/carrychain/models/tech_carry.v
 
 read_verilog <<EOF
 module carrychain_min8_narrow
@@ -19,7 +19,7 @@ module carrychain_min8_narrow
 endmodule
 EOF
 
-synth_fpga -config ../data/carrychain/carrychain_min8.json
+synth_fpga -config ../../data/carrychain/carrychain_min8.json
 
 select -assert-count 0 */t:efpga_carry
 select -assert-count 0 */t:$alu
