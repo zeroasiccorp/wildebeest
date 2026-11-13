@@ -423,11 +423,21 @@ with open(outfile, "w") as f:
         print("", file=f)
     current_pattern = None
 
+    # From Yosys 0.71 on, ids that aren't Yosys builtins must be interned in
+    # the design's pool. module is the first member, so it's already set here.
+    print("#if YOSYS_MAJOR > 0 || YOSYS_MINOR >= 71", file=f)
+    for v, n in sorted(ids.items()):
+        if n[0] == "\\":
+            print("  IdString {}{{module->twines().add(\"\\{}\")}};".format(v, n), file=f)
+        else:
+            print("  IdString {}{{module->twines().add(\"{}\")}};".format(v, n), file=f)
+    print("#else", file=f)
     for v, n in sorted(ids.items()):
         if n[0] == "\\":
             print("  IdString {}{{\"\\{}\"}};".format(v, n), file=f)
         else:
             print("  IdString {}{{\"{}\"}};".format(v, n), file=f)
+    print("#endif", file=f)
     print("", file=f)
 
     print("  void add_siguser(const SigSpec &sig, Cell *cell) {", file=f)
@@ -462,7 +472,13 @@ with open(outfile, "w") as f:
     print("  SigSpec port(Cell *cell, IdString portname) {", file=f)
     print("    try {", file=f)
     print("      return sigmap(cell->getPort(portname));", file=f)
-    print("    } catch(std::out_of_range&) { log_error(\"Accessing non existing port %s\\n\",portname.c_str()); }", file=f)
+    print("    } catch(std::out_of_range&) {", file=f)
+    print("#if YOSYS_MAJOR > 0 || YOSYS_MINOR >= 71", file=f)
+    print("      log_error(\"Accessing non existing port %s\\n\", module->twines().str(portname).c_str());", file=f)
+    print("#else", file=f)
+    print("      log_error(\"Accessing non existing port %s\\n\", portname.c_str());", file=f)
+    print("#endif", file=f)
+    print("    }", file=f)
     print("  }", file=f)
     print("", file=f)
     print("  SigSpec port(Cell *cell, IdString portname, const SigSpec& defval) {", file=f)
@@ -473,7 +489,13 @@ with open(outfile, "w") as f:
     print("  Const param(Cell *cell, IdString paramname) {", file=f)
     print("    try {", file=f)
     print("      return cell->getParam(paramname);", file=f)
-    print("    } catch(std::out_of_range&) { log_error(\"Accessing non existing parameter %s\\n\",paramname.c_str()); }", file=f)
+    print("    } catch(std::out_of_range&) {", file=f)
+    print("#if YOSYS_MAJOR > 0 || YOSYS_MINOR >= 71", file=f)
+    print("      log_error(\"Accessing non existing parameter %s\\n\", module->twines().str(paramname).c_str());", file=f)
+    print("#else", file=f)
+    print("      log_error(\"Accessing non existing parameter %s\\n\", paramname.c_str());", file=f)
+    print("#endif", file=f)
+    print("    }", file=f)
     print("  }", file=f)
     print("", file=f)
     print("  Const param(Cell *cell, IdString paramname, const Const& defval) {", file=f)

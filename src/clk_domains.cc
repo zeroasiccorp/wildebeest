@@ -1,6 +1,7 @@
 #include "kernel/celltypes.h"
 #include "kernel/sigtools.h"
 #include "kernel/yosys.h"
+#include "yosys_compat.h"
 #include <cassert>
 #include <chrono>
 
@@ -49,37 +50,37 @@ struct MaxLvlPass : public ScriptPass {
     void setup_internals_zeroasic_clocked_cells(CellTypes &ff_celltypes) {
       // Simply list the DFF cells names is enough as cut points
       //
-      ff_celltypes.setup_type(ID(dffehl), {}, {});
-      ff_celltypes.setup_type(ID(dffeh), {}, {});
-      ff_celltypes.setup_type(ID(dffel), {}, {});
-      ff_celltypes.setup_type(ID(dffer), {}, {});
-      ff_celltypes.setup_type(ID(dffes), {}, {});
-      ff_celltypes.setup_type(ID(dffe), {}, {});
-      ff_celltypes.setup_type(ID(dffhl), {}, {});
-      ff_celltypes.setup_type(ID(dffh), {}, {});
-      ff_celltypes.setup_type(ID(dffl), {}, {});
-      ff_celltypes.setup_type(ID(dffr), {}, {});
-      ff_celltypes.setup_type(ID(dffs), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, dffehl), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, dffeh), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, dffel), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, dffer), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, dffes), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, dffe), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, dffhl), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, dffh), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, dffl), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, dffr), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, dffs), {}, {});
       ff_celltypes.setup_type(ID(dff), {}, {});
 
       // Clocked DSPs
       //
-      ff_celltypes.setup_type(ID(efpga_adder_regi), {}, {});
-      ff_celltypes.setup_type(ID(efpga_adder_rego), {}, {});
-      ff_celltypes.setup_type(ID(efpga_adder_regio), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, efpga_adder_regi), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, efpga_adder_rego), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, efpga_adder_regio), {}, {});
 
-      ff_celltypes.setup_type(ID(efpga_acc_regi), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, efpga_acc_regi), {}, {});
 
-      ff_celltypes.setup_type(ID(efpga_mult_regi), {}, {});
-      ff_celltypes.setup_type(ID(efpga_mult_rego), {}, {});
-      ff_celltypes.setup_type(ID(efpga_mult_regio), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, efpga_mult_regi), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, efpga_mult_rego), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, efpga_mult_regio), {}, {});
 
-      ff_celltypes.setup_type(ID(efpga_macc_regi), {}, {});
-      ff_celltypes.setup_type(ID(efpga_macc_pipe_regi), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, efpga_macc_regi), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, efpga_macc_pipe_regi), {}, {});
 
-      ff_celltypes.setup_type(ID(efpga_mult_addc_regio), {}, {});
-      ff_celltypes.setup_type(ID(efpga_mult_addc_regi), {}, {});
-      ff_celltypes.setup_type(ID(efpga_mult_addc_rego), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, efpga_mult_addc_regio), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, efpga_mult_addc_regi), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, efpga_mult_addc_rego), {}, {});
     }
 
     // ------------------------------------
@@ -93,17 +94,17 @@ struct MaxLvlPass : public ScriptPass {
       ff_celltypes.setup_type(ID(FDRE), {}, {});
       ff_celltypes.setup_type(ID(FDRE_1), {}, {});
       ff_celltypes.setup_type(ID(FDSE), {}, {});
-      ff_celltypes.setup_type(ID(LDCE), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, LDCE), {}, {});
     }
     void setup_internals_xilinx_io_xc4v(CellTypes &ff_celltypes) {
       ff_celltypes.setup_type(ID(IBUF), {}, {});
-      ff_celltypes.setup_type(ID(OBUF), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, OBUF), {}, {});
     }
     void setup_internals_xilinx_bram(CellTypes &ff_celltypes) {
-      ff_celltypes.setup_type(ID(RAMB16), {}, {});
-      ff_celltypes.setup_type(ID(RAM32M), {}, {});
-      ff_celltypes.setup_type(ID(RAM64x12), {}, {});
-      ff_celltypes.setup_type(ID(OBUF), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, RAMB16), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, RAM32M), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, RAM64x12), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, OBUF), {}, {});
     }
 
     // ------------------------------------
@@ -117,7 +118,7 @@ struct MaxLvlPass : public ScriptPass {
     void setup_internals_lattice_bram_xo2(CellTypes &ff_celltypes) {
       // Simply list the BRAM cells names is enough as cut points
       //
-      ff_celltypes.setup_type(ID(DP8KC), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, DP8KC), {}, {});
     }
 
     // ------------------------------------
@@ -126,19 +127,19 @@ struct MaxLvlPass : public ScriptPass {
     void setup_internals_ice40_ff_hx(CellTypes &ff_celltypes) {
       // Simply list the DFF cells names is enough as cut points
       //
-      ff_celltypes.setup_type(ID(SB_DFF), {}, {});
-      ff_celltypes.setup_type(ID(SB_DFFE), {}, {});
-      ff_celltypes.setup_type(ID(SB_DFFER), {}, {});
-      ff_celltypes.setup_type(ID(SB_DFFESR), {}, {});
-      ff_celltypes.setup_type(ID(SB_DFFESS), {}, {});
-      ff_celltypes.setup_type(ID(SB_DFFN), {}, {});
-      ff_celltypes.setup_type(ID(SB_DFFR), {}, {});
-      ff_celltypes.setup_type(ID(SB_DFFRS), {}, {});
-      ff_celltypes.setup_type(ID(SB_DFFRR), {}, {});
-      ff_celltypes.setup_type(ID(SB_DFFS), {}, {});
-      ff_celltypes.setup_type(ID(SB_DFFSS), {}, {});
-      ff_celltypes.setup_type(ID(SB_DFFSR), {}, {});
-      ff_celltypes.setup_type(ID(SB_DFFES), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, SB_DFF), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, SB_DFFE), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, SB_DFFER), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, SB_DFFESR), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, SB_DFFESS), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, SB_DFFN), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, SB_DFFR), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, SB_DFFRS), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, SB_DFFRR), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, SB_DFFS), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, SB_DFFSS), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, SB_DFFSR), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, SB_DFFES), {}, {});
     }
 
     // ------------------------------------
@@ -147,7 +148,7 @@ struct MaxLvlPass : public ScriptPass {
     void setup_internals_quicklogic_ff_pp3(CellTypes &ff_celltypes) {
       // Simply list the DFF cells names is enough as cut points
       //
-      ff_celltypes.setup_type(ID(dffepc), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, dffepc), {}, {});
     }
 
     // ---------------------------------------
@@ -161,15 +162,15 @@ struct MaxLvlPass : public ScriptPass {
     void setup_internals_microchip_bram_polarfire(CellTypes &ff_celltypes) {
       // Simply list the BRAM cells names is enough as cut points
       //
-      ff_celltypes.setup_type(ID(RAM1K20), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, RAM1K20), {}, {});
     }
     void setup_internals_microchip_cells_polarfire(CellTypes &ff_celltypes) {
       // Simply list the cells names is enough as cut points
       //
-      ff_celltypes.setup_type(ID(INBUF), {}, {});
-      ff_celltypes.setup_type(ID(OUTBUF), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, INBUF), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, OUTBUF), {}, {});
       ff_celltypes.setup_type(ID(SLE), {}, {});
-      ff_celltypes.setup_type(ID(CLKINT), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, CLKINT), {}, {});
     }
 
     // ------------------------------------
@@ -178,7 +179,7 @@ struct MaxLvlPass : public ScriptPass {
     void setup_internals_intel_ff_cycloneiv(CellTypes &ff_celltypes) {
       // Simply list the DFF cells names is enough as cut points
       //
-      ff_celltypes.setup_type(ID(dffeas), {}, {});
+      ff_celltypes.setup_type(WB_ID(module, dffeas), {}, {});
     }
 
     // ---------------------

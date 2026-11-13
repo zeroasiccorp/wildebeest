@@ -38,6 +38,11 @@ jobs:
           - "v0.64"
           - "v0.65"
           - "v0.66"
+          - "v0.67"
+          - "v0.68"
+          - "v0.69"
+          - "v0.70"
+          - "v0.71"
     steps:
       - name: Install dependencies
         shell: bash
@@ -71,9 +76,21 @@ jobs:
         shell: bash
         run: |
           cd yosys
-          make config-gcc
-          make -j$(nproc) PREFIX=${{ github.workspace }}/yosys-install
-          make install PREFIX=${{ github.workspace }}/yosys-install
+          if [ -f Makefile ]; then
+            # Yosys <= 0.66 uses a Makefile-based build
+            make config-gcc
+            make -j$(nproc) PREFIX=${{ github.workspace }}/yosys-install
+            make install PREFIX=${{ github.workspace }}/yosys-install
+          else
+            # Yosys >= 0.67 uses a CMake-based build
+            cmake -S . -B build \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/yosys-install \
+              -DYOSYS_ENABLE_UNIT_TESTS=OFF \
+              -DYOSYS_WITHOUT_SLANG=ON
+            cmake --build build --parallel $(nproc)
+            cmake --install build
+          fi
 
       - name: Build wildebeest
         run: |

@@ -20,6 +20,7 @@
 #include "kernel/log.h"
 #include "kernel/register.h"
 #include "kernel/rtlil.h"
+#include "yosys_compat.h"
 #include <cassert>
 #include <chrono>
 #include <iomanip>
@@ -64,7 +65,8 @@ struct ReportStatPass : public ScriptPass {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(MUXF5), ID(MUXF6), ID(MUXF7))) {
+      if (cell->type.in(WB_ID(cell, MUXF5), WB_ID(cell, MUXF6),
+                        WB_ID(cell, MUXF7))) {
         nb++;
         continue;
       }
@@ -104,14 +106,14 @@ struct ReportStatPass : public ScriptPass {
 
       // Quicklogic 'pp3' mux4x0
       //
-      if (cell->type.in(ID(mux4x0))) {
+      if (cell->type.in(WB_ID(cell, mux4x0))) {
         nb += 3; // equivalent to 3 LUT3 (Mux)
         continue;
       }
 
       // Quicklogic 'pp3' mux8x0
       //
-      if (cell->type.in(ID(mux8x0))) {
+      if (cell->type.in(WB_ID(cell, mux8x0))) {
         nb += 7; // equivalent to 7 LUT3 (Mux)
         continue;
       }
@@ -125,7 +127,7 @@ struct ReportStatPass : public ScriptPass {
 
       // Intel 'cycloneiv' Luts
       //
-      if (cell->type.in(ID($not), ID(cycloneiv_lcell_comb))) {
+      if (cell->type.in(ID($not), WB_ID(cell, cycloneiv_lcell_comb))) {
         nb++;
         continue;
       }
@@ -145,20 +147,22 @@ struct ReportStatPass : public ScriptPass {
 
       // Zero Asic Z1000/Z1010 DFFs
       //
-      if (cell->type.in(ID(dffer), ID(dffes), ID(dffe), ID(dffr), ID(dffs),
+      if (cell->type.in(WB_ID(cell, dffer), WB_ID(cell, dffes),
+                        WB_ID(cell, dffe), WB_ID(cell, dffr), WB_ID(cell, dffs),
                         ID(dff))) {
         nb++;
       }
 
-      if (cell->type.in(ID(dffh), ID(dffeh), ID(dffl), ID(dffel), ID(dffhl),
-                        ID(dffehl))) {
+      if (cell->type.in(WB_ID(cell, dffh), WB_ID(cell, dffeh),
+                        WB_ID(cell, dffl), WB_ID(cell, dffel),
+                        WB_ID(cell, dffhl), WB_ID(cell, dffehl))) {
         nb++;
       }
 
       // Xilinx 'xc4v' DFFs, 'xc7'
       //
       if (cell->type.in(ID(FDCE), ID(FDPE), ID(FDRE), ID(FDRE_1), ID(FDSE),
-                        ID(LDCE))) { // LATCH !!!
+                        WB_ID(cell, LDCE))) { // LATCH !!!
         nb++;
         continue;
       }
@@ -172,16 +176,18 @@ struct ReportStatPass : public ScriptPass {
 
       // ice40 'hx' DFFs
       //
-      if (cell->type.in(ID(SB_DFF), ID(SB_DFFE), ID(SB_DFFER), ID(SB_DFFESR),
-                        ID(SB_DFFESS), ID(SB_DFFN), ID(SB_DFFR), ID(SB_DFFS),
-                        ID(SB_DFFSR), ID(SB_DFFES))) {
+      if (cell->type.in(WB_ID(cell, SB_DFF), WB_ID(cell, SB_DFFE),
+                        WB_ID(cell, SB_DFFER), WB_ID(cell, SB_DFFESR),
+                        WB_ID(cell, SB_DFFESS), WB_ID(cell, SB_DFFN),
+                        WB_ID(cell, SB_DFFR), WB_ID(cell, SB_DFFS),
+                        WB_ID(cell, SB_DFFSR), WB_ID(cell, SB_DFFES))) {
         nb++;
         continue;
       }
 
       // Quicklogic 'pp3' DFFs
       //
-      if (cell->type.in(ID(dffepc))) {
+      if (cell->type.in(WB_ID(cell, dffepc))) {
         nb++;
         continue;
       }
@@ -195,18 +201,18 @@ struct ReportStatPass : public ScriptPass {
 
       // Intel 'cycloneiv' DFFs
       //
-      if (cell->type.in(ID(dffeas))) {
+      if (cell->type.in(WB_ID(cell, dffeas))) {
         nb++;
         continue;
       }
 
       // rest of the world
       //
-      if (cell->type.in(ID(dffer_pxp))) {
+      if (cell->type.in(WB_ID(cell, dffer_pxp))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(dffes_xpp))) {
+      if (cell->type.in(WB_ID(cell, dffes_xpp))) {
         nb++;
         continue;
       }
@@ -236,14 +242,14 @@ struct ReportStatPass : public ScriptPass {
 
       // Xilinx xc4v
       //
-      if (cell->type.in(ID(DSP48))) {
+      if (cell->type.in(WB_ID(cell, DSP48))) {
         nb++;
         continue;
       }
 
       // Xilinx xc5v
       //
-      if (cell->type.in(ID(DSP48E))) {
+      if (cell->type.in(WB_ID(cell, DSP48E))) {
         nb++;
         continue;
       }
@@ -276,75 +282,75 @@ struct ReportStatPass : public ScriptPass {
       //
       //    architecture/z1010/models/tech_mae.v
       //
-      if (cell->type.in(ID(efpga_adder))) {
+      if (cell->type.in(WB_ID(cell, efpga_adder))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_adder_regi))) {
+      if (cell->type.in(WB_ID(cell, efpga_adder_regi))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_adder_rego))) {
+      if (cell->type.in(WB_ID(cell, efpga_adder_rego))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_adder_regio))) {
+      if (cell->type.in(WB_ID(cell, efpga_adder_regio))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_acc_regi))) {
+      if (cell->type.in(WB_ID(cell, efpga_acc_regi))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_acc))) {
+      if (cell->type.in(WB_ID(cell, efpga_acc))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_mult))) {
+      if (cell->type.in(WB_ID(cell, efpga_mult))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_mult_regi))) {
+      if (cell->type.in(WB_ID(cell, efpga_mult_regi))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_mult_rego))) {
+      if (cell->type.in(WB_ID(cell, efpga_mult_rego))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_mult_regio))) {
+      if (cell->type.in(WB_ID(cell, efpga_mult_regio))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_mult_addc_regi))) {
+      if (cell->type.in(WB_ID(cell, efpga_mult_addc_regi))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_mult_addc_rego))) {
+      if (cell->type.in(WB_ID(cell, efpga_mult_addc_rego))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_mult_addc_regio))) {
+      if (cell->type.in(WB_ID(cell, efpga_mult_addc_regio))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_mult_addc))) {
+      if (cell->type.in(WB_ID(cell, efpga_mult_addc))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_macc_pipe))) {
+      if (cell->type.in(WB_ID(cell, efpga_macc_pipe))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_macc_pipe_regi))) {
+      if (cell->type.in(WB_ID(cell, efpga_macc_pipe_regi))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_macc_regi))) {
+      if (cell->type.in(WB_ID(cell, efpga_macc_regi))) {
         nb++;
         continue;
       }
-      if (cell->type.in(ID(efpga_macc))) {
+      if (cell->type.in(WB_ID(cell, efpga_macc))) {
         nb++;
         continue;
       }
@@ -364,14 +370,14 @@ struct ReportStatPass : public ScriptPass {
 
       // Xilinx xc4v
       //
-      if (cell->type.in(ID(RAMB16))) {
+      if (cell->type.in(WB_ID(cell, RAMB16))) {
         nb++;
         continue;
       }
 
       // Xilinx xc7
       //
-      if (cell->type.in(ID(RAM32M))) {
+      if (cell->type.in(WB_ID(cell, RAM32M))) {
         nb++;
         continue;
       }
@@ -385,21 +391,21 @@ struct ReportStatPass : public ScriptPass {
 
       // Lattice xo2
       //
-      if (cell->type.in(ID(DP8KC))) {
+      if (cell->type.in(WB_ID(cell, DP8KC))) {
         nb++;
         continue;
       }
 
       // Intel cycloneiv
       //
-      if (cell->type.in(ID(altsyncram))) {
+      if (cell->type.in(WB_ID(cell, altsyncram))) {
         nb++;
         continue;
       }
 
       // Microchip polarfire
       //
-      if (cell->type.in(ID(RAM1K20))) {
+      if (cell->type.in(WB_ID(cell, RAM1K20))) {
         nb++;
         continue;
       }
@@ -412,37 +418,43 @@ struct ReportStatPass : public ScriptPass {
               //
               // sprams
               //
-              ID(spram_512x32), ID(spram_1024x16), ID(spram_2048x8),
-              ID(spram_4096x4), ID(spram_8192x2), ID(spram_16384x1),
+              WB_ID(cell, spram_512x32), WB_ID(cell, spram_1024x16),
+              WB_ID(cell, spram_2048x8), WB_ID(cell, spram_4096x4),
+              WB_ID(cell, spram_8192x2), WB_ID(cell, spram_16384x1),
 
               // sdprams
               //
-              ID(sdpram_1024x16), ID(sdpram_2048x8), ID(sdpram_4096x4),
-              ID(sdpram_8192x2), ID(sdpram_16384x1), ID(sdpram_16384x1),
+              WB_ID(cell, sdpram_1024x16), WB_ID(cell, sdpram_2048x8),
+              WB_ID(cell, sdpram_4096x4), WB_ID(cell, sdpram_8192x2),
+              WB_ID(cell, sdpram_16384x1), WB_ID(cell, sdpram_16384x1),
 
               // tdprams
               //
-              ID(tdpram_1024x16), ID(tdpram_2048x8), ID(tdpram_4096x4),
-              ID(tdpram_8192x2), ID(tdpram_16384x1),
+              WB_ID(cell, tdpram_1024x16), WB_ID(cell, tdpram_2048x8),
+              WB_ID(cell, tdpram_4096x4), WB_ID(cell, tdpram_8192x2),
+              WB_ID(cell, tdpram_16384x1),
 
               // Old RAM names
               //
-              ID(spram_512x64), ID(spram_1024x32), ID(spram_2048x16),
-              ID(spram_4096x8), ID(spram_8192x4), ID(spram_16384x2),
-              ID(spram_32768x1),
+              WB_ID(cell, spram_512x64), WB_ID(cell, spram_1024x32),
+              WB_ID(cell, spram_2048x16), WB_ID(cell, spram_4096x8),
+              WB_ID(cell, spram_8192x4), WB_ID(cell, spram_16384x2),
+              WB_ID(cell, spram_32768x1),
 
-              ID(sdpram_1024x32), ID(sdpram_2048x16), ID(sdpram_4096x8),
-              ID(sdpram_8192x4), ID(sdpram_16384x2), ID(sdpram_32768x1),
+              WB_ID(cell, sdpram_1024x32), WB_ID(cell, sdpram_2048x16),
+              WB_ID(cell, sdpram_4096x8), WB_ID(cell, sdpram_8192x4),
+              WB_ID(cell, sdpram_16384x2), WB_ID(cell, sdpram_32768x1),
 
-              ID(tdpram_1024x32), ID(tdpram_2048x16), ID(tdpram_4096x8),
-              ID(tdpram_8192x4), ID(tdpram_16384x2), ID(tdpram_32768x1))) {
+              WB_ID(cell, tdpram_1024x32), WB_ID(cell, tdpram_2048x16),
+              WB_ID(cell, tdpram_4096x8), WB_ID(cell, tdpram_8192x4),
+              WB_ID(cell, tdpram_16384x2), WB_ID(cell, tdpram_32768x1))) {
         nb++;
         continue;
       }
 
       // rest of the world
       //
-      if (cell->type.in(ID(RAM64x12))) {
+      if (cell->type.in(WB_ID(cell, RAM64x12))) {
         nb++;
         continue;
       }

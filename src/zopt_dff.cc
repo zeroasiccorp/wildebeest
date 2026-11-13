@@ -23,6 +23,7 @@
 #include "kernel/register.h"
 #include "kernel/rtlil.h"
 #include "kernel/sigtools.h"
+#include "yosys_compat.h"
 #include "zqcsat.h"
 #include "zsimplemap.h"
 #include <chrono>

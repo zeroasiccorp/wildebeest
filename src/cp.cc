@@ -20,6 +20,7 @@
 #include "kernel/celltypes.h"
 #include "kernel/sigtools.h"
 #include "kernel/yosys.h"
+#include "yosys_compat.h"
 #include <cassert>
 #include <chrono>
 #include <fstream>
