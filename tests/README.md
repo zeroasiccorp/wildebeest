@@ -1,6 +1,6 @@
 # Wildebeest tests
 
-Every `*.ys` file under `unit/` is a test: a Yosys script that loads the
+Every `*.ys` file under `unit/` is a test (C++ unit tests are described below): a Yosys script that loads the
 plugin, runs a pass and checks the result with `select -assert-*`,
 `logger -expect`, `scratchpad -assert*`, and SAT/`equiv_opt` equivalence
 checks.  `ctest` finds them automatically.
@@ -55,6 +55,30 @@ source tree.  stdin is empty and `tools/` (a stub `xdot`) comes first on
   `unit/data/config/` come from the table in
   `unit/data/config/generate.py`.  Edit the table and run
   `python3 tests/unit/data/config/generate.py .` from the repository root.
+
+## C++ unit tests (`cpp/`)
+
+A small layer for code that scripts cannot reach: "no design" guards,
+internal errors, helpers nothing calls, and bugs that abort Yosys with an
+uncaught exception.  Behaviour is still tested through scripts.
+
+- Each `cpp/<name>_test.cc` does `#include "../../src/<name>.cc"`, so it can
+  use the pass object and members that live in the source's anonymous
+  namespace.  CMake builds `wildebeest_cxxtest.so` from the test files plus
+  the remaining sources; it is loaded *instead of* `wildebeest.so`.
+- A case is `WB_TEST(name) { ... }` with `WB_CHECK`, `WB_CHECK_EQ`,
+  `WB_CHECK_THROWS` and `WB_CHECK_LOG_ERROR` (see `cpp/wb_test.h`).
+  `WB_CHECK_LOG_ERROR` works by making Yosys's `log_error_atexit` hook
+  throw.  `wbtest::NullDesign` and `wbtest::LogCapture` help reach guards and
+  check log output.
+- CTest runs each case as `yosys -m wildebeest_cxxtest.so -p "wb_cxxtest
+  -case <name>"` in its own process and directory (label `cxx`), so a case
+  may leave Yosys in any state.
+- Built with `-DWILDEBEEST_CXXTESTS=ON`, which is the default in coverage
+  builds (`-DWILDEBEEST_COVERAGE=ON`); the regular build matrix does not
+  build them.
+- The tests depend on private names in `src/`; when a test stops compiling
+  after a refactor, update or delete it.
 
 ## Coverage
 

@@ -6,6 +6,10 @@ pins down one of these behaviours has a `# KNOWN-ISSUE <ID>` comment, so
 `grep -rn KNOWN-ISSUE tests/` lists every test that will need updating when a
 fix lands.
 
+Bugs that throw an uncaught C++ exception (ML1, MH2, MH5) cannot be tested
+from a script, because they abort Yosys; the C++ unit tests in `tests/cpp/`
+pin them with `WB_CHECK_THROWS`.
+
 The exception is a confirmed **wrong-logic** bug: pinning a wrong netlist as
 "expected" would be misleading, so such a test asserts the correct behaviour
 instead and has a `<script>.xfail` file next to it. CTest then expects it to
@@ -40,6 +44,7 @@ Line numbers refer to the source as of commit `6763981`.
 | SF15 | M | 594-701, 2710-2746 | `root_path` is applied inconsistently. `setup_options` builds the techmap/libmap paths as `root_path + "/" + file`, and a relative `root_path` is taken relative to the **current directory**, not the config file. `load_cell_models_from_config` reads the flip-flop and DSP model files relative to the **config file's directory** and ignores `root_path`. Any `root_path` other than one naming the config file's own directory (relative to where Yosys runs) therefore fails with "file not found". Found in Phase 2b. |
 | SF16 | H | flow | `synth_fpga -no_flatten` segfaults inside Yosys's `stat` (`hierarchy_builder` → `statdata_t`) after the flow has transformed the design, on every design tried, including a single-module counter; `-obs_clean -no_flatten` crashes the same way. Likely related to the cell-model modules the flow reads into the design (they would be flattened away otherwise), but the root cause is not analysed. Seen on Yosys 0.70; to be confirmed on the CI versions. Found in Phase 2c. |
 | SF17 | L | `resynthesize` | `-resynthesis` leaves 7 internal nets of the techmapped adder undriven. They drive nothing (the netlist is correct and has no `x`), but `-stop_if_undriven_nets` treats them as fatal. Found in Phase 2c. |
+| SF19 | L | 1919-1931 | `show_sig` loops from `sig.chunks().rbegin()` to `sig.chunks().rend()`. Since Yosys 0.70 `SigSpec::chunks()` returns a temporary view, so the two iterators belong to different objects and the loop crashes. `show_sig` is never called by the plugin (dead code); found by the C++ unit tests. |
 | SF18 | L | 788-796 | On z1000, `-no_dff_enable`, `-no_dff_async_reset` and `-dff_async_set` have no effect (same netlist as without them); they only change the legal flop list on the platypus parts. Found in Phase 2c. |
 
 ## zopt_dff / zopt_const_dff

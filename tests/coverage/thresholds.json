@@ -1,5 +1,5 @@
 {
-  "_comment": "Coverage floor enforced in CI by check_ratchet.py. Raise these numbers whenever a change adds coverage; never lower them without a stated reason. Measured locally on Yosys 0.70 at 92.3% lines / 64.4% branches; the floor sits ~2 points lower until the first CI run (merged v0.57 + v0.66) reports its own numbers. What is not covered, and why, is listed in UNREACHABLE.md.",
-  "line": 90.0,
-  "branch": 62.0
+  "_comment": "Coverage floor enforced in CI by check_ratchet.py. Raise these numbers whenever a change adds coverage; never lower them without a stated reason. Measured locally on Yosys 0.70 (scripts + C++ unit tests) at 93.2% lines / 65.0% branches; the floor sits ~2 points lower until the first CI run (merged v0.57 + v0.66) reports its own numbers. What is not covered, and why, is listed in UNREACHABLE.md.",
+  "line": 91.0,
+  "branch": 63.0
 }

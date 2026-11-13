@@ -1,4 +1,9 @@
 
+# C++ unit tests (tests/cpp/): built only on request, and always with coverage.
+if (WILDEBEEST_CXXTESTS)
+    add_subdirectory(cpp)
+endif()
+
 # Every *.ys script below unit/ is a test.  Scripts are discovered rather than
 # listed so a new test cannot be silently left out.  unit/data/ only holds
 # fixtures (no .ys files).
