@@ -1,0 +1,20 @@
+# On a pure LUT network max_level and max_height agree, so there is no
+# mismatch warning.  Without -csv the file is stat.csv in the current
+# directory.  With time_chrono timestamps the duration is end - start + 1;
+# it is wall-clock based, so only its presence is checked.
+
+read_rtlil ../../data/rtlil/lut_network.il
+cd top
+connect -set k d
+cd ..
+
+time_chrono -start
+time_chrono -end
+
+logger -expect log "   Dumped file stat.csv" 1
+logger -expect log "   Duration   = [0-9]+ sec." 1
+report_stat
+logger -check-expected
+
+# 4 $lut + LUT2 + SB_LUT4 = 6 LUTs, no FFs/DSPs/BRAMs, height 3.
+!grep -qE "^top,6,0,0,0,3,[0-9]+$" stat.csv

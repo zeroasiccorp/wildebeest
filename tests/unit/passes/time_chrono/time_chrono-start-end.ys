@@ -1,0 +1,23 @@
+# time_chrono -start / -end store a timestamp in the scratchpad.
+# The values are wall-clock times, so only their presence is checked.
+
+read_verilog <<EOF
+module top (input a, output y);
+   assign y = a;
+endmodule
+EOF
+hierarchy -top top
+
+time_chrono -start
+scratchpad -assert-set time_chrono_start
+scratchpad -assert-unset time_chrono_end
+
+time_chrono -end
+scratchpad -assert-set time_chrono_end
+
+# KNOWN-ISSUE TC1: with both options only the start time is stored.
+scratchpad -unset time_chrono_start
+scratchpad -unset time_chrono_end
+time_chrono -start -end
+scratchpad -assert-set time_chrono_start
+scratchpad -assert-unset time_chrono_end

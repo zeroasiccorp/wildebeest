@@ -1,0 +1,14 @@
+# On generic gates max_height sees no LUTs (height 0) while max_level counts
+# the gate levels, so report_stat warns that the two disagree.
+
+read_verilog <<EOF
+module top (input a, b, c, output y);
+   assign y = (a & b) | c;
+endmodule
+EOF
+
+logger -expect warning "Max level and Max height computations give different values" 1
+report_stat -csv gates.csv
+logger -check-expected
+
+!grep -qx "top,0,0,0,0,0,1" gates.csv

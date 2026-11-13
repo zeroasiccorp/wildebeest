@@ -63,6 +63,7 @@ Line numbers refer to the source as of commit `6763981`.
 | MH2 | H | `cp.cc:121` | `bits.at()` crashes on a partial selection. |
 | MH3 | M | `cp.cc:224` | A combinational LUT loop can end in `log_error`, depending on iteration order. |
 | MH4 | L | `cp.cc:95` | Memory leak. |
+| MH5 | H | `cp.cc` (`dump_cp_dot`) | `max_height -dot` aborts Yosys with an uncaught `std::out_of_range` (`dict::at()`) when a LUT on the critical path has a constant input. Without `-dot` the same design is reported correctly. Found in Phase 2a. |
 | OB1 | H | `obs_clean.cc:275` | With a partial selection, cells outside the selection are deleted. |
 | OB2 | M | `obs_clean.cc:251` | The per-bit check isn't sigmapped, so `-wires` may remove a wire that is still connected. |
 | OB3 | L | `obs_clean.cc:42, 59, 84` | Unused maps; a raw-vs-sigmapped key mismatch. |

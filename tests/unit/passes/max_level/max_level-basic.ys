@@ -1,0 +1,38 @@
+# max_level on coarse cells: default report, -summary, and -clk2clk.
+#
+# Without -clk2clk, flip-flops are traversed like any other cell, so the
+# register feedback on 'r' is reported as a loop (twice per run) and the
+# longest path goes through both registers (7 levels).  With -clk2clk the
+# registers are cut points: the path stops at the D input of 'q' and the
+# register it feeds is printed on the 'xx' line.
+
+read_verilog <<EOF
+module top (input clk, input a, b, c, d, output y, output reg q, output reg r);
+   wire t = (a & b) | c;
+   assign y = t ^ d;
+   always @(posedge clk) q <= y & a;
+   always @(posedge clk) r <= q ^ r;
+endmodule
+EOF
+proc
+opt_clean
+
+logger -expect warning "Detected loop at " 2
+logger -expect log "Max logic level in top .length=7.:" 1
+logger -expect log "    7: .r .via .dff." 1
+max_level
+logger -check-expected
+scratchpad -assert max_level.max_levels 7
+
+logger -expect warning "Detected loop at " 2
+logger -expect log "   Max logic level = 7" 1
+max_level -summary
+logger -check-expected
+scratchpad -assert max_level.max_levels 7
+
+logger -expect log "Max logic level in top .length=4.:" 1
+logger -expect log "   xx: .q .via " 1
+logger -expect log "   Total bits      = 5" 1
+max_level -clk2clk
+logger -check-expected
+scratchpad -assert max_level.max_levels 4

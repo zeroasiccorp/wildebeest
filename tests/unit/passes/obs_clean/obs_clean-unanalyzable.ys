@@ -1,0 +1,38 @@
+# A cell whose output port is connected to nothing cannot be analysed: the
+# pass warns and leaves the module as it is.
+
+read_verilog -lib <<EOF
+module bb (input I, output O);
+endmodule
+EOF
+read_rtlil <<EOF
+module \eo
+  wire input 1 \a
+  wire output 2 \y
+  wire \dead
+  cell \bb \i
+    connect \I \a
+    connect \O { }
+  end
+  cell $not \n
+    parameter \A_SIGNED 0
+    parameter \A_WIDTH 1
+    parameter \Y_WIDTH 1
+    connect \A \a
+    connect \Y \y
+  end
+  cell $not \unused_not
+    parameter \A_SIGNED 0
+    parameter \A_WIDTH 1
+    parameter \Y_WIDTH 1
+    connect \A \a
+    connect \Y \dead
+  end
+end
+EOF
+
+logger -expect warning "Module .eo contains some logic that prevents obs_clean analysis" 1
+obs_clean
+logger -check-expected
+
+select -assert-count 3 eo/t:*

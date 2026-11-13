@@ -1,0 +1,25 @@
+# max_height counts LUT cells only ($lut, the LUT1..LUT6 models, and the
+# ice40/Xilinx LUT-like cells).  See data/rtlil/lut_network.il.
+#
+# The SB_LUT4 instance has no module definition, so its output port cannot be
+# identified and it is reported as undriven.  The critical-path LUT l3 has a
+# constant input.
+
+read_rtlil ../../data/rtlil/lut_network.il
+cd top
+connect -set k 1'1
+cd ..
+
+logger -expect warning "It seems Lut cell 's1' is undriven" 1
+logger -expect log "   1:   l1.x.y:z.0. ..lut." 1
+logger -expect log "   2:   l2.q ..lut." 1
+logger -expect log "   3:   l3 ..lut." 1
+logger -expect log "   Max height / Max levels    = 3" 1
+logger -expect log "   CP bits size               = 3" 1
+logger -expect log "   Total lut output bits      = 5" 1
+max_height
+logger -check-expected
+scratchpad -assert max_height.max_height 3
+
+# Like max_level, the run leaves the LUT1..LUT6 blackbox models in the design.
+select -assert-mod-count 7 =*

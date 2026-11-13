@@ -1,0 +1,15 @@
+# The undocumented -dot option (KNOWN-ISSUE RS1) runs 'max_height -dot'
+# instead of 'max_height', which writes cp.dot and calls xdot (a stub under
+# ctest).
+
+read_rtlil ../../data/rtlil/lut_network.il
+cd top
+connect -set k d
+cd ..
+
+logger -expect log "Dumped 'cp.dot' file" 1
+report_stat -dot -csv dot.csv
+logger -check-expected
+
+!grep -q "digraph cp" cp.dot
+!grep -qx "top,6,0,0,0,3,1" dot.csv

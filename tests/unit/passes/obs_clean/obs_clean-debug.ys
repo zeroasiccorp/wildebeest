@@ -1,0 +1,14 @@
+# The undocumented -debug option logs each phase of the analysis.
+
+read_rtlil ../../data/rtlil/obs_clean.il
+
+logger -expect log "Processing module: .top" 1
+logger -expect log "Collecting cell info" 1
+logger -expect log "Collecting assign info" 1
+logger -expect log "Collecting cell transitive fanin" 1
+logger -expect log "Collecting assign transitive fanin" 1
+logger -expect log "Removing unused assign" 1
+logger -expect log "Removing unused wires" 1
+logger -expect log "Removing unused cells" 1
+obs_clean -debug -wires -assigns
+logger -check-expected
