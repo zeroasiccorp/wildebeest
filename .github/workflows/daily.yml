@@ -146,7 +146,7 @@ jobs:
 
       - name: Cache Yosys install
         id: cache-yosys
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: yosys-install
           key: ${{ runner.os }}-yosys-install-${{ matrix.yosys_version }}
