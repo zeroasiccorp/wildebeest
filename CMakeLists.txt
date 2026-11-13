@@ -32,6 +32,8 @@ set(YOSYS_SHARE_DIR ${YOSYS_DATDIR}/plugins/${OUTPUT_NAME})
 # Build the plugin with gcov instrumentation so the test suite can report
 # code coverage (see gcovr.cfg and the 'coverage' job in .github/workflows).
 option(WILDEBEEST_COVERAGE "Instrument the plugin for code coverage" OFF)
+# C++ unit tests (tests/cpp/), on by default in coverage builds.
+option(WILDEBEEST_CXXTESTS "Build and register the C++ unit tests" ${WILDEBEEST_COVERAGE})
 
 add_subdirectory(src)
 add_subdirectory(architecture)
