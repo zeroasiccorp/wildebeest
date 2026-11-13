@@ -51,4 +51,14 @@ foreach(test_script ${ALL_TESTS})
             -P ${CMAKE_CURRENT_SOURCE_DIR}/run_yosys_test.cmake
     )
     set_tests_properties(${test_script} PROPERTIES LABELS "${test_labels}")
+
+    # A '<script>.xfail' file next to a script marks a test that asserts the
+    # correct behaviour for a known functional bug (see tests/KNOWN_ISSUES.md)
+    # and is expected to fail until that bug is fixed.  The file holds the
+    # issue ID and a one-line reason.  Once the bug is fixed the test starts
+    # "failing", which is the cue to delete the .xfail file.
+    if(EXISTS ${test_fullpath}.xfail)
+        set_tests_properties(${test_script} PROPERTIES WILL_FAIL TRUE)
+        set_property(TEST ${test_script} APPEND PROPERTY LABELS xfail)
+    endif()
 endforeach()

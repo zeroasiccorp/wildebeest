@@ -1,0 +1,34 @@
+# Only selected cells are mapped, cell types without a mapper are left alone,
+# and blackbox modules are skipped.  Unknown options are rejected.
+
+read_verilog -lib <<EOF
+module bb (input [1:0] a, output y);
+endmodule
+EOF
+read_verilog <<EOF
+module top (input [1:0] a, b, output [1:0] x, output y, output [2:0] s);
+   assign x = a & b;
+   assign y = |a;
+   assign s = a + b;
+endmodule
+EOF
+select -assert-count 3 top/t:*
+
+logger -expect log "Mapping top.* ..reduce_or." 1
+zsimplemap top/t:$reduce_or top/t:$add
+logger -check-expected
+
+# $reduce_or is mapped; $and (not selected) and $add (no mapper) stay.
+select -assert-count 0 top/t:$reduce_or
+select -assert-count 1 top/t:$and
+select -assert-count 1 top/t:$add
+select -assert-count 1 top/t:$_OR_
+
+logger -expect log "Mapping top.* ..and." 1
+zsimplemap
+logger -check-expected
+select -assert-count 0 top/t:$and
+select -assert-count 1 top/t:$add
+
+logger -expect error "Unknown option or option in arguments" 1
+zsimplemap -bogus

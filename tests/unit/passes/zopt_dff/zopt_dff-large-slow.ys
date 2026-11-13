@@ -1,0 +1,22 @@
+# Large register for zopt_dff -sat (label 'slow': only the coverage job runs
+# it).  12000 flip-flop bits, each stuck at its init value 0 through
+# q <= q & a, mapped to fine cells.  This exercises the progress messages
+# for designs with more than 10000 flip-flop bits and the SAT solver reset
+# after more than 5000 imported cells.
+
+read_verilog <<EOF
+module top (input clk, input [11999:0] a, output reg [11999:0] q);
+   initial q = 0;
+   always @(posedge clk) q <= q & a;
+endmodule
+EOF
+proc
+opt_clean
+simplemap
+select -assert-count 12000 t:$_DFF_P_
+
+logger -expect log "Setting constant 0-bit at position 0 on " 12000
+zopt_dff -sat
+logger -check-expected
+
+select -assert-none t:$_DFF_P_

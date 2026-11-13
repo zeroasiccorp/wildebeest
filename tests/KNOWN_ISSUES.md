@@ -6,6 +6,12 @@ pins down one of these behaviours has a `# KNOWN-ISSUE <ID>` comment, so
 `grep -rn KNOWN-ISSUE tests/` lists every test that will need updating when a
 fix lands.
 
+The exception is a confirmed **wrong-logic** bug: pinning a wrong netlist as
+"expected" would be misleading, so such a test asserts the correct behaviour
+instead and has a `<script>.xfail` file next to it. CTest then expects it to
+fail (label `xfail`); once the bug is fixed the test starts failing, which is
+the cue to delete the `.xfail` file.
+
 Severity: **H** = wrong result or crash, **M** = wrong behaviour or
 diagnostic, **L** = cosmetic. "To confirm" means the issue was found by
 reading the code and still needs a reproducing test.
@@ -46,7 +52,7 @@ Line numbers refer to the source as of commit `6763981`.
 
 | ID | Sev | Where | Issue |
 |----|-----|-------|-------|
-| DSP7 | H, to confirm | `zeroasic_dsp.cc:136-142` | With only C registered, `C_REG` may not be honoured by the mode map, so a cycle of latency would be lost. resetn is also left undriven. |
+| DSP7 | H, **confirmed** | `zeroasic_dsp.cc:136-142` | For `y = a*b + c_reg` with only C registered, `synth_fpga -partname z1010` absorbs the 36-bit C register into `efpga_mult_addc`. That cell is purely combinational (no clock input) and its `c` port is wired straight to the primary input, so the netlist computes `a*b + c`: one cycle of latency on C is lost. Test `passes/zeroasic_dsp/zeroasic_dsp-mult_addc-c_reg.ys` asserts the correct behaviour and is marked expected-to-fail (`.xfail`). |
 | DSP8 | M | `zeroasic_dsp.cc:118-130` | The multiplier path takes its reset from ffA only and never checks that B, C, P and the pipeline register share it. |
 | DSP9 | H | `zeroasic_dsp.pmg:345-363` | `out_dffe` doesn't check the reset value, so a P register that resets to non-zero is still packed. |
 | DSP10 | M | `zeroasic_dsp.cc:86-97` | The init check covers the whole Q, not the matched slice, so it can trip the assert. It also clears init on flops that stay in the fabric. |

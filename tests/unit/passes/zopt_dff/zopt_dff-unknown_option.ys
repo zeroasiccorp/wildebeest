@@ -1,0 +1,11 @@
+# An unknown option is rejected.
+
+read_verilog <<EOF
+module top (input clk, d, output reg q);
+   always @(posedge clk) q <= d;
+endmodule
+EOF
+proc
+
+logger -expect error "Unknown option or option in arguments" 1
+zopt_dff -bogus
