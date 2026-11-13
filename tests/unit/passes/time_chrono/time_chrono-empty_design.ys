@@ -1,0 +1,7 @@
+# With no top module the pass warns and stores nothing.
+
+logger -expect warning "Design seems empty" 1
+time_chrono -start
+logger -check-expected
+
+scratchpad -assert-unset time_chrono_start

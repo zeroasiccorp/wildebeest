@@ -1,0 +1,36 @@
+# KNOWN-ISSUE MH3: a combinational loop of LUTs is detected and warned about,
+# but printing the critical path then stops with a log_error.  Whether the
+# error fires depends on the order the LUTs are visited in; this is the
+# current behaviour for this netlist.
+
+read_rtlil <<EOF
+module \lp
+  wire input 1 \a
+  wire input 2 \b
+  wire output 3 \y
+  wire \p
+  wire \q
+  cell $lut \la
+    parameter \WIDTH 2
+    parameter \LUT 4'1000
+    connect \A { \q \a }
+    connect \Y \p
+  end
+  cell $lut \lb
+    parameter \WIDTH 2
+    parameter \LUT 4'1110
+    connect \A { \p \b }
+    connect \Y \q
+  end
+  cell $lut \lc
+    parameter \WIDTH 1
+    parameter \LUT 2'10
+    connect \A \q
+    connect \Y \y
+  end
+end
+EOF
+
+logger -expect warning "Detected loop at .q in lp" 1
+logger -expect error "Problem in the print CP function : Height 2 must be less than height 0" 1
+max_height

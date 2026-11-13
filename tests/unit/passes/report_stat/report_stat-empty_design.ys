@@ -1,0 +1,7 @@
+# With no top module report_stat warns and writes nothing.
+
+logger -expect warning "Design seems empty" 1
+report_stat -csv empty.csv
+logger -check-expected
+
+!test ! -e empty.csv

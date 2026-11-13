@@ -1,0 +1,26 @@
+# Default obs_clean removes cells that are not in the fan-in of an output or
+# of a (* keep *) wire, except cells with keep.  Wires and assigns stay.
+# See data/rtlil/obs_clean.il.  The outputs must be unchanged, which is
+# proven with a SAT equivalence check.
+
+read_rtlil ../../data/rtlil/obs_clean.il
+design -save pre
+select -assert-count 7 t:*
+select -assert-count 19 w:*
+
+logger -expect log "      o Removed 2 '.and' cells" 1
+logger -expect log "      o Removed 1 '.or' cells" 1
+obs_clean
+logger -check-expected
+
+select -assert-count 4 t:*
+select -assert-count 1 c:g_t1
+select -assert-count 1 c:g_y
+select -assert-count 1 c:g_kw
+select -assert-count 1 c:kept_x
+select -assert-count 19 w:*
+
+rename top gate
+design -copy-from pre -as gold top
+miter -equiv -flatten -make_assert gold gate miter
+sat -verify -prove-asserts miter

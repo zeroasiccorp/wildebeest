@@ -1,0 +1,11 @@
+# A module that still has processes (no 'proc' run) is skipped with a warning.
+
+read_verilog <<EOF
+module top (input clk, input a, b, output reg q);
+   always @(posedge clk) q <= a & b;
+endmodule
+EOF
+
+logger -expect warning "Ignoring module top because it contains processes" 1
+max_height
+logger -check-expected

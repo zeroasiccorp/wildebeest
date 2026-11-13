@@ -1,0 +1,18 @@
+# report_stat counts LUTs, flip-flops, DSPs and BRAMs by cell type name and
+# writes one CSV line: top,LUTs,DFFs,DSPs,BRAMs,max_height,duration.
+#
+# data/rtlil/report_stat_cells.il holds one cell of every type the counters
+# know.  mux4x0 counts as 3 LUTs and mux8x0 as 7.  KNOWN-ISSUE RS1: some LUT
+# branches can never be reached because an earlier check already takes
+# LUT1..LUT4 and INV; the totals below are what the code produces today.
+#
+# time_chrono was not run, so the duration is reported as 1 second.
+
+read_rtlil ../../data/rtlil/report_stat_cells.il
+
+logger -expect log "   Duration   = 1 sec." 1
+logger -expect log "   Dumped file counts.csv" 1
+report_stat -csv counts.csv
+logger -check-expected
+
+!grep -qx "top,29,36,23,42,1,1" counts.csv

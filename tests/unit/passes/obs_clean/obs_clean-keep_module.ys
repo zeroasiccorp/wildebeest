@@ -1,0 +1,9 @@
+# A module with (* keep *) is left untouched.
+
+read_rtlil ../../data/rtlil/obs_clean.il
+setattr -mod -set keep 1 top
+
+obs_clean -wires -assigns
+
+select -assert-count 7 t:*
+select -assert-count 19 w:*

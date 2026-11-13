@@ -1,0 +1,6 @@
+# KNOWN-ISSUE LM1: load_models reads ff_models/dffrs.v, which is not shipped,
+# so the pass always stops with an error after loading the first models.
+
+# The message wording differs between Yosys versions; match the file name.
+logger -expect error "ff_models/dffrs.v" 1
+load_models
