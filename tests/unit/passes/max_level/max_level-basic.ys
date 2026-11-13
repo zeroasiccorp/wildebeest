@@ -6,16 +6,9 @@
 # registers are cut points: the path stops at the D input of 'q' and the
 # register it feeds is printed on the 'xx' line.
 
-read_verilog <<EOF
-module top (input clk, input a, b, c, d, output y, output reg q, output reg r);
-   wire t = (a & b) | c;
-   assign y = t ^ d;
-   always @(posedge clk) q <= y & a;
-   always @(posedge clk) r <= q ^ r;
-endmodule
-EOF
-proc
-opt_clean
+# The netlist is data/rtlil/max_level_regs.il (proc + opt_clean of the design
+# in its header, frozen so all Yosys versions see the same cells).
+read_rtlil ../../data/rtlil/max_level_regs.il
 
 logger -expect warning "Detected loop at " 2
 logger -expect log "Max logic level in top .length=7.:" 1

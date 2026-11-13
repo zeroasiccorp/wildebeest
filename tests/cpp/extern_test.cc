@@ -85,6 +85,47 @@ WB_TEST(zqcsat_import_and_limits) {
   WB_CHECK_EQ(complexity(ID($dff)), 5);
 }
 
+// --------------------------- missing files (behaviour differs by Yosys version)
+//
+// Whether a missing input file stops Yosys depends on the Yosys version (0.70
+// stops; some older versions carry on).  A script cannot accept either
+// outcome, so these checks live here: they only require that the missing
+// file is reported.
+
+// Runs a command with log_error() made catchable; returns true if it stopped.
+static bool run_allowing_error(RTLIL::Design *design, const std::string &cmd) {
+  wbtest::ErrorHook hook;
+  try {
+    Pass::call(design, cmd);
+  } catch (const wbtest::LogError &) {
+    return true;
+  }
+  return false;
+}
+
+// KNOWN-ISSUE LM1: load_models reads ff_models/dffrs.v, which is not shipped.
+WB_TEST(load_models_missing_model_file) {
+  RTLIL::Design *design = yosys_get_design();
+  wbtest::LogCapture log;
+  run_allowing_error(design, "load_models");
+  WB_CHECK(log.contains("ff_models/dffrs.v"));
+}
+
+// KNOWN-ISSUE SF5: -opt fast with 4-input LUTs points at
+// LUT4/BEST/fast_lut4.scr, which does not exist.
+WB_TEST(synth_fpga_opt_fast_lut4_missing_script) {
+  RTLIL::Design *design = yosys_get_design();
+  load(design,
+       "module top(input clk, nreset, en, input [7:0] d, output reg [7:0] q);\n"
+       "  always @(posedge clk or negedge nreset)\n"
+       "    if (!nreset) q <= 8'h00; else if (en) q <= q + d;\n"
+       "endmodule");
+  wbtest::LogCapture log;
+  run_allowing_error(design, "synth_fpga -opt fast");
+  WB_CHECK(log.contains("Calling ABC script in 'fast' mode"));
+  WB_CHECK(log.contains("abc_scripts/LUT4/BEST/fast_lut4.scr"));
+}
+
 // ------------------------------------------- crash bugs (KNOWN_ISSUES.md)
 //
 // These throw std::out_of_range out of the pass, which aborts Yosys when it

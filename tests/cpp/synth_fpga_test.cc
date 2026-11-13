@@ -6,6 +6,9 @@
 
 #include "wb_test.h"
 
+#include <type_traits>
+#include <utility>
+
 USING_YOSYS_NAMESPACE
 
 using wbtest::load;
@@ -50,15 +53,19 @@ WB_TEST(synth_fpga_show_sig) {
   SynthFpgaPass.show_sig(b.extract(1, 1));                // one bit, upto
   SynthFpgaPass.show_sig(b.extract(0, 2));                // slice, upto
   SynthFpgaPass.show_sig(RTLIL::SigSpec(RTLIL::Const(5, 3)));   // constant
-#if YOSYS_MAJOR == 0 && YOSYS_MINOR < 70
-  // KNOWN-ISSUE SF19: on Yosys 0.70+ SigSpec::chunks() returns a temporary
-  // view, so the multi-chunk loop compares iterators of two different
-  // temporaries and crashes.  show_sig is never called by the plugin.
-  RTLIL::SigSpec mixed = a.extract(0, 2);
-  mixed.append(RTLIL::Const(1, 1));
-  SynthFpgaPass.show_sig(mixed);                          // several chunks
-  WB_CHECK(log.contains("{ "));
-#endif
+  // KNOWN-ISSUE SF19: in newer Yosys versions SigSpec::chunks() returns a
+  // temporary view instead of a reference, so show_sig's multi-chunk loop
+  // compares iterators of two different temporaries and crashes.  show_sig is
+  // never called by the plugin; the multi-chunk case only runs where chunks()
+  // still returns a reference.
+  constexpr bool chunks_by_reference = std::is_reference<
+      decltype(std::declval<const RTLIL::SigSpec &>().chunks())>::value;
+  if constexpr (chunks_by_reference) {
+    RTLIL::SigSpec mixed = a.extract(0, 2);
+    mixed.append(RTLIL::Const(1, 1));
+    SynthFpgaPass.show_sig(mixed);                        // several chunks
+    WB_CHECK(log.contains("{ "));
+  }
   const std::string text = log.text();
   WB_CHECK(text.find("{0{1'b0}}") != std::string::npos);
   WB_CHECK(text.find("a[3]") != std::string::npos);
