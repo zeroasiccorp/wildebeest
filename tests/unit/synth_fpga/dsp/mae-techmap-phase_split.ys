@@ -1,0 +1,35 @@
+# yosys -m wildebeest -s mae-techmap-phase_split.ys
+#
+# DSP inference runs the multiplier phase to completion before the add-only
+# phase starts. Splitting the phases must not change what maps: the multiply,
+# the multiply-add and the plain add each still land on one DSP, and the post
+# adder of the multiply-add is absorbed by the multiplier phase rather than
+# claimed again by the add-only phase.
+read_verilog <<EOF
+module mult_and_add
+   (
+    input signed [17:0]  mul_a,
+    input signed [17:0]  mul_b,
+    output [35:0]        mul_y,
+    input signed [17:0]  mac_a,
+    input signed [17:0]  mac_b,
+    input signed [39:0]  mac_c,
+    output [39:0]        mac_y,
+    input signed [17:0]  add_a,
+    input signed [17:0]  add_b,
+    output signed [39:0] add_y
+    );
+
+   assign mul_y = mul_a * mul_b;
+   assign mac_y = mac_a * mac_b + mac_c;
+   assign add_y = add_a + add_b;
+
+endmodule
+EOF
+
+logger -expect log "DSPs used by multipliers: 2" 1
+synth_fpga -partname z1010
+select -assert-count 1 */t:efpga_mult
+select -assert-count 1 */t:efpga_mult_addc
+select -assert-count 1 */t:efpga_adder
+select -assert-count 3 */t:*
