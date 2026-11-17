@@ -234,7 +234,8 @@ The configuration format is still work in progress. A draft format specification
                 "techmap_parameters": {
                         "<str, name of define>": <str or int, value of define>
                 }
-                "pack_command": "DSP packing command" (optional)
+                "pack_command": "DSP packing command" (optional),
+                "mode_techmap": <path, relative path to yosys MAE mode tech mapping file> (optional)
         },
         "adders": { (optional)
                 "techmap": <path, relative path to yosys hard carry-chain adder tech mapping file>
@@ -247,6 +248,13 @@ Sections version, partname, lut_size, flip-flops, are required. Sections root_pa
 The "brams" keys `logic_cost_rom` and `bram_with_init` control memory initialization. `logic_cost_rom` is the cost per bit of a memory with no write port left in soft logic; raising it pushes small ROMs into BRAM, and it is written straight through to `memory_libmap -logic-cost-rom` (default 0.5). `bram_with_init` declares that the `memory_libmap` and `techmap` files given alongside it carry the memory contents through to the netlist; it selects no files of its own. Setting it makes `synth_fpga` check that the contents really did arrive, and fail if they did not.
 
 That check is worth having because losing memory contents is silent. A memory library that declares `init none`, or a techmap that declares an `INIT` parameter and never forwards it to the macro, both produce a netlist that maps, places, routes and programs perfectly well -- the BRAM simply comes up holding zeros. The two cases are indistinguishable downstream, so the check reports which one happened.
+
+The "dsps" key `mode_techmap` names the techmap that turns the packed `MAE` cells (made by the `zeroasic_dsp` pack command) into the final DSP mode cells. It is resolved against `root_path` like `techmap`. Without it, the plugin's own map for `-partname` is used -- note that this is the command-line partname, not the config file's `partname`. A package that describes a DSP block of another shape brings its own map through this key, and the map must honour two rules:
+
+- It must declare every parameter an `MAE` cell carries (`A_REG`, `B_REG`, `C_REG`, `P_REG`, `MULT_HAS_REG`, `POST_ADDER_STATIC`, `USE_FEEDBACK`, `ADD_ONLY`). `techmap` stops with `Can't find object for defparam` on a cell parameter its template does not declare.
+- Its `MAE` `A` and `B` ports must be exactly `DSP_A_MAXWIDTH` and `DSP_B_MAXWIDTH` wide, and its `C` and `P` ports at least as wide as the cells'. `techmap` would otherwise silently truncate the cell, so `synth_fpga` checks the widths before running the map and stops with an error naming the cell, both widths and the map.
+
+The key does not change the `zeroasic_dsp` pack command, whose limits are compiled in: it fuses a post-adder only up to a 40-bit result, seeds add-only modes only from operands up to 18 bits, and pads `P` to at least 40 bits and the add-only operands to 18 bits.
 
 To use an initialized BRAM through `-partname` rather than a config file, use `-partname z1070 -bram_with_init`. `z1070` is the only part whose BRAM library can hold initial contents; asking for `-bram_with_init` on any other part is an error rather than a zeroed BRAM.
 

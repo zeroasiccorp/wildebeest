@@ -113,6 +113,7 @@ struct SynthFpgaPass : public ScriptPass {
   dict<string, int> ys_dsps_parameter_int;
   dict<string, string> ys_dsps_parameter_string;
   string ys_dsps_pack_command = "";
+  string ys_dsps_mode_techmap = ""; // "" : the partname's own mode map
 
   // Adders (carry chain)
   //
@@ -418,7 +419,9 @@ struct SynthFpgaPass : public ScriptPass {
                    "DSP_A_MINWIDTH": "2",
                    "DSP_B_MINWIDTH": "2",
                    "DSP_NAME": "_dsp_block_"
-                }
+                },
+                "pack_command": "zeroasic_dsp",
+                "mode_techmap": "/zeroasic_dsp_map_mode.v"
         }
 }
 ~
@@ -459,6 +462,7 @@ struct SynthFpgaPass : public ScriptPass {
     dict<string, int> dsps_parameter_int;
     dict<string, string> dsps_parameter_string;
     string dsps_pack_command;
+    string dsps_mode_techmap;
 
     //
     // Adder (carry chain) related
@@ -557,6 +561,12 @@ struct SynthFpgaPass : public ScriptPass {
     log("\n");
     log("  DSP pack_command   : \n");
     log("                       %s\n", (G_config.dsps_pack_command).c_str());
+
+    log("  DSP mode techmap   : \n");
+    log("                       %s\n",
+        (G_config.dsps_mode_techmap == "")
+            ? "(default)"
+            : (G_config.dsps_mode_techmap).c_str());
 
     log("  ADDER techmap      : \n");
     log("                       %s\n", (G_config.adders_techmap).c_str());
@@ -688,6 +698,19 @@ struct SynthFpgaPass : public ScriptPass {
         }
 
         ys_dsps_pack_command = G_config.dsps_pack_command;
+      }
+
+      // DSP mode techmap: resolved like 'dsps.techmap'. Absent, the mode map
+      // stays the partname's own (see 'infer_DSPs').
+      //
+      if (G_config.dsps_mode_techmap == "") {
+
+        ys_dsps_mode_techmap = "";
+
+      } else {
+
+        ys_dsps_mode_techmap =
+            G_config.root_path + "/" + G_config.dsps_mode_techmap;
       }
 
       // Adder (carry chain) techmap setting.  Resolved relative to root_path
@@ -864,6 +887,7 @@ struct SynthFpgaPass : public ScriptPass {
       ys_dsps_parameter_int.clear();
       ys_dsps_parameter_string.clear();
       ys_dsps_pack_command = "";
+      ys_dsps_mode_techmap = "";
 
       if (platypus_partnames.count(part_name) && (dsp_tech == "zeroasic")) {
 
@@ -1419,6 +1443,20 @@ struct SynthFpgaPass : public ScriptPass {
         log_error("'pack_command' associated to 'dsps' must be a string.\n");
       }
       G_config.dsps_pack_command = dsps_pack_command->data_string;
+    }
+
+    // DSP mode techmap (optional): the map from the packed '\MAE' cell to the
+    // final DSP mode cells. Absent, the plugin's own map for the partname is
+    // used.
+    //
+    G_config.dsps_mode_techmap = "";
+
+    if (dsps && (dsps->data_dict.count("mode_techmap") != 0)) {
+      JsonNode *dsps_mode_techmap = dsps->data_dict.at("mode_techmap");
+      if (dsps_mode_techmap->type != 'S') {
+        log_error("'mode_techmap' associated to 'dsps' must be a string.\n");
+      }
+      G_config.dsps_mode_techmap = dsps_mode_techmap->data_string;
     }
 
     // adders (optional carry-chain hard adder techmap)
@@ -3402,17 +3440,22 @@ struct SynthFpgaPass : public ScriptPass {
       return;
     }
 
-    // Say where the map came from. A config file author expects its own
-    // 'partname' to have selected it, but the map follows '-partname' (see
-    // KNOWN_ISSUES SF8), so name both: the error is the one place the author
-    // gets to find that out.
+    // Say where the map came from. Unless 'dsps.mode_techmap' names it, a
+    // config file author expects its own 'partname' to have selected it, but
+    // the map follows '-partname' (see KNOWN_ISSUES SF8), so name both: the
+    // error is the one place the author gets to find that out.
     //
-    string map_origin =
-        config_file_success
-            ? stringf("it comes from '-partname %s', not from the config "
-                      "file's partname '%s'",
-                      part_name.c_str(), G_config.partname.c_str())
-            : stringf("selected by partname '%s'", part_name.c_str());
+    string map_origin;
+
+    if (ys_dsps_mode_techmap != "") {
+      map_origin = "the config file's 'dsps.mode_techmap'";
+    } else if (config_file_success) {
+      map_origin = stringf("it comes from '-partname %s', not from the "
+                           "config file's partname '%s'",
+                           part_name.c_str(), G_config.partname.c_str());
+    } else {
+      map_origin = stringf("selected by partname '%s'", part_name.c_str());
+    }
 
     // A and B: equal. C and P: not wider. Checked in this order so the
     // reported port does not depend on the cell's connection order.
@@ -3537,9 +3580,14 @@ struct SynthFpgaPass : public ScriptPass {
       run(sc_syn_dsps_pack_command + " -add_only");
     }
 
-    std::string ys_dsps_techmap_modes = "+/plugins/wildebeest/architecture/" +
-                                        part_name +
-                                        "/dsp/zeroasic_dsp_map_mode.v";
+    // The config file's 'dsps.mode_techmap' when it has one, else the
+    // plugin's own map for the partname.
+    //
+    std::string ys_dsps_techmap_modes =
+        (ys_dsps_mode_techmap != "")
+            ? ys_dsps_mode_techmap
+            : "+/plugins/wildebeest/architecture/" + part_name +
+                  "/dsp/zeroasic_dsp_map_mode.v";
 
     check_mae_widths(ys_dsps_techmap_modes);
 
@@ -3701,6 +3749,23 @@ struct SynthFpgaPass : public ScriptPass {
     log("    -config <file name>\n");
     log("        Specifies the config file setting main 'synth_fpga' "
         "parameters.\n");
+    log("        In its 'dsps' section, the optional 'mode_techmap' names "
+        "the techmap\n");
+    log("        file that maps the packed 'MAE' cells to the final DSP mode "
+        "cells,\n");
+    log("        resolved against 'root_path' like 'techmap'. Without it, "
+        "the map of\n");
+    log("        '-partname' is used. The file must declare every parameter "
+        "an 'MAE'\n");
+    log("        cell carries (A_REG, B_REG, C_REG, P_REG, MULT_HAS_REG,\n");
+    log("        POST_ADDER_STATIC, USE_FEEDBACK, ADD_ONLY): 'techmap' "
+        "fails on a\n");
+    log("        parameter the template does not declare. Its 'MAE' A/B "
+        "ports must be\n");
+    log("        as wide as 'DSP_A_MAXWIDTH'/'DSP_B_MAXWIDTH', and C/P at "
+        "least as wide\n");
+    log("        as the cells' own C/P; otherwise synth_fpga stops before "
+        "mapping.\n");
     log("\n");
 
     log("    -show_config\n");

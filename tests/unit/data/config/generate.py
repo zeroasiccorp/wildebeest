@@ -239,6 +239,10 @@ case(C, "dsp_pack_command_type", "'dsps.pack_command' must be a string.",
      mod(dsps={"family": "x", "techmap": "x.v", "techmap_parameters": {},
                "pack_command": 1}),
      err("'pack_command' associated to 'dsps' must be a string."))
+case(C, "dsp_mode_techmap_type", "'dsps.mode_techmap' must be a string.",
+     mod(dsps={"family": "x", "techmap": "x.v", "techmap_parameters": {},
+               "pack_command": "x", "mode_techmap": 1}),
+     err("'mode_techmap' associated to 'dsps' must be a string."))
 case(C, "adders_type", "'adders' must be a dictionary.", mod(adders=[1]),
      err("'adders' must be a dictionnary."))
 case(C, "adders_techmap_type", "'adders.techmap' must be a string.",

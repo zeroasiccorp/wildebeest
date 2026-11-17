@@ -1,0 +1,25 @@
+# yosys -m wildebeest -s mae-mode_techmap-config_key.ys
+#
+# 'dsps.mode_techmap' makes the config file's own mode map replace the
+# partname's. The config describes a 24x24 -> 48 block and points at a 24/48
+# mode map that produces 'efpga_mult_24x24', a cell the plugin's z1010 map
+# cannot produce, so the cell count shows the key was honoured and not merely
+# read. The width guard must accept these cells: they match the map exactly.
+read_verilog <<EOF
+module mult24
+   (
+    input signed [23:0]  a,
+    input signed [23:0]  b,
+    output [47:0]        y
+    );
+
+   assign y = a * b;
+
+endmodule
+EOF
+
+logger -expect log "DSP mode techmap" 1
+synth_fpga -config ../../data/dsp/mae_mode_techmap_24.json -show_config
+select -assert-count 1 */t:efpga_mult_24x24
+select -assert-count 0 */t:efpga_mult
+select -assert-count 0 */t:MAE

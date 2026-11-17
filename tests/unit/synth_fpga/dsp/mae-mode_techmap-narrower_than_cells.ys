@@ -1,0 +1,20 @@
+# yosys -m wildebeest -s mae-mode_techmap-narrower_than_cells.ys
+#
+# A mode map named by 'dsps.mode_techmap' is checked like the partname's own:
+# 24-bit MAE cells against the 18-bit z1060 map are refused before the map
+# runs, and the message names the config key as where the map came from.
+read_verilog <<EOF
+module mult24
+   (
+    input signed [23:0]  a,
+    input signed [23:0]  b,
+    output [47:0]        y
+    );
+
+   assign y = a * b;
+
+endmodule
+EOF
+
+logger -expect error "has a 24-bit 'A' port but the DSP mode map '.*architecture/z1060/dsp/zeroasic_dsp_map_mode.v' .the config file's 'dsps.mode_techmap'. expects 18 bits" 1
+synth_fpga -config ../../data/dsp/mae_mode_techmap_narrow.json

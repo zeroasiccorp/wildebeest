@@ -33,7 +33,7 @@ Line numbers refer to the source as of commit `6763981`.
 | SF5 | M | 2896 | `-opt fast` with LUT4 or LUT6 points at `.scr` files that don't exist. `-abc_script_version` is never validated. ABC reports the missing file; Yosys 0.70 then stops, while older versions (e.g. 0.66) carry on and produce a netlist. |
 | SF6 | M | globals | Config and flop state (`G_config`, `ys_legal_flops`, ...) is never reset between two `synth_fpga` runs in one session. |
 | SF7 | H, **confirmed** | 1534, 2052 | XOR-tree leaves are kept in a set, so a repeated leaf doesn't cancel. `(a8^a9)^(a8^a10)^(a11^a12)` synthesized with `-opt delay` computes `a8^a9^a10^a11^a12` instead of `a9^a10^a11^a12` (SAT counterexample; the same design is proven equivalent with `-no_xor_tree_process`, in area mode, and with Yosys's own `synth -lut 4`). Test `synth_fpga/flow/flow-opt_delay-repeated_xor_leaf.ys` asserts equivalence and is marked `.xfail`. |
-| SF8 | M | 3403 | The DSP mode map uses the command-line partname, not the partname in the config file. |
+| SF8 | M | 3403 | The DSP mode map uses the command-line partname, not the partname in the config file. A config file can name its map with `dsps.mode_techmap` instead, and the MAE width check's error says which partname picked the map. |
 | SF9 | L | 711-725 | The DFF-feature fallback flags are inverted. |
 | SF10 | L | 2660 | The CSV logic level is -1 when `-show_max_level` is given. |
 | SF11 | L | 3595 | The `-use_bram_tech` help text says "DSP"; `bram_tech` has no effect at all. |
