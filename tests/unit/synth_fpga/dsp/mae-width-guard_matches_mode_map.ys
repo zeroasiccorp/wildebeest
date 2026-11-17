@@ -1,0 +1,28 @@
+# yosys -m wildebeest -s mae-width-guard_matches_mode_map.ys
+#
+# The positive side of the MAE width guard: a config whose DSP techmap
+# parameters match the mode map's 18-bit A/B ports maps as before. The
+# multiply's 36-bit product is narrower than the map's 40-bit P, which is
+# legal, and the multiply-add fills P exactly.
+read_verilog <<EOF
+module mult_and_mac
+   (
+    input signed [17:0]  mul_a,
+    input signed [17:0]  mul_b,
+    output [35:0]        mul_y,
+    input signed [17:0]  mac_a,
+    input signed [17:0]  mac_b,
+    input signed [39:0]  mac_c,
+    output [39:0]        mac_y
+    );
+
+   assign mul_y = mul_a * mul_b;
+   assign mac_y = mac_a * mac_b + mac_c;
+
+endmodule
+EOF
+
+synth_fpga -config ../../data/dsp/mae_width_18.json
+select -assert-count 1 */t:efpga_mult
+select -assert-count 1 */t:efpga_mult_addc
+select -assert-count 0 */t:MAE

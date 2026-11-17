@@ -82,6 +82,7 @@ A script test cannot assert a crash; see `tests/KNOWN_ISSUES.md`.
 |---|---|---|
 | `synth_fpga.cc` | 3236-3257 | BRAM INIT lost or truncated after techmap.  Needs a techmap or pass that changes INIT later than the existing `bram-init-config-techmap-drops` test does. |
 | `synth_fpga.cc` | 3415 | An `MAE` cell left after the DSP mode map. |
+| `synth_fpga.cc` | `check_mae_widths` | The message for a run without a config file, a mode map with no `MAE` module, and an `A`/`B`/`C`/`P` port missing from the cell or the map.  Without a config file the plugin's own DSP parameters always match its own mode map, and every shipped mode map defines `MAE` with all four ports. |
 | `synth_fpga.cc` | 1690-1700, 1722-1723, 2140-2153 | Duplicate XORs after balancing: `opt_merge` has already removed shared sub-expressions, so trees sharing a leaf pair still show "0 duplicated XORs". |
 | `synth_fpga.cc` | 2925-3113, 3173, 3217 | Defensive early returns in the BRAM INIT helpers. |
 

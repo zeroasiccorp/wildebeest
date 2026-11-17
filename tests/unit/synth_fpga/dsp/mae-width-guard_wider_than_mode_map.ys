@@ -1,0 +1,24 @@
+# yosys -m wildebeest -s mae-width-guard_wider_than_mode_map.ys
+#
+# A config whose DSP techmap parameters say the block is 24 bits wide makes
+# 'mul2dsp' build 24-bit MAE cells, but the z1010 mode map has 18-bit A/B
+# ports. 'techmap' would silently drop the top 6 bits of each operand, so
+# synth_fpga refuses before running the mode map, naming the cell's width,
+# the map's width, the map file and the config's partname. The partname is
+# 'z1060' on purpose: the map still follows '-partname' (z1010 by default,
+# KNOWN-ISSUE SF8), and the message has to say so.
+read_verilog <<EOF
+module mult24
+   (
+    input signed [23:0]  a,
+    input signed [23:0]  b,
+    output [47:0]        y
+    );
+
+   assign y = a * b;
+
+endmodule
+EOF
+
+logger -expect error "has a 24-bit 'A' port but the DSP mode map '.*z1010/dsp/zeroasic_dsp_map_mode.v' .it comes from '-partname z1010', not from the config file's partname 'z1060'. expects 18 bits; the mode techmap would truncate it" 1
+synth_fpga -config ../../data/dsp/mae_width_24.json

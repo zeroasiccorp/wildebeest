@@ -3346,6 +3346,122 @@ struct SynthFpgaPass : public ScriptPass {
   }
 
   // -------------------------
+  // check_mae_widths
+  // -------------------------
+  //
+  // Refuses to run the DSP mode techmap over a '\MAE' cell whose ports the
+  // map would truncate.
+  //
+  // 'techmap' silently drops the part of a connection that is wider than the
+  // template port (and zero pads one that is narrower), so once the mode map
+  // has run nothing is left to show that a wider cell ever existed. The check
+  // therefore has to happen before it.
+  //
+  // The rule comes from 'mul2dsp': it instantiates the DSP block with
+  // 'A_WIDTH = DSP_A_MAXWIDTH' and sign extends A to exactly that width (B
+  // likewise), and 'zeroasic_dsp' pads the add-only operands up to the block
+  // width. So A and B must be *equal* to the map's width. P and C can be
+  // narrower, as 'mul2dsp' caps the product width and nothing pads them down,
+  // so they must only not be wider.
+  //
+  // The expected widths are read from the mode map file itself, so editing
+  // the map cannot leave this check behind.
+  //
+  void check_mae_widths(const string &mode_map) {
+
+    RTLIL::Design *design = yosys_get_design();
+
+    // Gated on '\MAE' cells being there: a config file of another DSP family
+    // (e.g. 'DSP48') runs the mode techmap to no effect and is left alone.
+    //
+    if (count_cell_type(design, "\\MAE") == 0) {
+      return;
+    }
+
+    std::map<string, int> map_width;
+
+    RTLIL::Design *map_design = new RTLIL::Design;
+    Pass::call(map_design, {"read_verilog", "-lib", mode_map});
+
+    for (auto module : map_design->modules()) {
+      if (module->name.str() != "\\MAE") {
+        continue;
+      }
+      for (auto wire : module->wires()) {
+        if (wire->port_id > 0) {
+          map_width[wire->name.str()] = wire->width;
+        }
+      }
+    }
+    delete map_design;
+
+    // No '\MAE' template in the map: 'techmap' leaves the cells alone and the
+    // "Could not techmap DSP" error after it reports them.
+    //
+    if (map_width.empty()) {
+      return;
+    }
+
+    // Say where the map came from. A config file author expects its own
+    // 'partname' to have selected it, but the map follows '-partname' (see
+    // KNOWN_ISSUES SF8), so name both: the error is the one place the author
+    // gets to find that out.
+    //
+    string map_origin =
+        config_file_success
+            ? stringf("it comes from '-partname %s', not from the config "
+                      "file's partname '%s'",
+                      part_name.c_str(), G_config.partname.c_str())
+            : stringf("selected by partname '%s'", part_name.c_str());
+
+    // A and B: equal. C and P: not wider. Checked in this order so the
+    // reported port does not depend on the cell's connection order.
+    //
+    const std::vector<std::pair<string, bool>> checked_ports = {
+        {"\\A", true}, {"\\B", true}, {"\\C", false}, {"\\P", false}};
+
+    for (auto module : design->modules()) {
+      for (auto cell : module->cells()) {
+
+        if (cell->type.str() != "\\MAE") {
+          continue;
+        }
+
+        std::map<string, int> cell_widths;
+        for (auto &conn : cell->connections()) {
+          cell_widths[conn.first.str()] = GetSize(conn.second);
+        }
+
+        for (auto &checked : checked_ports) {
+
+          const string &port = checked.first;
+          bool equal = checked.second;
+
+          if (!cell_widths.count(port) || !map_width.count(port)) {
+            continue;
+          }
+
+          int cell_width = cell_widths.at(port);
+          int width = map_width.at(port);
+
+          if ((cell_width == width) || (!equal && (cell_width < width))) {
+            continue;
+          }
+
+          log_error("DSP cell '%s' in module '%s' has a %d-bit '%s' port "
+                    "but the DSP mode map '%s' (%s) expects %s%d bits; the "
+                    "mode techmap would truncate it. Check the DSP "
+                    "techmap parameters (e.g. 'DSP_A_MAXWIDTH') against "
+                    "that map.\n",
+                    log_id(cell), log_id(module), cell_width,
+                    port.substr(1).c_str(), mode_map.c_str(),
+                    map_origin.c_str(), equal ? "" : "at most ", width);
+        }
+      }
+    }
+  }
+
+  // -------------------------
   // infer_DSPs
   // -------------------------
   //
@@ -3424,6 +3540,8 @@ struct SynthFpgaPass : public ScriptPass {
     std::string ys_dsps_techmap_modes = "+/plugins/wildebeest/architecture/" +
                                         part_name +
                                         "/dsp/zeroasic_dsp_map_mode.v";
+
+    check_mae_widths(ys_dsps_techmap_modes);
 
     // after dsp packing, map to modes for compatibility with our vpr solution
     run("techmap -map " + ys_dsps_techmap_modes);
